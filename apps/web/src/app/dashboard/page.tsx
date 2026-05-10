@@ -12,28 +12,34 @@ export default async function DashboardPage() {
   const session = await auth()
   if (!session) redirect('/auth')
 
-  const [myMatches, myProjects, notifications] = await Promise.all([
-    prisma.match.findMany({
-      where: { artistId: session.user.id },
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      include: { project: { select: { title: true, budget: true } } },
-    }),
-    prisma.project.findMany({
-      where: { clientId: session.user.id },
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { matches: true } } },
-    }),
-    // 未読メッセージ数（簡易実装）
-    prisma.message.count({
-      where: {
-        match: { artistId: session.user.id },
-        readAt: null,
-        NOT: { senderId: session.user.id },
-      },
-    }),
-  ])
+  let myMatches: Awaited<ReturnType<typeof prisma.match.findMany>> = []
+  let myProjects: Awaited<ReturnType<typeof prisma.project.findMany>> = []
+  let notifications = 0
+  try {
+    ;[myMatches, myProjects, notifications] = await Promise.all([
+      prisma.match.findMany({
+        where: { artistId: session.user.id },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: { project: { select: { title: true, budget: true } } },
+      }),
+      prisma.project.findMany({
+        where: { clientId: session.user.id },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: { _count: { select: { matches: true } } },
+      }),
+      prisma.message.count({
+        where: {
+          match: { artistId: session.user.id },
+          readAt: null,
+          NOT: { senderId: session.user.id },
+        },
+      }),
+    ])
+  } catch {
+    // DB unreachable — show empty state
+  }
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4">

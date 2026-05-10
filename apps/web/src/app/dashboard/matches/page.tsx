@@ -9,17 +9,22 @@ export default async function MatchesPage() {
   const session = await auth()
   if (!session) redirect('/auth')
 
-  const matches = await prisma.match.findMany({
-    where: { artistId: session.user.id },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      project: {
-        include: {
-          client: { select: { name: true, avatarUrl: true } },
+  let matches: Awaited<ReturnType<typeof prisma.match.findMany>> = []
+  try {
+    matches = await prisma.match.findMany({
+      where: { artistId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        project: {
+          include: {
+            client: { select: { name: true, avatarUrl: true } },
+          },
         },
       },
-    },
-  })
+    })
+  } catch {
+    // DB unreachable — show empty state
+  }
 
   const statusGroups = {
     APPLIED: matches.filter((m) => m.status === 'APPLIED'),

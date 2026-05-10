@@ -11,33 +11,40 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  const user = await prisma.user.findUnique({
-    where: { id },
-    select: { name: true, bio: true, avatarUrl: true },
-  })
-
-  if (!user) return { title: 'アーティストが見つかりません' }
-
-  return {
-    title: `${user.name} | アーティストプロフィール`,
-    description: user.bio ?? `${user.name} のポートフォリオ・実績をチェック`,
-    openGraph: {
-      images: user.avatarUrl ? [{ url: user.avatarUrl }] : [],
-    },
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { name: true, bio: true, avatarUrl: true },
+    })
+    if (!user) return { title: 'アーティストが見つかりません' }
+    return {
+      title: `${user.name} | アーティストプロフィール`,
+      description: user.bio ?? `${user.name} のポートフォリオ・実績をチェック`,
+      openGraph: {
+        images: user.avatarUrl ? [{ url: user.avatarUrl }] : [],
+      },
+    }
+  } catch {
+    return { title: 'アーティストプロフィール' }
   }
 }
 
 export default async function ArtistDetailPage({ params }: Props) {
   const { id } = await params
 
-  const user = await prisma.user.findUnique({
-    where: { id },
-    include: {
-      portfolios: { orderBy: { createdAt: 'desc' } },
-      reviewsGiven: false, // reviewsReceived 相当はカスタムクエリで取得
-    },
-    omit: { passwordHash: true, stripeCustomerId: true },
-  })
+  let user: Awaited<ReturnType<typeof prisma.user.findUnique>> = null
+  try {
+    user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        portfolios: { orderBy: { createdAt: 'desc' } },
+        reviewsGiven: false,
+      },
+      omit: { passwordHash: true, stripeCustomerId: true },
+    })
+  } catch {
+    notFound()
+  }
 
   if (!user) notFound()
 
