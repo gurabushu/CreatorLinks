@@ -29,6 +29,8 @@ export default function NewProjectPage() {
     null
   )
 
+  const errorState = state && !state.success ? state : null
+
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) =>
       prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
@@ -66,10 +68,10 @@ export default function NewProjectPage() {
                 maxLength={100}
                 placeholder="例: YouTube 用 BGM 楽曲制作をお願いしたいです"
                 className={`w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                  state?.field === 'title' ? 'border-red-400' : 'border-gray-300'
+                  errorState?.field === 'title' ? 'border-red-400' : 'border-gray-300'
                 }`}
               />
-              {state?.field === 'title' && (
+              {errorState?.field === 'title' && (
                 <p className="text-xs text-red-600 mt-1">{state.error}</p>
               )}
             </div>
@@ -118,7 +120,7 @@ export default function NewProjectPage() {
                   </button>
                 ))}
               </div>
-              {state?.field === 'genres' && (
+              {errorState?.field === 'genres' && (
                 <p className="text-xs text-red-600 mt-2">{state.error}</p>
               )}
               {selectedGenres.length === 0 && (
@@ -212,7 +214,7 @@ export default function NewProjectPage() {
               </p>
             </div>
 
-            {state?.error && !state.field && (
+            {errorState?.error && !state.field && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
                 {state.error}
               </p>

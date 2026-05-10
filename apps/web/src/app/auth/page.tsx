@@ -91,7 +91,7 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
   const router = useRouter()
 
   const [state, action, isPending] = useActionState(
-    async (_prev: { error?: string; field?: string } | null, formData: FormData) => {
+    async (_prev: { success: false; error: string; field?: string } | null, formData: FormData) => {
       const result = await signUpAction(formData)
       if (result.success) {
         router.push('/dashboard')
