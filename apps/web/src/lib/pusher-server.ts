@@ -1,7 +1,8 @@
 // lib/pusher-server.ts — サーバーサイド Pusher（Server Action / Route Handler から使う）
 // PUSHER_APP_ID / PUSHER_SECRET が設定されていない場合は null を返す
 
-let _pusher: InstanceType<import('pusher')> | null = null
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _pusher: any = null
 
 export async function getPusherServer() {
   if (!process.env.PUSHER_APP_ID || !process.env.PUSHER_SECRET || !process.env.NEXT_PUBLIC_PUSHER_KEY) {
