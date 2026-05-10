@@ -4,7 +4,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { UploadButton } from '@/lib/uploadthing'
-import { trpc } from '@/lib/trpc'
+import { updateAvatarAction } from '@/server/actions/profile'
 
 interface AvatarUploadProps {
   currentUrl?: string | null
@@ -16,7 +16,6 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl ?? null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const updateAvatar = trpc.user.updateAvatar.useMutation()
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -61,7 +60,8 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
 
           // DB に保存
           try {
-            await updateAvatar.mutateAsync({ avatarUrl: url })
+            const result = await updateAvatarAction(url)
+            if (!result.success) throw new Error(result.error)
             onUploadComplete?.(url)
           } catch {
             setError('プロフィール保存に失敗しました')
