@@ -10,7 +10,7 @@ import {
 
 export const matchRouter = router({
   // 案件応募（アーティスト）
-  apply: protectedProcedure.input(ApplyMatchSchema).mutation(async ({ ctx, input }) => {
+  submit: protectedProcedure.input(ApplyMatchSchema).mutation(async ({ ctx, input }) => {
     const project = await ctx.prisma.project.findUnique({ where: { id: input.projectId } })
 
     if (!project) {

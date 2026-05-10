@@ -15,8 +15,8 @@ const IDS = {
   review:  'cltest00000000000000000006',
 }
 
-// ---- match.apply ----
-describe('match.apply', () => {
+// ---- match.submit ----
+describe('match.submit', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('OPEN な案件に応募できる', async () => {
@@ -28,7 +28,7 @@ describe('match.apply', () => {
     mockPrisma.match.create.mockResolvedValue(newMatch)
 
     const caller = createCaller(createAuthContext({ id: IDS.user }))
-    const result = await caller.match.apply({
+    const result = await caller.match.submit({
       projectId: IDS.project,
       message: '担当させてください',
     })
@@ -43,7 +43,7 @@ describe('match.apply', () => {
 
     const caller = createCaller(createAuthContext({ id: IDS.user }))
     await expect(
-      caller.match.apply({ projectId: IDS.project })
+      caller.match.submit({ projectId: IDS.project })
     ).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }))
   })
 
@@ -53,7 +53,7 @@ describe('match.apply', () => {
 
     const caller = createCaller(createAuthContext({ id: IDS.user }))
     await expect(
-      caller.match.apply({ projectId: IDS.project })
+      caller.match.submit({ projectId: IDS.project })
     ).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }))
   })
 
@@ -66,14 +66,14 @@ describe('match.apply', () => {
 
     const caller = createCaller(createAuthContext({ id: IDS.user }))
     await expect(
-      caller.match.apply({ projectId: IDS.project })
+      caller.match.submit({ projectId: IDS.project })
     ).rejects.toThrow(expect.objectContaining({ code: 'CONFLICT' }))
   })
 
   it('未認証の場合は UNAUTHORIZED エラーを返す', async () => {
     const caller = createCaller(createPublicContext())
     await expect(
-      caller.match.apply({ projectId: IDS.project })
+      caller.match.submit({ projectId: IDS.project })
     ).rejects.toThrow(expect.objectContaining({ code: 'UNAUTHORIZED' }))
   })
 })
