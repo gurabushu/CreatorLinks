@@ -25,8 +25,8 @@ app.use(
   '/trpc/*',
   trpcServer({
     router: appRouter,
-    createContext: async (opts) => {
-      const authHeader = opts.req.headers.get('authorization') ?? null
+    createContext: async (opts, _c) => {
+      const authHeader = opts.req.headers.get('authorization')
       return createContext(authHeader) as any
     },
   })

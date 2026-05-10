@@ -34,6 +34,6 @@ export function createPublicContext() {
 }
 
 // tRPC caller（単体テスト用）
-export function createCaller(ctx: ReturnType<typeof createAuthContext> | ReturnType<typeof createPublicContext>) {
+export function createCaller(ctx: ReturnType<typeof createAuthContext> | ReturnType<typeof createPublicContext>): ReturnType<typeof appRouter.createCaller> {
   return appRouter.createCaller(ctx as any)
 }

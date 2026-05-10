@@ -1,6 +1,5 @@
 // __tests__/routers/user.test.ts — user ルーターのユニットテスト
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { TRPCError } from '@trpc/server'
 import { createCaller, createAuthContext, createPublicContext } from '../helpers.js'
 import { prisma } from '../../db/index.js'
 
