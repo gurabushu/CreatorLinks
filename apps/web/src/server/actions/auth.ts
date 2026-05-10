@@ -28,7 +28,12 @@ export async function signUpAction(formData: FormData): Promise<SignUpResult> {
   const { name, email, password } = parsed.data
 
   // メールアドレス重複チェック
-  const existing = await prisma.user.findUnique({ where: { email } })
+  let existing
+  try {
+    existing = await prisma.user.findUnique({ where: { email } })
+  } catch {
+    return { success: false, error: 'データベースに接続できません。しばらく後で再試行してください。', field: 'general' }
+  }
   if (existing) {
     return { success: false, error: 'このメールアドレスはすでに登録されています', field: 'email' }
   }
@@ -37,15 +42,19 @@ export async function signUpAction(formData: FormData): Promise<SignUpResult> {
   const passwordHash = await bcrypt.hash(password, 12)
 
   // ユーザー作成
-  await prisma.user.create({
-    data: {
-      name,
-      email,
-      passwordHash,
-      role: 'GENERAL',
-      genres: [],
-    },
-  })
+  try {
+    await prisma.user.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+        role: 'GENERAL',
+        genres: [],
+      },
+    })
+  } catch {
+    return { success: false, error: 'アカウント作成に失敗しました。しばらく後で再試行してください。', field: 'general' }
+  }
 
   // 作成後そのままサインイン
   try {
