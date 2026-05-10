@@ -92,8 +92,18 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
 
   const [state, action, isPending] = useActionState(
     async (_prev: { success: false; error: string; field?: string } | null, formData: FormData) => {
+      const email = formData.get('email') as string
+      const password = formData.get('password') as string
       const result = await signUpAction(formData)
       if (result.success) {
+        const signInResult = await signIn('credentials', {
+          email,
+          password,
+          redirect: false,
+        })
+        if (signInResult?.error) {
+          return { success: false as const, error: 'アカウントは作成されましたが、ログインに失敗しました。ログインページからサインインしてください。', field: 'general' as const }
+        }
         router.push('/dashboard')
         router.refresh()
         onSuccess()

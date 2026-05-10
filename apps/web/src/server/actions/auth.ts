@@ -1,10 +1,8 @@
 'use server'
 
 import bcrypt from 'bcryptjs'
-import { signIn } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SignUpSchema } from '@creator-links/shared'
-import { AuthError } from 'next-auth'
 
 export type SignUpResult =
   | { success: true }
@@ -56,18 +54,5 @@ export async function signUpAction(formData: FormData): Promise<SignUpResult> {
     return { success: false, error: 'アカウント作成に失敗しました。しばらく後で再試行してください。', field: 'general' }
   }
 
-  // 作成後そのままサインイン
-  try {
-    await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    })
-    return { success: true }
-  } catch (err) {
-    if (err instanceof AuthError) {
-      return { success: false, error: 'アカウントは作成されましたが、ログインに失敗しました。再度ログインしてください。', field: 'general' }
-    }
-    throw err
-  }
+  return { success: true }
 }
