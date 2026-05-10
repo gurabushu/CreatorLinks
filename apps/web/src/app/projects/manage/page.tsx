@@ -11,26 +11,31 @@ export default async function ProjectManagePage() {
   const session = await auth()
   if (!session) redirect('/auth')
 
-  const projects = await prisma.project.findMany({
-    where: { clientId: session.user.id },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      matches: {
-        include: {
-          artist: {
-            select: {
-              id: true,
-              name: true,
-              avatarUrl: true,
-              averageRating: true,
-              genres: true,
+  let projects: Awaited<ReturnType<typeof prisma.project.findMany>> = []
+  try {
+    projects = await prisma.project.findMany({
+      where: { clientId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        matches: {
+          include: {
+            artist: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+                averageRating: true,
+                genres: true,
+              },
             },
           },
+          orderBy: { createdAt: 'desc' },
         },
-        orderBy: { createdAt: 'desc' },
       },
-    },
-  })
+    })
+  } catch {
+    // DB unreachable — show empty state
+  }
 
   const STATUS_LABEL: Record<string, string> = {
     OPEN: '募集中',

@@ -10,15 +10,20 @@ export const metadata: Metadata = {
 }
 
 export default async function ProjectsPage() {
-  const projects = await prisma.project.findMany({
-    where: { status: 'OPEN' },
-    take: 20,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      client: { select: { id: true, name: true, avatarUrl: true } },
-      _count: { select: { matches: true } },
-    },
-  })
+  let projects: Awaited<ReturnType<typeof prisma.project.findMany>> = []
+  try {
+    projects = await prisma.project.findMany({
+      where: { status: 'OPEN' },
+      take: 20,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        client: { select: { id: true, name: true, avatarUrl: true } },
+        _count: { select: { matches: true } },
+      },
+    })
+  } catch {
+    // DB unreachable — show empty list
+  }
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4">

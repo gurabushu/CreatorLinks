@@ -8,18 +8,23 @@ export default async function AdminPage() {
   const session = await auth()
   if (!session || session.user.role !== 'ADMIN') redirect('/')
 
-  const [userCount, projectCount, matchCount, proCount] = await Promise.all([
-    prisma.user.count(),
-    prisma.project.count(),
-    prisma.match.count(),
-    prisma.user.count({ where: { role: 'PRO' } }),
-  ])
-
-  const recentUsers = await prisma.user.findMany({
-    take: 20,
-    orderBy: { createdAt: 'desc' },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
-  })
+  let userCount = 0, projectCount = 0, matchCount = 0, proCount = 0
+  let recentUsers: Awaited<ReturnType<typeof prisma.user.findMany>> = []
+  try {
+    ;[userCount, projectCount, matchCount, proCount] = await Promise.all([
+      prisma.user.count(),
+      prisma.project.count(),
+      prisma.match.count(),
+      prisma.user.count({ where: { role: 'PRO' } }),
+    ])
+    recentUsers = await prisma.user.findMany({
+      take: 20,
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
+    })
+  } catch {
+    // DB unreachable — show zeros
+  }
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4">

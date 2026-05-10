@@ -13,14 +13,18 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  const project = await prisma.project.findUnique({
-    where: { id },
-    select: { title: true, description: true },
-  })
-  if (!project) return { title: '案件が見つかりません' }
-  return {
-    title: project.title,
-    description: project.description ?? project.title,
+  try {
+    const project = await prisma.project.findUnique({
+      where: { id },
+      select: { title: true, description: true },
+    })
+    if (!project) return { title: '案件が見つかりません' }
+    return {
+      title: project.title,
+      description: project.description ?? project.title,
+    }
+  } catch {
+    return { title: '案件詳細' }
   }
 }
 
@@ -28,23 +32,32 @@ export default async function ProjectDetailPage({ params }: Props) {
   const { id } = await params
   const session = await auth()
 
-  const project = await prisma.project.findUnique({
-    where: { id },
-    include: {
-      client: { select: { id: true, name: true, avatarUrl: true, averageRating: true } },
-      _count: { select: { matches: true } },
-    },
-  })
+  let project: Awaited<ReturnType<typeof prisma.project.findUnique>> = null
+  try {
+    project = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        client: { select: { id: true, name: true, avatarUrl: true, averageRating: true } },
+        _count: { select: { matches: true } },
+      },
+    })
+  } catch {
+    notFound()
+  }
 
   if (!project) notFound()
 
   // 自分がすでに応募しているか確認
   let alreadyApplied = false
   if (session?.user.id) {
-    const existing = await prisma.match.findFirst({
-      where: { projectId: id, artistId: session.user.id },
-    })
-    alreadyApplied = !!existing
+    try {
+      const existing = await prisma.match.findFirst({
+        where: { projectId: id, artistId: session.user.id },
+      })
+      alreadyApplied = !!existing
+    } catch {
+      // DB unreachable — assume not applied
+    }
   }
 
   const isOwner = session?.user.id === project.clientId
