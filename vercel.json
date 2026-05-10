@@ -1,0 +1,3 @@
+{
+  "buildCommand": "turbo db:migrate --filter=@creator-links/web && turbo build"
+}
