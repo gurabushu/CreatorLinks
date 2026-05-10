@@ -39,5 +39,3 @@ test-results/
 *.xls
 *.docx
 *.pdf
-.claude/
-setup-vercel-env.sh
