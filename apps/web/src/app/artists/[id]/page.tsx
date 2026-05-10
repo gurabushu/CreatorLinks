@@ -32,7 +32,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArtistDetailPage({ params }: Props) {
   const { id } = await params
 
-  let user: Awaited<ReturnType<typeof prisma.user.findUnique>> = null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let user: any = null
   try {
     user = await prisma.user.findUnique({
       where: { id },

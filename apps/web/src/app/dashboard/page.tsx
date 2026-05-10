@@ -12,8 +12,10 @@ export default async function DashboardPage() {
   const session = await auth()
   if (!session) redirect('/auth')
 
-  let myMatches: Awaited<ReturnType<typeof prisma.match.findMany>> = []
-  let myProjects: Awaited<ReturnType<typeof prisma.project.findMany>> = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let myMatches: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let myProjects: any[] = []
   let notifications = 0
   try {
     ;[myMatches, myProjects, notifications] = await Promise.all([

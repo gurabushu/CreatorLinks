@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 }
 
 export default async function ProjectsPage() {
-  let projects: Awaited<ReturnType<typeof prisma.project.findMany>> = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let projects: any[] = []
   try {
     projects = await prisma.project.findMany({
       where: { status: 'OPEN' },

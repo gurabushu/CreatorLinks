@@ -9,7 +9,8 @@ export default async function AdminPage() {
   if (!session || session.user.role !== 'ADMIN') redirect('/')
 
   let userCount = 0, projectCount = 0, matchCount = 0, proCount = 0
-  let recentUsers: Awaited<ReturnType<typeof prisma.user.findMany>> = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let recentUsers: any[] = []
   try {
     ;[userCount, projectCount, matchCount, proCount] = await Promise.all([
       prisma.user.count(),
