@@ -32,7 +32,8 @@ export default async function ProjectDetailPage({ params }: Props) {
   const { id } = await params
   const session = await auth()
 
-  let project: Awaited<ReturnType<typeof prisma.project.findUnique>> = null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let project: any = null
   try {
     project = await prisma.project.findUnique({
       where: { id },

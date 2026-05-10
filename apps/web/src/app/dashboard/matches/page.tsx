@@ -9,7 +9,8 @@ export default async function MatchesPage() {
   const session = await auth()
   if (!session) redirect('/auth')
 
-  let matches: Awaited<ReturnType<typeof prisma.match.findMany>> = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let matches: any[] = []
   try {
     matches = await prisma.match.findMany({
       where: { artistId: session.user.id },

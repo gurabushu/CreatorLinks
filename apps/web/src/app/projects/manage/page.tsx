@@ -11,7 +11,8 @@ export default async function ProjectManagePage() {
   const session = await auth()
   if (!session) redirect('/auth')
 
-  let projects: Awaited<ReturnType<typeof prisma.project.findMany>> = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let projects: any[] = []
   try {
     projects = await prisma.project.findMany({
       where: { clientId: session.user.id },
