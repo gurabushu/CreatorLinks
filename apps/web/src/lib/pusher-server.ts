@@ -1,7 +1,7 @@
 // lib/pusher-server.ts — サーバーサイド Pusher（Server Action / Route Handler から使う）
 // PUSHER_APP_ID / PUSHER_SECRET が設定されていない場合は null を返す
 
-let _pusher: import('pusher').default | null = null
+let _pusher: InstanceType<import('pusher')> | null = null
 
 export async function getPusherServer() {
   if (!process.env.PUSHER_APP_ID || !process.env.PUSHER_SECRET || !process.env.NEXT_PUBLIC_PUSHER_KEY) {
