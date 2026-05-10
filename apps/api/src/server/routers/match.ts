@@ -105,7 +105,7 @@ export const messageRouter = router({
         match.artistId === ctx.user.id ||
         (await ctx.prisma.project
           .findUnique({ where: { id: match.projectId } })
-          .then((p) => p?.clientId === ctx.user.id))
+          .then((p: { clientId: string } | null) => p?.clientId === ctx.user.id))
 
       if (!isParticipant) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'アクセス権限がありません' })
