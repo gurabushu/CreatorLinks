@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "next build",
-    "db:migrate": "prisma migrate deploy --schema=../api/prisma/schema.prisma",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
