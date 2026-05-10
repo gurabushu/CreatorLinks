@@ -1,24 +1,24 @@
-import { auth } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-// 認証保護ルート定義
-export default auth((req) => {
-  const { nextUrl, auth: session } = req
-  const isLoggedIn = !!session
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  const { pathname } = req.nextUrl
 
   const protectedPaths = ['/dashboard', '/projects/new', '/projects/manage']
   const adminPaths = ['/admin']
 
-  const isProtected = protectedPaths.some((p) => nextUrl.pathname.startsWith(p))
-  const isAdmin = adminPaths.some((p) => nextUrl.pathname.startsWith(p))
+  const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
+  const isAdmin = adminPaths.some((p) => pathname.startsWith(p))
 
-  if (!isLoggedIn && isProtected) {
-    return Response.redirect(new URL('/auth', nextUrl))
+  if (!token && isProtected) {
+    return NextResponse.redirect(new URL('/auth', req.url))
   }
 
-  if (isAdmin && session?.user.role !== 'ADMIN') {
-    return Response.redirect(new URL('/', nextUrl))
+  if (isAdmin && (token?.role as string) !== 'ADMIN') {
+    return NextResponse.redirect(new URL('/', req.url))
   }
-})
+}
 
 export const config = {
   matcher: [
