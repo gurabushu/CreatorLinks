@@ -54,7 +54,7 @@ export default async function AdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {recentUsers.map((u) => (
+              {recentUsers.map((u: { id: string; name: string | null; email: string; role: string; createdAt: Date }) => (
                 <tr key={u.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">{u.name}</td>
                   <td className="px-4 py-3 text-gray-500">{u.email}</td>
