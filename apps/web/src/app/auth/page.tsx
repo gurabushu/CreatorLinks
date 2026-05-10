@@ -122,7 +122,7 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="例: 山田 太郎"
         />
         {state?.field === 'name' && (
-          <p className="text-xs text-red-600 mt-1">{state.error}</p>
+          <p className="text-xs text-red-600 mt-1">{state?.error}</p>
         )}
       </div>
 
@@ -142,7 +142,7 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="you@example.com"
         />
         {state?.field === 'email' && (
-          <p className="text-xs text-red-600 mt-1">{state.error}</p>
+          <p className="text-xs text-red-600 mt-1">{state?.error}</p>
         )}
       </div>
 
@@ -163,13 +163,13 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="8文字以上"
         />
         {state?.field === 'password' && (
-          <p className="text-xs text-red-600 mt-1">{state.error}</p>
+          <p className="text-xs text-red-600 mt-1">{state?.error}</p>
         )}
       </div>
 
       {state?.field === 'general' && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-          {state.error}
+          {state?.error}
         </p>
       )}
 

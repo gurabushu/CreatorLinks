@@ -21,7 +21,8 @@ export function getTrpcClient() {
     links: [
       httpBatchLink({
         url: `${getBaseUrl()}/trpc`,
-        transformer: superjson,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        transformer: superjson as any,
         async headers() {
           // NextAuth セッションから JWT を取得して Bearer ヘッダーに付与
           const session = await getSession()
