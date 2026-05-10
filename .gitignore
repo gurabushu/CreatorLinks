@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+dist/
+.turbo/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Prisma
+apps/api/prisma/migrations/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Test coverage
+coverage/
+playwright-report/
+test-results/
+
+# 事業計画書など（コミット対象外）
+*.xlsx
+*.xls
+*.docx
+*.pdf

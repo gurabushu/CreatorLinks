@@ -1,0 +1,227 @@
+// =============================================
+// 個人アーティスト営業プラットフォーム
+// Prisma スキーマ定義
+// =============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================
+// Enum 定義
+// =============================================
+
+enum UserRole {
+  GENERAL
+  PRO
+  ADMIN
+}
+
+enum MediaType {
+  IMAGE
+  AUDIO
+  VIDEO
+}
+
+enum ContractType {
+  SPOT
+  SUBSCRIPTION
+}
+
+enum ProjectStatus {
+  OPEN
+  MATCHING
+  CLOSED
+}
+
+enum MatchStatus {
+  APPLIED
+  ACCEPTED
+  COMPLETED
+  REJECTED
+}
+
+enum PlanType {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum SubStatus {
+  ACTIVE
+  CANCELLED
+  PAUSED
+}
+
+// =============================================
+// モデル定義
+// =============================================
+
+model User {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  name             String
+  passwordHash     String?  // Credentials認証時のみ
+  role             UserRole @default(GENERAL)
+  genres           String[] // PostgreSQL 配列型
+  bio              String?
+  avatarUrl        String?  // Uploadthing ファイルキー
+  stripeCustomerId String?  @unique
+  averageRating    Decimal  @default(0) @db.Decimal(3, 2)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  portfolios        Portfolio[]
+  projectsAsClient  Project[]      @relation("ClientProjects")
+  matchesAsArtist   Match[]        @relation("ArtistMatches")
+  sentMessages      Message[]
+  reviewsGiven      Review[]       @relation("ReviewerReviews")
+  subscriptionsGiven Subscription[] @relation("SubscriberSubs")
+  subscriptionsReceived Subscription[] @relation("TargetSubs")
+  accounts          Account[]
+  sessions          Session[]
+
+  @@map("users")
+}
+
+model Portfolio {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  mediaType   MediaType
+  fileKey     String    // Uploadthing ファイルキー
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("portfolios")
+}
+
+model Project {
+  id           String        @id @default(cuid())
+  clientId     String
+  title        String
+  description  String?
+  genres       String[]
+  budget       Int?          // 円単位
+  contractType ContractType
+  status       ProjectStatus @default(OPEN)
+  createdAt    DateTime      @default(now())
+
+  client  User    @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
+  matches Match[]
+
+  @@map("projects")
+}
+
+model Match {
+  id        String      @id @default(cuid())
+  projectId String
+  artistId  String
+  status    MatchStatus @default(APPLIED)
+  message   String?     // 応募メッセージ
+  createdAt DateTime    @default(now())
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  artist   User      @relation("ArtistMatches", fields: [artistId], references: [id], onDelete: Cascade)
+  messages Message[]
+  reviews  Review[]
+
+  @@unique([projectId, artistId]) // 同一プロジェクトへの重複応募防止
+  @@map("matches")
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  subscriberId         String
+  targetId             String
+  stripeSubscriptionId String    @unique
+  plan                 PlanType
+  status               SubStatus @default(ACTIVE)
+  createdAt            DateTime  @default(now())
+
+  subscriber User @relation("SubscriberSubs", fields: [subscriberId], references: [id], onDelete: Cascade)
+  target     User @relation("TargetSubs", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  matchId   String
+  senderId  String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  match  Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  matchId    String
+  reviewerId String
+  score      Int      @db.SmallInt // 1〜5
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  match    Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  reviewer User  @relation("ReviewerReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, reviewerId]) // 1案件1レビュー
+  @@map("reviews")
+}
+
+// =============================================
+// NextAuth.js v5 Prisma Adapter 用テーブル
+// =============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
