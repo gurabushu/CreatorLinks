@@ -3,7 +3,12 @@ import { auth } from '@/lib/auth'
 import { signOut } from '@/lib/auth'
 
 export async function Header() {
-  const session = await auth()
+  let session: Awaited<ReturnType<typeof auth>> = null
+  try {
+    session = await auth()
+  } catch {
+    // auth unavailable — show logged-out state
+  }
 
   return (
     <header className="border-b bg-white sticky top-0 z-50">
