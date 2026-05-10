@@ -14,25 +14,29 @@ export const metadata: Metadata = {
 export const revalidate = 3600 // 1時間ごと再生成 (ISR)
 
 async function getLatestData() {
-  const [projects, artists] = await Promise.all([
-    prisma.project.findMany({
-      where: { status: 'OPEN' },
-      take: 6,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        client: { select: { name: true, avatarUrl: true } },
-      },
-    }),
-    prisma.user.findMany({
-      take: 8,
-      orderBy: [{ role: 'asc' }, { averageRating: 'desc' }],
-      select: {
-        id: true, name: true, role: true, genres: true, bio: true,
-        avatarUrl: true, averageRating: true,
-      },
-    }),
-  ])
-  return { projects, artists }
+  try {
+    const [projects, artists] = await Promise.all([
+      prisma.project.findMany({
+        where: { status: 'OPEN' },
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          client: { select: { name: true, avatarUrl: true } },
+        },
+      }),
+      prisma.user.findMany({
+        take: 8,
+        orderBy: [{ role: 'asc' }, { averageRating: 'desc' }],
+        select: {
+          id: true, name: true, role: true, genres: true, bio: true,
+          avatarUrl: true, averageRating: true,
+        },
+      }),
+    ])
+    return { projects, artists }
+  } catch {
+    return { projects: [], artists: [] }
+  }
 }
 
 export default async function HomePage() {
