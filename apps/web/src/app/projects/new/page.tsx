@@ -72,7 +72,7 @@ export default function NewProjectPage() {
                 }`}
               />
               {errorState?.field === 'title' && (
-                <p className="text-xs text-red-600 mt-1">{state.error}</p>
+                <p className="text-xs text-red-600 mt-1">{errorState.error}</p>
               )}
             </div>
 
@@ -121,7 +121,7 @@ export default function NewProjectPage() {
                 ))}
               </div>
               {errorState?.field === 'genres' && (
-                <p className="text-xs text-red-600 mt-2">{state.error}</p>
+                <p className="text-xs text-red-600 mt-2">{errorState.error}</p>
               )}
               {selectedGenres.length === 0 && (
                 <p className="text-xs text-gray-400 mt-2">少なくとも1つ選択してください</p>
@@ -214,9 +214,9 @@ export default function NewProjectPage() {
               </p>
             </div>
 
-            {errorState?.error && !state.field && (
+            {errorState?.error && !errorState.field && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                {state.error}
+                {errorState.error}
               </p>
             )}
 
