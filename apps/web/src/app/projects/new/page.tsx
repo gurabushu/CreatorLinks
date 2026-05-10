@@ -13,10 +13,14 @@ export default function NewProjectPage() {
   const [step, setStep] = useState(1)
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [contractType, setContractType] = useState<'SPOT' | 'SUBSCRIPTION'>('SPOT')
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
 
   const [state, action, isPending] = useActionState(
     async (_prev: { success: boolean; error?: string; field?: string; projectId?: string } | null, formData: FormData) => {
-      // 選択済みジャンルを FormData に追加
+      // ステップをまたいでアンマウントされる入力値を FormData に注入
+      formData.set('title', title)
+      formData.set('description', description)
       selectedGenres.forEach((g) => formData.append('genres', g))
       formData.set('contractType', contractType)
 
@@ -66,6 +70,8 @@ export default function NewProjectPage() {
                 name="title"
                 required
                 maxLength={100}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 placeholder="例: YouTube 用 BGM 楽曲制作をお願いしたいです"
                 className={`w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                   errorState?.field === 'title' ? 'border-red-400' : 'border-gray-300'
@@ -81,6 +87,8 @@ export default function NewProjectPage() {
               <textarea
                 name="description"
                 rows={6}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder={`案件の詳細・要件・希望する納品物などを記入してください\n\n例:\n・楽曲の用途: YouTube チャンネル紹介動画のBGM\n・雰囲気: 明るく前向きな曲調\n・尺: 1〜2分程度\n・納期: 2週間以内`}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
               />
@@ -214,7 +222,7 @@ export default function NewProjectPage() {
               </p>
             </div>
 
-            {errorState?.error && !errorState.field && (
+            {errorState?.error && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
                 {errorState.error}
               </p>
