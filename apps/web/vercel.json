@@ -1,3 +1,3 @@
 {
-  "buildCommand": "prisma migrate deploy --schema=../api/prisma/schema.prisma && next build"
+  "buildCommand": "(cd ../api && npx prisma migrate deploy) && next build"
 }
