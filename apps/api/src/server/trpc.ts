@@ -1,5 +1,4 @@
 import { initTRPC, TRPCError } from '@trpc/server'
-import { z } from 'zod'
 import type { Context } from './context'
 
 // tRPC インスタンス初期化

@@ -11,9 +11,10 @@ export const subscriptionRouter = router({
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'すでに PRO プランです' })
     }
 
+    const dbUser = await ctx.prisma.user.findUniqueOrThrow({ where: { id: ctx.user.id } })
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      customer: ctx.user.stripeCustomerId ?? undefined,
+      customer: dbUser.stripeCustomerId ?? undefined,
       line_items: [
         {
           price: PRO_PRICE_ID,
@@ -44,9 +45,10 @@ export const subscriptionRouter = router({
     }
 
     // Stripe Checkout Session 作成
+    const dbUser = await ctx.prisma.user.findUniqueOrThrow({ where: { id: ctx.user.id } })
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      customer: ctx.user.stripeCustomerId ?? undefined,
+      customer: dbUser.stripeCustomerId ?? undefined,
       line_items: [
         {
           price_data: {
