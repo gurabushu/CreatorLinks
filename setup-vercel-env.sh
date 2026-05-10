@@ -19,10 +19,10 @@ echo "環境変数を設定します..."
 
 # Railway の PostgreSQL 外部 URL（内部URLではなく PUBLIC URL を使う）
 # Railway ダッシュボード → PostgreSQL → Variables タブ → DATABASE_PUBLIC_URL をコピー
-DATABASE_URL="postgresql://postgres:cVNlTsPrBoCmhwwtuoMhpdAiXDcFXqSP@RAILWAY_PUBLIC_HOST:PORT/railway"
+DATABASE_URL="postgresql://postgres:cVNlTsPrBoCmhwwtuoMhpdAiXDcFXqSP@turntable.proxy.rlwy.net:39699/railway"
 
 # Vercel デプロイ後の URL（例: https://creator-links.vercel.app）
-NEXTAUTH_URL="https://creator-links.vercel.app"
+NEXTAUTH_URL="https://creator-links-web-25v7.vercel.app"
 
 # 認証用シークレット（既存値を使用）
 NEXTAUTH_SECRET="prt+Cj2wYVGUBCcG3ztiRGDoidFgqZPSjN4VPViz10o="
