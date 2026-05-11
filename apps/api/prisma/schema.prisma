@@ -71,6 +71,7 @@ model User {
   genres           String[] // PostgreSQL 配列型
   bio              String?
   avatarUrl        String?  // Uploadthing ファイルキー
+  coverUrl         String?  // プロフィールカバー画像（ジャケット）
   stripeCustomerId String?  @unique
   averageRating    Decimal  @default(0) @db.Decimal(3, 2)
   createdAt        DateTime @default(now())

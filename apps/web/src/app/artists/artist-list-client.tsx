@@ -15,6 +15,7 @@ type ArtistItem = {
   genres: string[]
   bio: string | null
   avatarUrl: string | null
+  coverUrl: string | null
   averageRating: number
   portfolios: { id: string; mediaType: string; title: string; fileKey: string }[]
 }
@@ -25,8 +26,13 @@ function resolveUrl(fileKey: string): string {
 
 // ---- アーティストカード ----
 function ArtistCard({ artist }: { artist: ArtistItem }) {
-  const coverPortfolio = artist.portfolios.find((p) => p.mediaType === 'IMAGE')
-  const coverUrl = coverPortfolio ? resolveUrl(coverPortfolio.fileKey) : null
+  // ジャケット画像優先、なければポートフォリオの1枚目画像をフォールバック
+  const fallbackPortfolio = artist.portfolios.find((p) => p.mediaType === 'IMAGE')
+  const coverUrl = artist.coverUrl
+    ? resolveUrl(artist.coverUrl)
+    : fallbackPortfolio
+    ? resolveUrl(fallbackPortfolio.fileKey)
+    : null
 
   return (
     <Link

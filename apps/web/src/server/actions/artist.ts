@@ -9,6 +9,7 @@ const ARTIST_SELECT = {
   genres: true,
   bio: true,
   avatarUrl: true,
+  coverUrl: true,
   averageRating: true,
   portfolios: {
     take: 3,

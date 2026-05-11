@@ -41,3 +41,21 @@ export async function updateAvatarAction(avatarUrl: string) {
     return { success: false as const, error: 'アバターの更新に失敗しました' }
   }
 }
+
+export async function updateCoverImageAction(coverUrl: string) {
+  const session = await auth()
+  if (!session) return { success: false as const, error: '認証が必要です' }
+
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { coverUrl },
+    })
+    revalidatePath('/dashboard/profile')
+    revalidatePath('/artists')
+    revalidatePath(`/artists/${session.user.id}`)
+    return { success: true as const }
+  } catch {
+    return { success: false as const, error: 'ジャケット画像の更新に失敗しました' }
+  }
+}

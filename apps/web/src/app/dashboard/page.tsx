@@ -86,6 +86,36 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* クイックアクション */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+        <Link
+          href="/dashboard/profile"
+          className="bg-white border rounded-xl p-5 hover:border-purple-300 hover:shadow-sm transition flex items-center gap-4"
+        >
+          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-xl">
+            👤
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-gray-900">プロフィール編集</p>
+            <p className="text-xs text-gray-500 mt-0.5">トプ画・ジャケット画像・自己紹介</p>
+          </div>
+          <span className="text-gray-300">→</span>
+        </Link>
+        <Link
+          href="/dashboard/portfolio"
+          className="bg-white border rounded-xl p-5 hover:border-purple-300 hover:shadow-sm transition flex items-center gap-4"
+        >
+          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-xl">
+            🎨
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-gray-900">ポートフォリオ管理</p>
+            <p className="text-xs text-gray-500 mt-0.5">作品の登録・編集・削除</p>
+          </div>
+          <span className="text-gray-300">→</span>
+        </Link>
+      </div>
+
       {/* 受注案件 */}
       <section className="mb-8">
         <div className="flex justify-between items-center mb-4">
