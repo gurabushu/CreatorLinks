@@ -38,8 +38,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       allowedOrigins: [
         'localhost:3000',
-        process.env.NEXTAUTH_URL?.replace('https://', '') ?? '',
-        '*.vercel.app',
+        process.env.NEXTAUTH_URL?.replace(/^https?:\/\//, '') ?? '',
+        process.env.VERCEL_URL ?? '',  // Vercel が各デプロイに自動設定するホスト名
       ].filter(Boolean),
     },
   },
