@@ -16,68 +16,90 @@ type ArtistItem = {
   bio: string | null
   avatarUrl: string | null
   averageRating: number
-  portfolios: { id: string; mediaType: string; title: string }[]
+  portfolios: { id: string; mediaType: string; title: string; fileKey: string }[]
+}
+
+function resolveUrl(fileKey: string): string {
+  return fileKey.startsWith('http') ? fileKey : `https://utfs.io/f/${fileKey}`
 }
 
 // ---- アーティストカード ----
 function ArtistCard({ artist }: { artist: ArtistItem }) {
-  const rating = artist.averageRating
+  const coverPortfolio = artist.portfolios.find((p) => p.mediaType === 'IMAGE')
+  const coverUrl = coverPortfolio ? resolveUrl(coverPortfolio.fileKey) : null
 
   return (
     <Link
       href={`/artists/${artist.id}`}
-      className="bg-white border rounded-2xl p-5 hover:shadow-md hover:border-purple-300 transition group block"
+      className="bg-white border rounded-2xl overflow-hidden hover:shadow-md hover:border-purple-300 transition group block"
     >
-      <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden shrink-0 flex items-center justify-center text-white text-xl font-bold">
-          {artist.avatarUrl ? (
-            <Image
-              src={artist.avatarUrl}
-              alt={artist.name}
-              width={56}
-              height={56}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            artist.name.charAt(0)
+      {/* カバー画像 */}
+      <div className="relative h-36 bg-gradient-to-br from-purple-100 to-indigo-100 overflow-hidden">
+        {coverUrl && (
+          <Image
+            src={coverUrl}
+            alt={`${artist.name}の作品`}
+            fill
+            className="object-cover"
+            unoptimized
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+          />
+        )}
+        {/* アバター（カバー底面に重ねる） */}
+        <div className="absolute -bottom-5 left-4">
+          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white text-lg font-bold shadow">
+            {artist.avatarUrl ? (
+              <Image
+                src={artist.avatarUrl}
+                alt={artist.name}
+                width={48}
+                height={48}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              artist.name.charAt(0)
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 本文 */}
+      <div className="pt-7 px-4 pb-4">
+        <div className="flex items-center gap-2 flex-wrap mb-1">
+          <p className="font-bold text-gray-900 group-hover:text-purple-700 transition truncate">
+            {artist.name}
+          </p>
+          {artist.role === 'PRO' && (
+            <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-bold shrink-0">
+              PRO
+            </span>
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-bold text-gray-900 group-hover:text-purple-700 transition truncate">
-              {artist.name}
-            </p>
-            {artist.role === 'PRO' && (
-              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-bold shrink-0">
-                PRO
-              </span>
-            )}
-          </div>
+        <div className="flex gap-1 flex-wrap mb-2">
+          {artist.genres.slice(0, 3).map((g) => (
+            <span key={g} className="bg-purple-50 text-purple-600 text-xs px-2 py-0.5 rounded">
+              {g}
+            </span>
+          ))}
+        </div>
 
-          <div className="flex gap-1 flex-wrap mt-1">
-            {artist.genres.slice(0, 3).map((g) => (
-              <span key={g} className="bg-purple-50 text-purple-600 text-xs px-2 py-0.5 rounded">
-                {g}
-              </span>
-            ))}
-          </div>
+        {artist.bio ? (
+          <p className="text-sm text-gray-500 line-clamp-2 mb-2">{artist.bio}</p>
+        ) : (
+          <p className="text-sm text-gray-300 italic mb-2">自己紹介未設定</p>
+        )}
 
-          {artist.bio && (
-            <p className="text-sm text-gray-500 mt-2 line-clamp-2">{artist.bio}</p>
+        <div className="flex items-center gap-3 text-xs text-gray-400">
+          {artist.averageRating > 0 && (
+            <span className="flex items-center gap-1">
+              <span className="text-yellow-400">★</span>
+              {artist.averageRating.toFixed(1)}
+            </span>
           )}
-
-          <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-            {rating > 0 && (
-              <span className="flex items-center gap-1">
-                <span className="text-yellow-400">★</span>
-                {rating.toFixed(1)}
-              </span>
-            )}
-            {artist.portfolios.length > 0 && (
-              <span>作品 {artist.portfolios.length} 件</span>
-            )}
-          </div>
+          {artist.portfolios.length > 0 && (
+            <span>作品 {artist.portfolios.length} 件</span>
+          )}
         </div>
       </div>
     </Link>
@@ -87,15 +109,13 @@ function ArtistCard({ artist }: { artist: ArtistItem }) {
 // ---- スケルトンカード ----
 function SkeletonCard() {
   return (
-    <div className="bg-white border rounded-2xl p-5 animate-pulse">
-      <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-full bg-gray-200 shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-200 rounded w-1/2" />
-          <div className="h-3 bg-gray-100 rounded w-1/3" />
-          <div className="h-3 bg-gray-100 rounded w-full" />
-          <div className="h-3 bg-gray-100 rounded w-4/5" />
-        </div>
+    <div className="bg-white border rounded-2xl overflow-hidden animate-pulse">
+      <div className="h-36 bg-gray-200" />
+      <div className="pt-7 px-4 pb-4 space-y-2">
+        <div className="h-4 bg-gray-200 rounded w-1/2" />
+        <div className="h-3 bg-gray-100 rounded w-1/3" />
+        <div className="h-3 bg-gray-100 rounded w-full" />
+        <div className="h-3 bg-gray-100 rounded w-4/5" />
       </div>
     </div>
   )
@@ -117,7 +137,6 @@ export function ArtistListClient({
   const [isPending, startTransition] = useTransition()
   const loaderRef = useRef<HTMLDivElement>(null)
 
-  // ジャンル変更時にリストを再取得
   useEffect(() => {
     setIsError(false)
     startTransition(async () => {
@@ -134,7 +153,6 @@ export function ArtistListClient({
     })
   }, [selectedGenres])
 
-  // 無限スクロール: 次ページ取得
   const loadMore = async () => {
     if (!nextCursor || isFetchingMore) return
     setIsFetchingMore(true)
@@ -153,11 +171,9 @@ export function ArtistListClient({
     }
   }
 
-  // Intersection Observer で画面下端に達したら次ページ取得
   useEffect(() => {
     const el = loaderRef.current
     if (!el) return
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && nextCursor && !isFetchingMore && !isPending) {
@@ -166,7 +182,6 @@ export function ArtistListClient({
       },
       { rootMargin: '200px' }
     )
-
     observer.observe(el)
     return () => observer.disconnect()
   }, [nextCursor, isFetchingMore, isPending]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -176,8 +191,6 @@ export function ArtistListClient({
       prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
     )
   }
-
-  const isLoading = isPending
 
   return (
     <div>
@@ -208,28 +221,21 @@ export function ArtistListClient({
         ))}
       </div>
 
-      {/* エラー */}
       {isError && (
         <div className="text-center py-12 text-red-500">
           読み込みに失敗しました。リロードしてください。
         </div>
       )}
 
-      {/* アーティスト一覧グリッド */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {isLoading
+        {isPending
           ? Array.from({ length: LIMIT }).map((_, i) => <SkeletonCard key={i} />)
-          : artists.map((artist) => (
-              <ArtistCard key={artist.id} artist={artist} />
-            ))}
-
-        {/* 追加ロード中スケルトン */}
+          : artists.map((artist) => <ArtistCard key={artist.id} artist={artist} />)}
         {isFetchingMore &&
           Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`more-${i}`} />)}
       </div>
 
-      {/* 検索結果ゼロ */}
-      {!isLoading && !isError && artists.length === 0 && (
+      {!isPending && !isError && artists.length === 0 && (
         <div className="text-center py-20 text-gray-400">
           <p className="text-4xl mb-4">🎨</p>
           <p className="font-medium">該当するアーティストが見つかりません</p>
@@ -237,11 +243,9 @@ export function ArtistListClient({
         </div>
       )}
 
-      {/* 無限スクロール トリガー */}
       <div ref={loaderRef} className="h-1" />
 
-      {/* 全件表示完了 */}
-      {!nextCursor && artists.length > 0 && !isLoading && (
+      {!nextCursor && artists.length > 0 && !isPending && (
         <p className="text-center text-sm text-gray-400 mt-8">
           全 {artists.length} 件を表示しました
         </p>

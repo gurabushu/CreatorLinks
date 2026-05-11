@@ -4,6 +4,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
+import { HeroSlideshow } from './HeroSlideshow'
 
 export const metadata: Metadata = {
   title: 'CreatorLinks — 個人アーティストの営業プラットフォーム',
@@ -44,33 +45,8 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero セクション */}
-      <section className="bg-gradient-to-br from-purple-600 to-indigo-700 text-white py-24 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            才能を、つなぐ。<br />
-            <span className="text-purple-200">手数料10%</span>で始める営業革命。
-          </h1>
-          <p className="text-xl text-purple-100 mb-8">
-            ランサーズ16.5%・ココナラ22%より断然お得。<br />
-            アーティスト特化型のマッチングプラットフォーム。
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link
-              href="/auth"
-              className="bg-white text-purple-700 font-bold px-8 py-3 rounded-full hover:bg-purple-50 transition"
-            >
-              無料で始める
-            </Link>
-            <Link
-              href="/projects"
-              className="border border-white text-white font-bold px-8 py-3 rounded-full hover:bg-white/10 transition"
-            >
-              案件を探す
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Hero スライドショー */}
+      <HeroSlideshow />
 
       {/* 新着案件 */}
       <section className="py-16 px-4 max-w-6xl mx-auto">

@@ -12,7 +12,7 @@ const ARTIST_SELECT = {
   averageRating: true,
   portfolios: {
     take: 3,
-    select: { id: true, mediaType: true, title: true },
+    select: { id: true, mediaType: true, title: true, fileKey: true },
     orderBy: { createdAt: 'desc' as const },
   },
 }
