@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
-import { UploadDropzone } from '@/lib/uploadthing'
 import { createPortfolioAction, deletePortfolioAction } from '@/server/actions/portfolio'
 
 type MediaType = 'IMAGE' | 'AUDIO' | 'VIDEO'
@@ -26,21 +25,82 @@ const MEDIA_ICON: Record<MediaType, string> = {
   VIDEO: '🎬',
 }
 
-function detectMediaType(fileName: string): MediaType {
-  const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
-  if (['mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg'].includes(ext)) return 'AUDIO'
-  if (['mp4', 'mov', 'avi', 'webm', 'mkv'].includes(ext)) return 'VIDEO'
+function detectMediaType(mimeType: string): MediaType {
+  if (mimeType.startsWith('audio/')) return 'AUDIO'
+  if (mimeType.startsWith('video/')) return 'VIDEO'
   return 'IMAGE'
+}
+
+// ---- ファイルドロップゾーン ----
+function FileDropzone({
+  onFile,
+  isUploading,
+  uploadProgress,
+}: {
+  onFile: (file: File) => void
+  isUploading: boolean
+  uploadProgress: number
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file) onFile(file)
+  }
+
+  return (
+    <div
+      onClick={() => !isUploading && inputRef.current?.click()}
+      onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+      onDragLeave={() => setIsDragging(false)}
+      onDrop={handleDrop}
+      className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 transition cursor-pointer select-none ${
+        isDragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-purple-400'
+      } ${isUploading ? 'pointer-events-none opacity-60' : ''}`}
+    >
+      {isUploading ? (
+        <>
+          <div className="w-10 h-10 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin" />
+          <p className="text-sm text-gray-500">アップロード中... {uploadProgress}%</p>
+        </>
+      ) : (
+        <>
+          <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+          </svg>
+          <p className="text-sm text-gray-600 font-medium">ここにドラッグ＆ドロップ</p>
+          <p className="text-xs text-gray-400">またはクリックしてファイルを選択</p>
+          <p className="text-xs text-gray-400">画像（16MB）· 音声（64MB）· 動画（256MB）</p>
+        </>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,audio/*,video/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0]
+          if (f) onFile(f)
+          e.target.value = ''
+        }}
+      />
+    </div>
+  )
 }
 
 export default function PortfolioClient({ initialPortfolios }: Props) {
   const [portfolios, setPortfolios] = useState<Portfolio[]>(initialPortfolios)
   const [showForm, setShowForm] = useState(false)
-  const [uploadedFile, setUploadedFile] = useState<{ key: string; url: string; name: string; type: MediaType } | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<{ url: string; name: string; type: MediaType } | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [isPending, startTransition] = useTransition()
 
   const resetForm = () => {
@@ -50,6 +110,44 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
     setUploadError(null)
     setFormError(null)
     setShowForm(false)
+    setUploadProgress(0)
+  }
+
+  const handleFile = async (file: File) => {
+    setUploadError(null)
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    // XMLHttpRequest でアップロード進捗を取得
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const url = await new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100))
+        }
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            resolve(JSON.parse(xhr.responseText).url)
+          } else {
+            reject(new Error(JSON.parse(xhr.responseText).error ?? 'アップロードに失敗しました'))
+          }
+        }
+        xhr.onerror = () => reject(new Error('ネットワークエラーが発生しました'))
+        xhr.open('POST', '/api/blob')
+        xhr.send(formData)
+      })
+
+      const mediaType = detectMediaType(file.type)
+      setUploadedFile({ url, name: file.name, type: mediaType })
+      if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'アップロードに失敗しました')
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -62,17 +160,16 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
         title: title.trim(),
         description: description.trim() || undefined,
         mediaType: uploadedFile.type,
-        fileKey: uploadedFile.key,
+        fileKey: uploadedFile.url,
       })
       if (result.success) {
-        // Optimistic UI: add a temporary item; page revalidates in background
         setPortfolios((prev) => [
           {
             id: `temp-${Date.now()}`,
             title: title.trim(),
             description: description.trim() || null,
             mediaType: uploadedFile.type,
-            fileKey: uploadedFile.key,
+            fileKey: uploadedFile.url,
             createdAt: new Date(),
           },
           ...prev,
@@ -107,7 +204,6 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
         )}
       </div>
 
-      {/* 追加フォーム */}
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-gray-50 border rounded-xl p-6 mb-8 space-y-5">
           <h2 className="font-bold text-lg">新しい作品を追加</h2>
@@ -115,34 +211,7 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
           {!uploadedFile ? (
             <div>
               <label className="block text-sm font-medium mb-2">ファイルをアップロード *</label>
-              <UploadDropzone
-                endpoint="portfolioFile"
-                onUploadBegin={() => setUploadError(null)}
-                onClientUploadComplete={(res) => {
-                  const file = res[0]
-                  if (!file) return
-                  const mediaType = detectMediaType(file.name)
-                  setUploadedFile({ key: file.key, url: file.url, name: file.name, type: mediaType })
-                  if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
-                }}
-                onUploadError={(err) => {
-                  const msg = err.message.toLowerCase()
-                  setUploadError(msg.includes('token') || msg.includes('uploadthing')
-                    ? 'アップロードサービスが未設定です。管理者に連絡してください。'
-                    : err.message)
-                }}
-                appearance={{
-                  container: 'border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center gap-2 hover:border-purple-400 transition cursor-pointer',
-                  uploadIcon: 'text-gray-400',
-                  label: 'text-sm text-gray-600',
-                  allowedContent: 'text-xs text-gray-400',
-                  button: 'bg-purple-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-purple-700 transition mt-2 after:bg-purple-700',
-                }}
-                content={{
-                  label: '画像・音声・動画ファイルをドラッグ＆ドロップ',
-                  allowedContent: 'PNG / JPG / WebP（16MB）· MP3 / WAV（64MB）· MP4 / MOV（256MB）',
-                }}
-              />
+              <FileDropzone onFile={handleFile} isUploading={isUploading} uploadProgress={uploadProgress} />
               {uploadError && <p className="text-red-500 text-sm mt-2">{uploadError}</p>}
             </div>
           ) : (
@@ -235,6 +304,7 @@ function PortfolioCard({ portfolio, onDelete }: { portfolio: Portfolio; onDelete
             width={200}
             height={112}
             className="w-full h-full object-cover"
+            unoptimized
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
         ) : (

@@ -11,7 +11,8 @@ const nextConfig: NextConfig = {
 
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'utfs.io' },                    // Uploadthing
+      { protocol: 'https', hostname: 'utfs.io' },                    // Uploadthing (既存データ互換)
+      { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' }, // Vercel Blob
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' }, // Google OAuth
     ],
   },

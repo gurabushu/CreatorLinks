@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import { useRef, useState } from 'react'
-import { useUploadThing } from '@/lib/uploadthing'
 import { updateAvatarAction } from '@/server/actions/profile'
 
 interface AvatarUploadProps {
@@ -13,39 +12,48 @@ interface AvatarUploadProps {
 
 export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploadProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl ?? null)
+  const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const { startUpload, isUploading } = useUploadThing('avatarImage', {
-    onClientUploadComplete: async (res) => {
-      const file = res[0]
-      if (!file) return
-      setPreviewUrl(file.url)
-      setError(null)
-      const result = await updateAvatarAction(file.url)
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    setError(null)
+    setIsUploading(true)
+
+    // プレビューを即時表示
+    const localUrl = URL.createObjectURL(file)
+    setPreviewUrl(localUrl)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/blob', { method: 'POST', body: formData })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setPreviewUrl(currentUrl ?? null)
+        setError(data.error ?? 'アップロードに失敗しました')
+        return
+      }
+
+      setPreviewUrl(data.url)
+      const result = await updateAvatarAction(data.url)
       if (!result.success) {
         setError(result.error ?? 'プロフィール保存に失敗しました')
       } else {
-        onUploadComplete?.(file.url)
+        onUploadComplete?.(data.url)
       }
-    },
-    onUploadError: (err) => {
-      const msg = err.message.toLowerCase()
-      if (msg.includes('token') || msg.includes('uploadthing')) {
-        setError('アップロードサービスが未設定です。管理者に連絡してください。')
-      } else {
-        setError(err.message)
-      }
-    },
-  })
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    if (files.length > 0) {
-      setError(null)
-      startUpload(files)
+    } catch {
+      setPreviewUrl(currentUrl ?? null)
+      setError('アップロードに失敗しました。もう一度お試しください。')
+    } finally {
+      setIsUploading(false)
     }
-    e.target.value = ''
   }
 
   return (
@@ -67,6 +75,7 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
               width={96}
               height={96}
               className="w-full h-full object-cover"
+              unoptimized={previewUrl.startsWith('blob:')}
             />
           ) : (
             name.charAt(0)
@@ -75,7 +84,9 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
 
         {/* ホバー / アップロード中オーバーレイ */}
         <div className={`absolute inset-0 rounded-full flex items-center justify-center transition-opacity ${
-          isUploading ? 'bg-black/50 opacity-100' : 'bg-black/40 opacity-0 group-hover:opacity-100'
+          isUploading
+            ? 'bg-black/50 opacity-100'
+            : 'bg-black/40 opacity-0 group-hover:opacity-100'
         }`}>
           {isUploading ? (
             <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -89,7 +100,7 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
       </button>
 
       <p className="text-xs text-gray-400">
-        {isUploading ? 'アップロード中...' : 'クリックして画像を変更 · JPG / PNG / WebP · 4MB まで'}
+        {isUploading ? 'アップロード中...' : 'クリックして画像を変更 · JPG / PNG / WebP · 16MB まで'}
       </p>
 
       {error && <p className="text-red-500 text-xs text-center">{error}</p>}
@@ -97,7 +108,7 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/gif"
         className="hidden"
         onChange={handleFileChange}
       />
