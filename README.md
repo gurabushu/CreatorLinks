@@ -9,15 +9,16 @@
 | レイヤー | 技術 |
 |---|---|
 | フロントエンド | Next.js 15 (App Router) + React 19 + Tailwind CSS 4 |
-| バックエンド | Hono 4.x + TypeScript |
-| API | tRPC 11 + Zod |
-| ORM / DB | Prisma 6 + PostgreSQL 16 |
-| 認証 | NextAuth.js v5 (JWT + Google OAuth) |
-| ファイル | Uploadthing + AWS S3 |
+| バックエンド | Next.js Server Actions + Hono 4.x (一部) |
+| API | tRPC 11 + Zod（ローカル開発時）/ Server Actions（本番） |
+| ORM / DB | Prisma 6 + PostgreSQL（Railway / ローカルは Docker） |
+| 認証 | Auth.js v5 (NextAuth v5 beta, JWT + Google OAuth) |
+| ファイル | **Vercel Blob**（ブラウザ→CDN 直接アップロード + Canvas 圧縮） |
 | 課金 | Stripe |
-| リアルタイム | Pusher Channels（未設定時はポーリング） |
-| メール | Resend + react-email |
+| リアルタイム | Pusher Channels（未設定時は 3 秒ポーリングにフォールバック） |
+| メール | Resend + react-email + Inngest |
 | モノレポ | Turborepo + pnpm workspaces |
+| ホスティング | Vercel（フロント） + Railway（DB） |
 
 ## ディレクトリ構成
 
@@ -25,13 +26,40 @@
 creatorLinks/
 ├── apps/
 │   ├── web/          # Next.js フロントエンド (port 3000)
-│   └── api/          # Hono API サーバー    (port 3001)
+│   └── api/          # Hono API サーバー    (port 3001) — ローカル開発用
 ├── packages/
 │   └── shared/       # 共通型定義・Zod スキーマ
 ├── scripts/
 │   └── setup.sh      # 初回セットアップスクリプト
 └── docker-compose.yml
 ```
+
+## 主要機能
+
+### サイトトップ
+- 自動切替ヒーロースライドショー（5 秒間隔・ドットインジケーター付き）
+  - 「手数料10%で始める営業革命」
+  - 「サブスク契約で継続案件が可能」
+  - 「PRO 認定で優先表示」
+- 新着案件・注目アーティスト・手数料比較
+
+### アーティスト機能
+- プロフィール編集（**ジャケット画像（カバー）** + トプ画 + 自己紹介 + ジャンル）
+- ポートフォリオ登録（画像・音声・動画、最大 256MB）
+- アーティスト一覧（カバー画像 + アバター + 自己紹介の縦型カード、ジャンルフィルタ、無限スクロール）
+
+### マッチング
+- 案件の作成・一覧・詳細
+- 応募・承認・却下フロー
+- ポーリング/Pusher リアルタイムチャット
+- 納品完了・レビュー投稿・評価集計
+
+### 課金
+- PRO プラン（Stripe Checkout 月額サブスク）
+- ファン支援（アーティストへの月額サブスク）
+
+### 管理
+- 管理画面（ユーザー・案件のモデレーション）
 
 ## はじめかた
 
@@ -62,7 +90,7 @@ pnpm dev
 | URL | 説明 |
 |---|---|
 | http://localhost:3000 | フロントエンド |
-| http://localhost:3001 | API サーバー |
+| http://localhost:3001 | Hono API サーバー（ローカル開発用） |
 | http://localhost:3001/api/health | ヘルスチェック |
 
 ### テストアカウント
@@ -94,14 +122,11 @@ pnpm --filter @creator-links/api test  # API 単体テスト（Vitest）
 
 # テスト（E2E） — pnpm dev 起動後に実行
 pnpm --filter @creator-links/web test:e2e  # Playwright E2E テスト
-# または
-cd apps/web && npx playwright test
 ```
 
 ## 環境変数
 
-`apps/web/.env.local` と `apps/api/.env` に設定。
-詳細は `.env.example` を参照。
+`apps/web/.env.local` と `apps/api/.env` に設定。詳細は `.env.example` を参照。
 
 ### 最低限必要な変数（ローカル開発）
 
@@ -109,44 +134,57 @@ cd apps/web && npx playwright test
 # DB（docker-compose で自動設定）
 DATABASE_URL="postgresql://creator:creator_pass@localhost:5432/creator_links_dev"
 
-# NextAuth（任意の文字列でOK）
-NEXTAUTH_SECRET="local-dev-secret"
+# Auth.js v5（任意の文字列でOK）
+AUTH_SECRET="local-dev-secret"
 
-# Stripe（テストキー）
+# Stripe（テストキー・任意）
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_PUBLISHABLE_KEY="pk_test_..."
 ```
 
 ### オプション（機能別）
 
-| 機能 | 変数 |
-|---|---|
-| Google ログイン | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
-| ファイルアップロード | `UPLOADTHING_SECRET`, `UPLOADTHING_APP_ID` |
-| リアルタイムチャット | `PUSHER_*`, `NEXT_PUBLIC_PUSHER_*` |
-| メール送信 | `RESEND_API_KEY` |
+| 機能 | 環境変数 | 未設定時の動作 |
+|---|---|---|
+| Google ログイン | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google 認証ボタン非表示・パスワード認証のみ |
+| ファイルアップロード（本番） | `BLOB_READ_WRITE_TOKEN`（Vercel Blob トークン） | アップロード不可 |
+| Stripe PRO プラン | `STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID` | Checkout 不可 |
+| リアルタイムチャット | `PUSHER_APP_ID`, `PUSHER_SECRET`, `NEXT_PUBLIC_PUSHER_KEY` | 3 秒ポーリングで動作 |
+| メール通知 | `RESEND_API_KEY` + Inngest Cloud | コンソールログのみ |
+
+## デプロイ（Vercel）
+
+### 設定
+- **Root Directory**: `apps/web`
+- **Build Command**（`apps/web/vercel.json` に記述）:
+  ```
+  (cd ../api && npx prisma db push --accept-data-loss) && npx turbo build --filter=@creator-links/web
+  ```
+- **必須環境変数**: `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_URL`, `BLOB_READ_WRITE_TOKEN`
+
+### 自動マイグレーション
+ビルド時に `prisma db push` が走るので、Prisma スキーマを変更してプッシュするだけで本番 DB のカラムも自動追加されます。
+
+### 画像アップロードの仕組み
+- ブラウザ側で **Canvas API による圧縮**（WebP 変換 + リサイズ）を実施
+- `@vercel/blob/client` の `upload()` でブラウザ → CDN に直接 PUT（Next.js サーバーを経由しない＝ボディサイズ制限なし）
+- `/api/blob` ルートはクライアントトークン発行と完了通知のみ処理（Node.js Runtime、Auth.js JWT で軽量認証）
 
 ## 実装済み機能
 
 - [x] 認証（メール/パスワード・Google OAuth）
-- [x] アーティストプロフィール・ポートフォリオ
+- [x] アーティストプロフィール（**ジャケット画像 + トプ画 + 自己紹介 + ジャンル**）
+- [x] ポートフォリオ登録（画像・音声・動画、Canvas 圧縮、進捗表示付き）
+- [x] アーティスト一覧（縦型カード + 無限スクロール）
 - [x] 案件 CRUD（作成・一覧・詳細）
 - [x] マッチング（応募・承認・却下）
-- [x] チャット（ポーリング方式）
+- [x] チャット（Pusher / ポーリングフォールバック）
 - [x] 納品完了・レビュー投稿・評価集計
 - [x] 管理画面
-- [x] Uploadthing ファイルアップロード（アバター・ポートフォリオ）
+- [x] **Vercel Blob ファイルアップロード**（ブラウザ → CDN 直接、自動 WebP 圧縮）
 - [x] Stripe 課金（PRO プラン Checkout・ファン支援 Checkout）
 - [x] Pusher リアルタイムチャット（環境変数設定時のみ有効・未設定はポーリング）
 - [x] メール通知（Resend + Inngest バックグラウンドジョブ）
+- [x] **トップページヒーロースライドショー**（自動切替・サブスク継続案件訴求）
 - [x] Vitest 単体テスト（スキーマ・tRPC ルーター・権限チェック）
 - [x] Playwright E2E テスト（認証・案件 CRUD・マッチング・チャット）
-
-### 環境変数（各機能を有効にするための追加設定）
-
-| 機能 | 必要な環境変数 | 未設定時の動作 |
-|---|---|---|
-| アバター・ポートフォリオアップロード | `UPLOADTHING_SECRET`, `UPLOADTHING_APP_ID` | アップロード不可 |
-| Stripe PRO プラン | `STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID` | Checkout 不可 |
-| リアルタイムチャット | `PUSHER_APP_ID`, `PUSHER_SECRET`, `NEXT_PUBLIC_PUSHER_KEY` | 3秒ポーリングで動作 |
-| メール通知 | `RESEND_API_KEY` + Inngest Cloud | コンソールログのみ |
