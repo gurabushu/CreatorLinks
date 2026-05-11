@@ -29,7 +29,14 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
         onUploadComplete?.(file.url)
       }
     },
-    onUploadError: (err) => setError(err.message),
+    onUploadError: (err) => {
+      const msg = err.message.toLowerCase()
+      if (msg.includes('token') || msg.includes('uploadthing')) {
+        setError('アップロードサービスが未設定です。管理者に連絡してください。')
+      } else {
+        setError(err.message)
+      }
+    },
   })
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

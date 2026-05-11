@@ -125,7 +125,12 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
                   setUploadedFile({ key: file.key, url: file.url, name: file.name, type: mediaType })
                   if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
                 }}
-                onUploadError={(err) => setUploadError(err.message)}
+                onUploadError={(err) => {
+                  const msg = err.message.toLowerCase()
+                  setUploadError(msg.includes('token') || msg.includes('uploadthing')
+                    ? 'アップロードサービスが未設定です。管理者に連絡してください。'
+                    : err.message)
+                }}
                 appearance={{
                   container: 'border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center gap-2 hover:border-purple-400 transition cursor-pointer',
                   uploadIcon: 'text-gray-400',
