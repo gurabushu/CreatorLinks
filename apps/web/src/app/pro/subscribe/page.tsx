@@ -1,31 +1,30 @@
-// app/pro/subscribe/page.tsx — プロプラン登録
 'use client'
 
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useState } from 'react'
-import { trpc } from '@/lib/trpc'
+import { Suspense, useState, useTransition } from 'react'
+import { createProCheckoutAction } from '@/server/actions/subscription'
 
 function ProSubscribeContent() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
   const success = searchParams.get('success')
-  const [redirecting, setRedirecting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
-  const createCheckout = trpc.subscription.createProCheckout.useMutation({
-    onSuccess: (data) => {
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl
+  const handleCheckout = () => {
+    setError(null)
+    startTransition(async () => {
+      const result = await createProCheckoutAction()
+      if (result.success) {
+        window.location.href = result.checkoutUrl
+      } else {
+        setError(result.error)
       }
-    },
-    onError: (err) => {
-      alert(err.message)
-      setRedirecting(false)
-    },
-  })
+    })
+  }
 
-  // 登録完了後
   if (success) {
     return (
       <div className="max-w-md mx-auto py-20 px-4 text-center">
@@ -44,7 +43,6 @@ function ProSubscribeContent() {
     )
   }
 
-  // すでに PRO
   if (session?.user?.role === 'PRO') {
     return (
       <div className="max-w-md mx-auto py-20 px-4 text-center">
@@ -71,7 +69,6 @@ function ProSubscribeContent() {
         <p className="text-gray-500">月額 ¥980 で優先表示・ファン支援機能が使えます</p>
       </div>
 
-      {/* 特典リスト */}
       <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-8 mb-8">
         <h2 className="font-bold text-lg mb-5">PRO プランの特典</h2>
         <div className="space-y-4">
@@ -92,7 +89,6 @@ function ProSubscribeContent() {
         </div>
       </div>
 
-      {/* 料金カード */}
       <div className="border-2 border-purple-400 rounded-2xl p-6 mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
           おすすめ
@@ -105,7 +101,12 @@ function ProSubscribeContent() {
         <p className="text-xs text-gray-400">税込。Stripe で安全に決済。</p>
       </div>
 
-      {/* 登録ボタン */}
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4 text-center">
+          {error}
+        </p>
+      )}
+
       {!session ? (
         <button
           onClick={() => router.push('/auth')}
@@ -115,14 +116,11 @@ function ProSubscribeContent() {
         </button>
       ) : (
         <button
-          onClick={() => {
-            setRedirecting(true)
-            createCheckout.mutate()
-          }}
-          disabled={redirecting || createCheckout.isPending}
+          onClick={handleCheckout}
+          disabled={isPending}
           className="w-full bg-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-purple-700 transition disabled:opacity-50 flex items-center justify-center gap-3"
         >
-          {redirecting || createCheckout.isPending ? (
+          {isPending ? (
             <>
               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               Stripe へリダイレクト中...
