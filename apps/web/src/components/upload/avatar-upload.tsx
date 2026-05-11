@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useRef, useState } from 'react'
+import { upload } from '@vercel/blob/client'
 import { updateAvatarAction } from '@/server/actions/profile'
 
 interface AvatarUploadProps {
@@ -25,32 +26,24 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
     setIsUploading(true)
 
     // プレビューを即時表示
-    const localUrl = URL.createObjectURL(file)
-    setPreviewUrl(localUrl)
+    setPreviewUrl(URL.createObjectURL(file))
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/blob',
+      })
 
-      const res = await fetch('/api/blob', { method: 'POST', body: formData })
-      const data = await res.json()
-
-      if (!res.ok) {
-        setPreviewUrl(currentUrl ?? null)
-        setError(data.error ?? 'アップロードに失敗しました')
-        return
-      }
-
-      setPreviewUrl(data.url)
-      const result = await updateAvatarAction(data.url)
+      setPreviewUrl(blob.url)
+      const result = await updateAvatarAction(blob.url)
       if (!result.success) {
         setError(result.error ?? 'プロフィール保存に失敗しました')
       } else {
-        onUploadComplete?.(data.url)
+        onUploadComplete?.(blob.url)
       }
-    } catch {
+    } catch (err) {
       setPreviewUrl(currentUrl ?? null)
-      setError('アップロードに失敗しました。もう一度お試しください。')
+      setError(err instanceof Error ? err.message : 'アップロードに失敗しました。もう一度お試しください。')
     } finally {
       setIsUploading(false)
     }

@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
+import { upload } from '@vercel/blob/client'
 import { createPortfolioAction, deletePortfolioAction } from '@/server/actions/portfolio'
 
 type MediaType = 'IMAGE' | 'AUDIO' | 'VIDEO'
@@ -118,30 +119,15 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
     setIsUploading(true)
     setUploadProgress(0)
 
-    // XMLHttpRequest でアップロード進捗を取得
-    const formData = new FormData()
-    formData.append('file', file)
-
     try {
-      const url = await new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100))
-        }
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            resolve(JSON.parse(xhr.responseText).url)
-          } else {
-            reject(new Error(JSON.parse(xhr.responseText).error ?? 'アップロードに失敗しました'))
-          }
-        }
-        xhr.onerror = () => reject(new Error('ネットワークエラーが発生しました'))
-        xhr.open('POST', '/api/blob')
-        xhr.send(formData)
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/blob',
+        onUploadProgress: ({ percentage }) => setUploadProgress(Math.round(percentage)),
       })
 
       const mediaType = detectMediaType(file.type)
-      setUploadedFile({ url, name: file.name, type: mediaType })
+      setUploadedFile({ url: blob.url, name: file.name, type: mediaType })
       if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'アップロードに失敗しました')
