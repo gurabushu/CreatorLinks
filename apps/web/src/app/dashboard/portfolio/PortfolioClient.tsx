@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { upload } from '@vercel/blob/client'
 import { createPortfolioAction, deletePortfolioAction } from '@/server/actions/portfolio'
+import { compressImage } from '@/lib/compress-image'
 
 type MediaType = 'IMAGE' | 'AUDIO' | 'VIDEO'
 
@@ -120,7 +121,8 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
     setUploadProgress(0)
 
     try {
-      const blob = await upload(file.name, file, {
+      const fileToUpload = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.85 })
+      const blob = await upload(fileToUpload.name, fileToUpload, {
         access: 'public',
         handleUploadUrl: '/api/blob',
         onUploadProgress: ({ percentage }) => setUploadProgress(Math.round(percentage)),

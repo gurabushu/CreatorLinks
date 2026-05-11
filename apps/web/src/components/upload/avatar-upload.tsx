@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useRef, useState } from 'react'
 import { upload } from '@vercel/blob/client'
 import { updateAvatarAction } from '@/server/actions/profile'
+import { compressImage } from '@/lib/compress-image'
 
 interface AvatarUploadProps {
   currentUrl?: string | null
@@ -29,7 +30,8 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
     setPreviewUrl(URL.createObjectURL(file))
 
     try {
-      const blob = await upload(file.name, file, {
+      const compressed = await compressImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.88 })
+      const blob = await upload(compressed.name, compressed, {
         access: 'public',
         handleUploadUrl: '/api/blob',
       })
