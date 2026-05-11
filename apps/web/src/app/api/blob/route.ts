@@ -2,7 +2,7 @@ import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 import { type NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 const ALLOWED_TYPES = [
   'image/jpeg', 'image/png', 'image/webp', 'image/gif',

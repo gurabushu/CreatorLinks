@@ -7,11 +7,19 @@ export const metadata: Metadata = {
   description: '音楽・イラスト・動画などのクリエイターを探せます。手数料10%で直接マッチング。',
 }
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default async function ArtistsPage() {
-  const { items: initialArtists, nextCursor: initialNextCursor } =
-    await listArtistsAction({ limit: 12 })
+  let initialArtists: Awaited<ReturnType<typeof listArtistsAction>>['items'] = []
+  let initialNextCursor: string | null = null
+
+  try {
+    const result = await listArtistsAction({ limit: 12 })
+    initialArtists = result.items
+    initialNextCursor = result.nextCursor
+  } catch {
+    // DB unavailable — クライアントが再取得する
+  }
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4">
