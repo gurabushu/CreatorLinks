@@ -14,9 +14,13 @@ interface AvatarUploadProps {
 
 export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploadProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl ?? null)
+  const [isCompressing, setIsCompressing] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const isBusy = isCompressing || isUploading
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -24,16 +28,19 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
     if (!file) return
 
     setError(null)
-    setIsUploading(true)
-
-    // プレビューを即時表示
+    setUploadProgress(0)
     setPreviewUrl(URL.createObjectURL(file))
 
     try {
-      const compressed = await compressImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.88 })
+      setIsCompressing(true)
+      const compressed = await compressImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.85 })
+      setIsCompressing(false)
+
+      setIsUploading(true)
       const blob = await upload(compressed.name, compressed, {
         access: 'public',
         handleUploadUrl: '/api/blob',
+        onUploadProgress: ({ percentage }) => setUploadProgress(Math.round(percentage)),
       })
 
       setPreviewUrl(blob.url)
@@ -47,21 +54,26 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
       setPreviewUrl(currentUrl ?? null)
       setError(err instanceof Error ? err.message : 'アップロードに失敗しました。もう一度お試しください。')
     } finally {
+      setIsCompressing(false)
       setIsUploading(false)
     }
   }
 
+  const statusText = isCompressing
+    ? '圧縮中...'
+    : isUploading
+    ? `アップロード中... ${uploadProgress}%`
+    : 'クリックして画像を変更 · JPG / PNG / WebP · 16MB まで'
+
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* クリックでファイル選択 */}
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
-        disabled={isUploading}
+        disabled={isBusy}
         className="relative group rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
         aria-label="プロフィール画像を変更"
       >
-        {/* アバター */}
         <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
           {previewUrl ? (
             <Image
@@ -77,13 +89,12 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
           )}
         </div>
 
-        {/* ホバー / アップロード中オーバーレイ */}
         <div className={`absolute inset-0 rounded-full flex items-center justify-center transition-opacity ${
-          isUploading
+          isBusy
             ? 'bg-black/50 opacity-100'
             : 'bg-black/40 opacity-0 group-hover:opacity-100'
         }`}>
-          {isUploading ? (
+          {isBusy ? (
             <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
             <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -94,9 +105,7 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
         </div>
       </button>
 
-      <p className="text-xs text-gray-400">
-        {isUploading ? 'アップロード中...' : 'クリックして画像を変更 · JPG / PNG / WebP · 16MB まで'}
-      </p>
+      <p className="text-xs text-gray-400">{statusText}</p>
 
       {error && <p className="text-red-500 text-xs text-center">{error}</p>}
 

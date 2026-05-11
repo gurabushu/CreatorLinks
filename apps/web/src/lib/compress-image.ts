@@ -16,8 +16,7 @@ export async function compressImage(
       URL.revokeObjectURL(objectUrl)
 
       let { width, height } = img
-      // Skip compression if already small enough
-      if (width <= maxWidth && height <= maxHeight && file.size < 300 * 1024) {
+      if (width <= maxWidth && height <= maxHeight && file.size < 100 * 1024) {
         resolve(file)
         return
       }
@@ -33,10 +32,16 @@ export async function compressImage(
       canvas.height = height
       canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
 
-      const outputName = file.name.replace(/\.[^.]+$/, '.jpg')
+      // WebP はJPEGより30〜40%小さい。Safari16+/Chrome/Firefoxすべて対応
+      const webpTest = canvas.toDataURL('image/webp')
+      const useWebP = webpTest.startsWith('data:image/webp')
+      const mime = useWebP ? 'image/webp' : 'image/jpeg'
+      const ext = useWebP ? '.webp' : '.jpg'
+      const outputName = file.name.replace(/\.[^.]+$/, ext)
+
       canvas.toBlob(
-        (blob) => resolve(new File([blob!], outputName, { type: 'image/jpeg' })),
-        'image/jpeg',
+        (blob) => resolve(new File([blob!], outputName, { type: mime })),
+        mime,
         quality
       )
     }

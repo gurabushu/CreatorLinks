@@ -1,8 +1,8 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 import { type NextRequest } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getToken } from 'next-auth/jwt'
 
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 
 const ALLOWED_TYPES = [
   'image/jpeg', 'image/png', 'image/webp', 'image/gif',
@@ -13,12 +13,14 @@ const ALLOWED_TYPES = [
 export async function POST(request: NextRequest): Promise<Response> {
   const body = (await request.json()) as HandleUploadBody
 
-  // blob.upload-completed is sent by Vercel's servers (no user session) — only auth the token request
+  // blob.upload-completed はVercelサーバーから送られるのでauth不要
   if (body.type === 'blob.generate-client-token') {
-    const session = await auth()
-    if (!session) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const token = await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+      secureCookie: process.env.NODE_ENV === 'production',
+    })
+    if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -27,11 +29,9 @@ export async function POST(request: NextRequest): Promise<Response> {
       request,
       onBeforeGenerateToken: async () => ({
         allowedContentTypes: ALLOWED_TYPES,
-        maximumSizeInBytes: 256 * 1024 * 1024, // 256 MB
+        maximumSizeInBytes: 256 * 1024 * 1024,
       }),
-      onUploadCompleted: async () => {
-        // DB への保存はクライアント側の server action で行うため不要
-      },
+      onUploadCompleted: async () => {},
     })
     return Response.json(jsonResponse)
   } catch (err) {

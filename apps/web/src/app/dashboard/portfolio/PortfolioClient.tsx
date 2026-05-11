@@ -33,18 +33,20 @@ function detectMediaType(mimeType: string): MediaType {
   return 'IMAGE'
 }
 
-// ---- ファイルドロップゾーン ----
 function FileDropzone({
   onFile,
+  isCompressing,
   isUploading,
   uploadProgress,
 }: {
   onFile: (file: File) => void
+  isCompressing: boolean
   isUploading: boolean
   uploadProgress: number
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const isBusy = isCompressing || isUploading
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
@@ -55,15 +57,20 @@ function FileDropzone({
 
   return (
     <div
-      onClick={() => !isUploading && inputRef.current?.click()}
+      onClick={() => !isBusy && inputRef.current?.click()}
       onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
       className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 transition cursor-pointer select-none ${
         isDragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-purple-400'
-      } ${isUploading ? 'pointer-events-none opacity-60' : ''}`}
+      } ${isBusy ? 'pointer-events-none opacity-60' : ''}`}
     >
-      {isUploading ? (
+      {isCompressing ? (
+        <>
+          <div className="w-10 h-10 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin" />
+          <p className="text-sm text-gray-500">圧縮中...</p>
+        </>
+      ) : isUploading ? (
         <>
           <div className="w-10 h-10 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin" />
           <p className="text-sm text-gray-500">アップロード中... {uploadProgress}%</p>
@@ -101,6 +108,7 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
   const [description, setDescription] = useState('')
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const [isCompressing, setIsCompressing] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isPending, startTransition] = useTransition()
@@ -117,11 +125,14 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
 
   const handleFile = async (file: File) => {
     setUploadError(null)
-    setIsUploading(true)
     setUploadProgress(0)
 
     try {
+      setIsCompressing(true)
       const fileToUpload = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.85 })
+      setIsCompressing(false)
+
+      setIsUploading(true)
       const blob = await upload(fileToUpload.name, fileToUpload, {
         access: 'public',
         handleUploadUrl: '/api/blob',
@@ -134,6 +145,7 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'アップロードに失敗しました')
     } finally {
+      setIsCompressing(false)
       setIsUploading(false)
     }
   }
@@ -199,7 +211,12 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
           {!uploadedFile ? (
             <div>
               <label className="block text-sm font-medium mb-2">ファイルをアップロード *</label>
-              <FileDropzone onFile={handleFile} isUploading={isUploading} uploadProgress={uploadProgress} />
+              <FileDropzone
+                onFile={handleFile}
+                isCompressing={isCompressing}
+                isUploading={isUploading}
+                uploadProgress={uploadProgress}
+              />
               {uploadError && <p className="text-red-500 text-sm mt-2">{uploadError}</p>}
             </div>
           ) : (
