@@ -11,12 +11,15 @@ const ALLOWED_TYPES = [
 ]
 
 export async function POST(request: NextRequest): Promise<Response> {
-  const session = await auth()
-  if (!session) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   const body = (await request.json()) as HandleUploadBody
+
+  // blob.upload-completed is sent by Vercel's servers (no user session) — only auth the token request
+  if (body.type === 'blob.generate-client-token') {
+    const session = await auth()
+    if (!session) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  }
 
   try {
     const jsonResponse = await handleUpload({
