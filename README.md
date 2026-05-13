@@ -185,7 +185,7 @@ STRIPE_PUBLISHABLE_KEY="pk_test_..."
 ### 画像アップロードの仕組み
 - ブラウザ側で **Canvas API による圧縮**（WebP 変換 + リサイズ）を実施
 - `@vercel/blob/client` の `upload()` でブラウザ → CDN に直接 PUT（Next.js サーバーを経由しない＝ボディサイズ制限なし）
-- `/api/blob` ルートはクライアントトークン発行と完了通知のみ処理（Node.js Runtime、Auth.js JWT で軽量認証）
+- `/api/blob` ルートはクライアントトークン発行と完了通知のみ処理（**Edge Runtime** でコールドスタートを最小化、Auth.js JWT で軽量認証）
 
 ## 実装済み機能
 
