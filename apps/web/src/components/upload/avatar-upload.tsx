@@ -62,7 +62,9 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
   const statusText = isCompressing
     ? '圧縮中...'
     : isUploading
-    ? `アップロード中... ${uploadProgress}%`
+    ? uploadProgress < 95
+      ? `アップロード中... ${uploadProgress}%`
+      : '完了処理中...'
     : 'クリックして画像を変更 · JPG / PNG / WebP · 16MB まで'
 
   return (

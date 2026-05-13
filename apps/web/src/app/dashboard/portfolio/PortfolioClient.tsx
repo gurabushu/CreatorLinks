@@ -73,7 +73,9 @@ function FileDropzone({
       ) : isUploading ? (
         <>
           <div className="w-10 h-10 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin" />
-          <p className="text-sm text-gray-500">アップロード中... {uploadProgress}%</p>
+          <p className="text-sm text-gray-500">
+            {uploadProgress < 95 ? `アップロード中... ${uploadProgress}%` : '完了処理中...'}
+          </p>
         </>
       ) : (
         <>

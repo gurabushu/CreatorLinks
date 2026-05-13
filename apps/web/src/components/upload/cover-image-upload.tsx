@@ -32,7 +32,8 @@ export function CoverImageUpload({ currentUrl, onUploadComplete }: CoverImageUpl
 
     try {
       setIsCompressing(true)
-      const compressed = await compressImage(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.85 })
+      // 1200x1200, q=0.80 で確実に 1MB 以下にしてマルチパート発動を回避
+      const compressed = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 })
       setIsCompressing(false)
 
       setIsUploading(true)
@@ -61,7 +62,9 @@ export function CoverImageUpload({ currentUrl, onUploadComplete }: CoverImageUpl
   const statusText = isCompressing
     ? '圧縮中...'
     : isUploading
-    ? `アップロード中... ${uploadProgress}%`
+    ? uploadProgress < 95
+      ? `アップロード中... ${uploadProgress}%`
+      : '完了処理中...'
     : ''
 
   return (
