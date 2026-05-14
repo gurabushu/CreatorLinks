@@ -2,9 +2,9 @@
 
 import Image from 'next/image'
 import { useRef, useState } from 'react'
-import { upload } from '@vercel/blob/client'
 import { updateAvatarAction } from '@/server/actions/profile'
 import { compressImage } from '@/lib/compress-image'
+import { uploadBlob } from '@/lib/blob-upload'
 
 interface AvatarUploadProps {
   currentUrl?: string | null
@@ -37,10 +37,8 @@ export function AvatarUpload({ currentUrl, name, onUploadComplete }: AvatarUploa
       setIsCompressing(false)
 
       setIsUploading(true)
-      const blob = await upload(compressed.name, compressed, {
-        access: 'public',
-        handleUploadUrl: '/api/blob',
-        onUploadProgress: ({ percentage }) => setUploadProgress(Math.round(percentage)),
+      const blob = await uploadBlob(compressed, {
+        onProgress: setUploadProgress,
       })
 
       setPreviewUrl(blob.url)

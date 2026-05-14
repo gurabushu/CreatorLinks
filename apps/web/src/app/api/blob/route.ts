@@ -20,7 +20,10 @@ export async function POST(request: NextRequest): Promise<Response> {
       secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
       secureCookie: process.env.NODE_ENV === 'production',
     })
-    if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!token) {
+      console.warn('[api/blob] token request rejected: no session')
+      return Response.json({ error: 'ログインが切れています。再ログインしてください。' }, { status: 401 })
+    }
   }
 
   try {
@@ -35,6 +38,9 @@ export async function POST(request: NextRequest): Promise<Response> {
     })
     return Response.json(jsonResponse)
   } catch (err) {
-    return Response.json({ error: String(err) }, { status: 400 })
+    // Vercel logs に出して原因特定できるようにする（500 で返すと client がリトライしてしまうので 400）
+    console.error('[api/blob] handleUpload failed:', err)
+    const message = err instanceof Error ? err.message : String(err)
+    return Response.json({ error: message }, { status: 400 })
   }
 }

@@ -2,9 +2,9 @@
 
 import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
-import { upload } from '@vercel/blob/client'
 import { createPortfolioAction, deletePortfolioAction } from '@/server/actions/portfolio'
 import { compressImage } from '@/lib/compress-image'
+import { uploadBlob } from '@/lib/blob-upload'
 
 type MediaType = 'IMAGE' | 'AUDIO' | 'VIDEO'
 
@@ -135,10 +135,11 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
       setIsCompressing(false)
 
       setIsUploading(true)
-      const blob = await upload(fileToUpload.name, fileToUpload, {
-        access: 'public',
-        handleUploadUrl: '/api/blob',
-        onUploadProgress: ({ percentage }) => setUploadProgress(Math.round(percentage)),
+      // 動画は最大 256MB 許容するので、stall タイムアウトを長めに
+      const isLargeMedia = file.type.startsWith('video/') || file.type.startsWith('audio/')
+      const blob = await uploadBlob(fileToUpload, {
+        onProgress: setUploadProgress,
+        stallTimeoutMs: isLargeMedia ? 60_000 : 20_000,
       })
 
       const mediaType = detectMediaType(file.type)
