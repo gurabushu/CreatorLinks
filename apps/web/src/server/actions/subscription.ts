@@ -22,6 +22,7 @@ export async function createProCheckoutAction(): Promise<
     mode: 'subscription',
     customer: dbUser?.stripeCustomerId ?? undefined,
     line_items: [{ price: PRO_PRICE_ID, quantity: 1 }],
+    subscription_data: { trial_period_days: 90 },
     success_url: `${APP_URL}/pro/subscribe?success=1`,
     cancel_url: `${APP_URL}/pro/subscribe`,
     metadata: { userId: session.user.id, type: 'pro_upgrade' },

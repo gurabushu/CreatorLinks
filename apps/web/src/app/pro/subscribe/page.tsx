@@ -63,7 +63,7 @@ function ProSubscribeContent() {
     <div className="max-w-2xl mx-auto py-12 px-4">
       <div className="text-center mb-10">
         <span className="inline-block bg-amber-100 text-amber-700 text-sm font-bold px-3 py-1 rounded-full mb-4">
-          β 期間中 初月無料
+          3ヶ月無料
         </span>
         <h1 className="text-3xl font-bold mb-2">PRO プランに登録する</h1>
         <p className="text-gray-500">月額 ¥980 で優先表示・ファン支援機能が使えます</p>
@@ -97,7 +97,7 @@ function ProSubscribeContent() {
           <span className="text-4xl font-bold text-purple-700">¥980</span>
           <span className="text-gray-500">/ 月</span>
         </div>
-        <p className="text-sm text-gray-500 mb-4">β 期間中は初月無料。いつでもキャンセル可能。</p>
+        <p className="text-sm text-gray-500 mb-4">3ヶ月無料。いつでもキャンセル可能。</p>
         <p className="text-xs text-gray-400">税込。Stripe で安全に決済。</p>
       </div>
 
