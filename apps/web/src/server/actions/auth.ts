@@ -22,7 +22,7 @@ export type SignUpResult =
 // ===========================================
 // サービス展開前に、登録なしでアーティストに触ってもらうための一時アカウント。
 // 24 時間後に cron で自動削除される。Stripe / メール送信 / メアド変更は制限。
-export const GUEST_EMAIL_DOMAIN = 'demo.local'
+const GUEST_EMAIL_DOMAIN = 'demo.local'
 
 export async function signUpAsGuestAction(): Promise<
   { success: true; email: string; password: string } | { success: false; error: string }
