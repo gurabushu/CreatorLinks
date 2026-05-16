@@ -17,6 +17,42 @@ export type SignUpResult =
   | { success: true }
   | { success: false; error: string; field?: 'email' | 'name' | 'password' | 'general' }
 
+// ===========================================
+// テスト用ゲストアカウント
+// ===========================================
+// サービス展開前に、登録なしでアーティストに触ってもらうための一時アカウント。
+// 24 時間後に cron で自動削除される。Stripe / メール送信 / メアド変更は制限。
+export const GUEST_EMAIL_DOMAIN = 'demo.local'
+
+export async function signUpAsGuestAction(): Promise<
+  { success: true; email: string; password: string } | { success: false; error: string }
+> {
+  // 衝突しないランダム ID（cuid 風）と表示名
+  const shortId = crypto.randomBytes(4).toString('hex') // 8 chars
+  const email = `guest_${crypto.randomBytes(8).toString('hex')}@${GUEST_EMAIL_DOMAIN}`
+  const password = crypto.randomBytes(16).toString('hex') // 32 chars, クライアントへ返して signIn に使う
+  const name = `ゲストアーティスト#${shortId}`
+
+  const passwordHash = await bcrypt.hash(password, 12)
+
+  try {
+    await prisma.user.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+        role: 'GENERAL',
+        genres: [],
+        isGuest: true,
+      },
+    })
+  } catch {
+    return { success: false, error: 'ゲストアカウントの作成に失敗しました。しばらく後で再試行してください。' }
+  }
+
+  return { success: true, email, password }
+}
+
 export async function signUpAction(formData: FormData): Promise<SignUpResult> {
   const raw = {
     name: formData.get('name'),
@@ -91,6 +127,7 @@ export async function requestPasswordResetAction(
   try {
     const user = await prisma.user.findUnique({ where: { email } })
     if (!user) return { success: true }
+    if (user.isGuest) return { success: true } // ゲストには送らない（demo.local 宛は配信不能なので Resend で失敗するため）
 
     const { plain, hash } = generateToken()
     const expiresAt = new Date(Date.now() + TOKEN_TTL_MS)
@@ -182,6 +219,15 @@ export async function requestEmailChangeAction(
 ): Promise<{ success: true } | { success: false; error: string }> {
   const session = await auth()
   if (!session) return { success: false, error: '認証が必要です' }
+
+  // ゲストアカウントはメアド変更不可
+  const sessionUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isGuest: true },
+  })
+  if (sessionUser?.isGuest) {
+    return { success: false, error: 'ゲストアカウントではメールアドレスを変更できません' }
+  }
 
   const parsed = RequestEmailChangeSchema.safeParse(data)
   if (!parsed.success) {

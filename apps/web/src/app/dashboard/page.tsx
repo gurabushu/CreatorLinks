@@ -17,7 +17,17 @@ export default async function DashboardPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let myProjects: any[] = []
   let notifications = 0
+  let isGuest = false
+  let guestExpiresAt: Date | null = null
   try {
+    const me = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { isGuest: true, createdAt: true },
+    })
+    isGuest = me?.isGuest ?? false
+    if (me?.isGuest) {
+      guestExpiresAt = new Date(me.createdAt.getTime() + 24 * 60 * 60 * 1000)
+    }
     ;[myMatches, myProjects, notifications] = await Promise.all([
       prisma.match.findMany({
         where: { artistId: session.user.id },
@@ -45,6 +55,18 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4">
+      {isGuest && (
+        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span className="font-bold">ゲストモード</span>
+          <span className="ml-2">
+            このアカウントは{guestExpiresAt ? ` ${guestExpiresAt.toLocaleString('ja-JP')} ` : 'まもなく'}に自動削除されます。引き続き利用するには
+            <Link href="/auth" className="ml-1 underline font-medium hover:text-amber-900">
+              正式登録
+            </Link>
+            をお願いします。
+          </span>
+        </div>
+      )}
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-bold">マイページ</h1>

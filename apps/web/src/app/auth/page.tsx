@@ -5,7 +5,7 @@
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useActionState, useState, Suspense } from 'react'
-import { signUpAction } from '@/server/actions/auth'
+import { signUpAction, signUpAsGuestAction } from '@/server/actions/auth'
 
 // ---- ログインフォーム ----
 function LoginForm() {
@@ -200,6 +200,55 @@ function SignUpForm({ onSuccess: _onSuccess }: { onSuccess: () => void }) {
   )
 }
 
+// ---- ゲストログインボタン ----
+function GuestLoginButton() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleGuestLogin = async () => {
+    setError(null)
+    setLoading(true)
+    const result = await signUpAsGuestAction()
+    if (!result.success) {
+      setLoading(false)
+      setError(result.error)
+      return
+    }
+    const signInResult = await signIn('credentials', {
+      email: result.email,
+      password: result.password,
+      redirect: false,
+    })
+    if (signInResult?.error) {
+      setLoading(false)
+      setError('ゲストログインに失敗しました')
+      return
+    }
+    window.location.href = '/dashboard'
+  }
+
+  return (
+    <div className="mb-5">
+      <button
+        type="button"
+        onClick={handleGuestLogin}
+        disabled={loading}
+        className="w-full border-2 border-dashed border-purple-400 bg-purple-50 text-purple-700 rounded-lg py-3 text-sm font-bold hover:bg-purple-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? 'ゲストアカウントを作成中...' : '登録なしでお試し（24時間有効）'}
+      </button>
+      <p className="text-center text-xs text-gray-400 mt-2">
+        テスト用アカウントです。24 時間後に自動削除されます。
+      </p>
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2 mt-2">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ---- メインページ ----
 function AuthPageInner() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
@@ -234,6 +283,9 @@ function AuthPageInner() {
             新規登録
           </button>
         </div>
+
+        {/* ゲストログイン */}
+        <GuestLoginButton />
 
         {/* Google OAuth */}
         <button

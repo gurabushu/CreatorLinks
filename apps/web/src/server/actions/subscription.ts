@@ -4,9 +4,9 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { stripe, PRO_PRICE_ID, PLAN_AMOUNTS } from '@/lib/stripe'
 
-const APP_URL = process.env.NEXTAUTH_URL ?? process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'http://localhost:3000'
+const APP_URL =
+  process.env.NEXTAUTH_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
 export async function createProCheckoutAction(): Promise<
   { success: true; checkoutUrl: string } | { success: false; error: string }
@@ -18,6 +18,9 @@ export async function createProCheckoutAction(): Promise<
   if (session.user.role === 'PRO') return { success: false, error: 'すでに PRO プランです' }
 
   const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } })
+  if (dbUser?.isGuest) {
+    return { success: false, error: 'ゲストアカウントでは PRO にアップグレードできません。正式登録してご利用ください。' }
+  }
   const checkout = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: dbUser?.stripeCustomerId ?? undefined,
@@ -47,6 +50,9 @@ export async function createFanSubscriptionAction(
 
   if (!target) return { success: false, error: 'アーティストが見つかりません' }
   if (target.role !== 'PRO') return { success: false, error: 'PRO アーティストのみ支援できます' }
+  if (dbUser?.isGuest) {
+    return { success: false, error: 'ゲストアカウントではファン支援を購入できません。正式登録してご利用ください。' }
+  }
 
   const checkout = await stripe.checkout.sessions.create({
     mode: 'subscription',
