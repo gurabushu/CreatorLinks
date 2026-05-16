@@ -578,15 +578,25 @@ export function ArtistListClient({
     <div>
       {/* マッチ成立バナー */}
       {matchBanner && (
-        <div className="mb-6 rounded-xl border border-pink-200 bg-gradient-to-r from-pink-50 to-purple-50 p-4 flex items-center gap-4">
-          <div className="text-3xl">🎉</div>
-          <div className="flex-1">
-            <p className="font-bold text-pink-700">マッチング成立！</p>
-            <p className="text-sm text-gray-600">{matchBanner.name} さんとマッチしました。チャットで案件を相互紹介できます。</p>
+        <div className="mb-6 rounded-xl border border-pink-200 bg-gradient-to-r from-pink-50 to-purple-50 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="text-2xl sm:text-3xl shrink-0">🎉</div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-pink-700 text-sm sm:text-base">マッチング成立！</p>
+              <p className="text-xs sm:text-sm text-gray-600">{matchBanner.name} さんとマッチしました。チャットで案件を相互紹介できます。</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMatchBanner(null)}
+              aria-label="閉じる"
+              className="text-gray-400 hover:text-gray-600 shrink-0 sm:hidden"
+            >
+              ✕
+            </button>
           </div>
           <Link
             href={`/dashboard/chat/${matchBanner.matchId}`}
-            className="bg-pink-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-pink-700 transition shrink-0"
+            className="bg-pink-600 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-lg hover:bg-pink-700 transition shrink-0 w-full sm:w-auto text-center"
           >
             チャットを開く
           </Link>
@@ -594,7 +604,7 @@ export function ArtistListClient({
             type="button"
             onClick={() => setMatchBanner(null)}
             aria-label="閉じる"
-            className="text-gray-400 hover:text-gray-600 shrink-0"
+            className="text-gray-400 hover:text-gray-600 shrink-0 hidden sm:block"
           >
             ✕
           </button>
@@ -602,11 +612,11 @@ export function ArtistListClient({
       )}
 
       {/* フィルタ + 音声トグル */}
-      <div className="flex items-start justify-between gap-4 mb-8">
-        <div className="flex gap-2 flex-wrap">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 mb-6 sm:mb-8">
+        <div className="flex gap-1.5 sm:gap-2 flex-wrap">
           <button
             onClick={() => setSelectedGenres([])}
-            className={`px-4 py-2 rounded-full text-sm border transition ${
+            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm border transition ${
               selectedGenres.length === 0
                 ? 'bg-purple-600 text-white border-purple-600'
                 : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
@@ -618,7 +628,7 @@ export function ArtistListClient({
             <button
               key={g}
               onClick={() => toggleGenre(g)}
-              className={`px-4 py-2 rounded-full text-sm border transition ${
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm border transition ${
                 selectedGenres.includes(g)
                   ? 'bg-purple-600 text-white border-purple-600'
                   : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'

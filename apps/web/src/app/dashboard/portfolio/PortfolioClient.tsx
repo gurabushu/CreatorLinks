@@ -418,28 +418,25 @@ function PortfolioCard({
         isFeatured ? 'border-amber-400 ring-2 ring-amber-200' : ''
       }`}
     >
-      {/* 星ボタン（メイン作品トグル） */}
+      {/* 星ボタン（メイン作品トグル）— モバイル省スペース化のためバッジは星の右に bundle */}
       <button
         type="button"
         onClick={onToggleFeatured}
         title={isFeatured ? '一覧カードのメイン解除' : '一覧カードのメインに設定'}
         aria-pressed={isFeatured}
-        className={`absolute top-2 left-2 z-10 w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm ${
+        className={`absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full transition shadow-sm ${
           isFeatured
-            ? 'bg-amber-400 text-white hover:bg-amber-500'
-            : 'bg-white/90 text-gray-400 hover:text-amber-500 opacity-0 group-hover:opacity-100'
+            ? 'bg-amber-400 text-white hover:bg-amber-500 px-2 py-1'
+            : 'bg-white/90 text-gray-400 hover:text-amber-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 w-8 h-8 justify-center'
         }`}
       >
-        <svg viewBox="0 0 24 24" className="w-4 h-4" fill={isFeatured ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+        <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill={isFeatured ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
           <path d="M12 2l2.39 7.36H22l-6.18 4.49L18.18 21 12 16.51 5.82 21l2.36-7.15L2 9.36h7.61L12 2z" />
         </svg>
+        {isFeatured && (
+          <span className="text-[10px] font-bold leading-none">メイン</span>
+        )}
       </button>
-
-      {isFeatured && (
-        <span className="absolute top-2 left-12 z-10 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-          メイン
-        </span>
-      )}
 
       <div className="bg-gray-100 h-28 flex items-center justify-center overflow-hidden relative">
         {thumb ? (
@@ -472,7 +469,7 @@ function PortfolioCard({
       </div>
       <button
         onClick={onDelete}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-red-100 text-red-600 text-xs px-2 py-1 rounded transition"
+        className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 bg-red-100 text-red-600 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded transition"
       >
         削除
       </button>

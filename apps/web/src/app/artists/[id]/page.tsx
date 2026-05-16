@@ -51,33 +51,33 @@ export default async function ArtistDetailPage({ params }: Props) {
   if (!user) notFound()
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4">
+    <div className="max-w-4xl mx-auto py-8 sm:py-12 px-4">
       {/* プロフィールヘッダー */}
-      <div className="flex items-start gap-6 mb-8">
-        <div className="w-24 h-24 rounded-full bg-purple-200 overflow-hidden shrink-0">
+      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-purple-200 overflow-hidden shrink-0">
           {user.avatarUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
           )}
         </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">{user.name}</h1>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold break-words">{user.name}</h1>
             {user.role === 'PRO' && (
-              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full font-bold">
+              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full font-bold shrink-0">
                 PRO
               </span>
             )}
           </div>
-          <div className="flex gap-2 mt-1 flex-wrap">
+          <div className="flex gap-1.5 mt-1 flex-wrap">
             {user.genres.map((g) => (
-              <span key={g} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
+              <span key={g} className="bg-gray-100 text-gray-600 text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded">
                 {g}
               </span>
             ))}
           </div>
-          {user.bio && <p className="text-gray-600 mt-2">{user.bio}</p>}
-          <p className="text-sm text-gray-500 mt-1">
+          {user.bio && <p className="text-sm sm:text-base text-gray-600 mt-2 whitespace-pre-wrap">{user.bio}</p>}
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             ⭐ {Number(user.averageRating).toFixed(1)}
           </p>
         </div>

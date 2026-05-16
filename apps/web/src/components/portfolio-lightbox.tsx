@@ -65,7 +65,7 @@ export function PortfolioLightbox({
             onClose()
           }}
           aria-label="閉じる"
-          className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+          className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-lg"
         >
           ✕
         </button>
@@ -82,7 +82,7 @@ export function PortfolioLightbox({
             type="button"
             onClick={() => onChangeIndex(index - 1)}
             aria-label="前の作品"
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white text-xl flex items-center justify-center z-10"
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-2xl flex items-center justify-center z-10"
           >
             ‹
           </button>
@@ -93,7 +93,7 @@ export function PortfolioLightbox({
             type="button"
             onClick={() => onChangeIndex(index + 1)}
             aria-label="次の作品"
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white text-xl flex items-center justify-center z-10"
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-2xl flex items-center justify-center z-10"
           >
             ›
           </button>
@@ -106,9 +106,9 @@ export function PortfolioLightbox({
 
       {/* キャプション */}
       <div className="px-4 pb-5 text-white shrink-0" onClick={(e) => e.stopPropagation()}>
-        <p className="font-bold text-lg">{current.title}</p>
+        <p className="font-bold text-base sm:text-lg">{current.title}</p>
         {current.description && (
-          <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap">{current.description}</p>
+          <p className="text-xs sm:text-sm text-gray-300 mt-1 whitespace-pre-wrap line-clamp-4 sm:line-clamp-none">{current.description}</p>
         )}
         {(source.kind === 'youtube' || source.kind === 'vimeo' || source.kind === 'twitter' || source.kind === 'other') && (
           <a

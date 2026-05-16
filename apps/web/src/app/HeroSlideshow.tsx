@@ -39,32 +39,32 @@ export function HeroSlideshow() {
   const slide = SLIDES[current]
 
   return (
-    <section className="bg-gradient-to-br from-purple-600 to-indigo-700 text-white py-24 px-4">
+    <section className="bg-gradient-to-br from-purple-600 to-indigo-700 text-white py-14 sm:py-20 md:py-24 px-4">
       <div className="max-w-4xl mx-auto text-center">
         <div
           className="transition-opacity duration-300"
           style={{ opacity: visible ? 1 : 0 }}
         >
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
             {slide.headline}
             <br />
             <span className="text-purple-200">{slide.accent}</span>
           </h1>
-          <p className="text-xl text-purple-100 mb-8 whitespace-pre-line">
+          <p className="text-sm sm:text-lg md:text-xl text-purple-100 mb-6 sm:mb-8 whitespace-pre-line">
             {slide.body}
           </p>
         </div>
 
-        <div className="flex gap-4 justify-center flex-wrap mb-8">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center mb-6 sm:mb-8 max-w-sm sm:max-w-none mx-auto">
           <Link
             href="/auth"
-            className="bg-white text-purple-700 font-bold px-8 py-3 rounded-full hover:bg-purple-50 transition"
+            className="bg-white text-purple-700 font-bold px-6 sm:px-8 py-3 rounded-full hover:bg-purple-50 transition text-center"
           >
             無料で始める
           </Link>
           <Link
             href="/projects"
-            className="border border-white text-white font-bold px-8 py-3 rounded-full hover:bg-white/10 transition"
+            className="border border-white text-white font-bold px-6 sm:px-8 py-3 rounded-full hover:bg-white/10 transition text-center"
           >
             案件を探す
           </Link>

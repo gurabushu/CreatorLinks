@@ -325,11 +325,11 @@ export function ChatClient({
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] max-w-3xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)] max-w-3xl mx-auto">
       {/* ヘッダー */}
-      <div className="border-b bg-white px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard/matches" className="text-gray-400 hover:text-gray-600 text-sm">
+      <div className="border-b bg-white px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <Link href="/dashboard/matches" className="text-gray-400 hover:text-gray-600 text-base shrink-0">
             ←
           </Link>
           {match.partnerAvatar && (
@@ -337,11 +337,11 @@ export function ChatClient({
             <img
               src={match.partnerAvatar}
               alt={match.partnerName}
-              className="w-8 h-8 rounded-full object-cover"
+              className="w-8 h-8 rounded-full object-cover shrink-0"
             />
           )}
-          <div>
-            <p className="font-medium text-sm leading-none">{match.partnerName}</p>
+          <div className="min-w-0">
+            <p className="font-medium text-sm leading-none truncate">{match.partnerName}</p>
             {match.isP2P ? (
               <p className="text-xs text-pink-500">アーティスト同士のマッチ</p>
             ) : (
@@ -360,9 +360,9 @@ export function ChatClient({
           <button
             onClick={handleComplete}
             disabled={isCompleting}
-            className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+            className="shrink-0 text-[11px] sm:text-xs bg-blue-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 whitespace-nowrap"
           >
-            {isCompleting ? '処理中...' : '✅ 納品完了'}
+            {isCompleting ? '処理中' : '✅ 納品完了'}
           </button>
         )}
 
@@ -455,7 +455,7 @@ export function ChatClient({
                 📋 自分の非公開案件を共有
               </button>
               {showShareMenu && (
-                <div className="absolute bottom-full left-0 mb-2 w-72 bg-white border border-pink-200 rounded-xl shadow-lg p-2 z-10 max-h-72 overflow-y-auto">
+                <div className="absolute bottom-full left-0 right-0 sm:right-auto sm:w-72 mb-2 bg-white border border-pink-200 rounded-xl shadow-lg p-2 z-10 max-h-72 overflow-y-auto">
                   {myPrivateProjects.length === 0 ? (
                     <div className="p-3 text-xs text-gray-500">
                       非公開案件はまだありません。

@@ -13,12 +13,12 @@ export async function Header() {
 
   return (
     <header className="border-b bg-white sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="font-bold text-xl text-purple-600">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
+        <Link href="/" className="font-bold text-lg sm:text-xl text-purple-600 shrink-0">
           CreatorLinks
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm">
+        <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm flex-1 min-w-0">
           <Link href="/artists" className="text-gray-600 hover:text-purple-600 transition">
             アーティスト
           </Link>
@@ -27,12 +27,12 @@ export async function Header() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {session ? (
             <>
               <Link
                 href="/dashboard"
-                className="text-sm text-gray-600 hover:text-purple-600 transition"
+                className="text-xs sm:text-sm text-gray-600 hover:text-purple-600 transition"
               >
                 マイページ
               </Link>
@@ -46,7 +46,7 @@ export async function Header() {
               >
                 <button
                   type="submit"
-                  className="text-sm border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+                  className="text-xs sm:text-sm border border-gray-300 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-gray-50 transition whitespace-nowrap"
                 >
                   ログアウト
                 </button>
@@ -56,13 +56,13 @@ export async function Header() {
             <>
               <Link
                 href="/auth"
-                className="text-sm text-gray-600 hover:text-purple-600 transition"
+                className="hidden sm:inline text-sm text-gray-600 hover:text-purple-600 transition"
               >
                 ログイン
               </Link>
               <Link
                 href="/auth"
-                className="text-sm bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+                className="text-xs sm:text-sm bg-purple-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-purple-700 transition whitespace-nowrap"
               >
                 無料登録
               </Link>
