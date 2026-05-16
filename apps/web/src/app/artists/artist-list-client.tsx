@@ -352,9 +352,37 @@ function ArtistCard({
   )
   const others = artist.portfolios.filter((p) => p.id !== lead?.id).slice(0, 4)
   const [isActive, setIsActive] = useState(false)
+  const cardRef = useRef<HTMLAnchorElement | null>(null)
+  const [hasHover, setHasHover] = useState(true)
+
+  useEffect(() => {
+    const mql = window.matchMedia('(hover: none)')
+    const update = () => setHasHover(!mql.matches)
+    update()
+    mql.addEventListener('change', update)
+    return () => mql.removeEventListener('change', update)
+  }, [])
+
+  // ホバー不可端末（スマホ等）はビューポートで半分以上見えたら自動再生
+  useEffect(() => {
+    if (hasHover) return
+    const el = cardRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        if (!entry) return
+        setIsActive(entry.intersectionRatio >= 0.5)
+      },
+      { threshold: [0, 0.5, 1] },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasHover])
 
   return (
     <Link
+      ref={cardRef}
       href={`/artists/${artist.id}`}
       onMouseEnter={() => setIsActive(true)}
       onMouseLeave={() => setIsActive(false)}
