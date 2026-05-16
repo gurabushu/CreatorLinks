@@ -23,34 +23,52 @@ type ArtistItem = {
   portfolios: Portfolio[]
 }
 
-// ---- メインメディア（自動再生 / YouTube サムネ / カバー画像） ----
+// ---- メインメディア（ホバー時のみ再生：TikTok 風） ----
 function MediaHero({
   artist,
   lead,
   coverUrl,
+  isActive,
 }: {
   artist: ArtistItem
   lead: Portfolio | null
   coverUrl: string | null
+  isActive: boolean
 }) {
   const source = lead ? resolveMediaSource(lead.fileKey) : null
+  const videoRef = useRef<HTMLVideoElement | null>(null)
 
-  // 1) 動画ファイル → ループ自動再生
+  // 動画ファイル: isActive で play/pause を切り替え
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+    if (isActive) {
+      v.currentTime = 0
+      void v.play().catch(() => {})
+    } else {
+      v.pause()
+    }
+  }, [isActive])
+
+  // 1) 動画ファイル → ホバーで再生
   if (lead && source?.kind === 'file' && lead.mediaType === 'VIDEO') {
     return (
-      <video
-        src={source.url}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      <>
+        <video
+          ref={videoRef}
+          src={`${source.url}#t=0.1`}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <HoverHint visible={!isActive} label="動画" />
+      </>
     )
   }
 
-  // 2) YouTube → 高画質サムネ + ▶ オーバーレイ
+  // 2) YouTube → ホバー時に iframe を mount
   if (source?.kind === 'youtube') {
     return (
       <>
@@ -58,27 +76,63 @@ function MediaHero({
           src={source.thumbnailUrl}
           alt={lead?.title ?? `${artist.name}の動画`}
           fill
-          className="object-cover"
+          className={`object-cover transition-opacity duration-200 ${isActive ? 'opacity-0' : 'opacity-100'}`}
           unoptimized
         />
-        <PlayOverlay label="YouTube" />
+        {isActive && (
+          <iframe
+            src={source.embedUrl}
+            title={lead?.title ?? `${artist.name}の動画`}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            loading="lazy"
+          />
+        )}
+        <HoverHint visible={!isActive} label="YouTube" />
       </>
     )
   }
 
-  // 3) Vimeo / Twitter / その他URL → 汎用 ▶
-  if (source && (source.kind === 'vimeo' || source.kind === 'twitter' || source.kind === 'other')) {
+  // 3) Vimeo → ホバー時に iframe を mount
+  if (source?.kind === 'vimeo') {
+    return (
+      <>
+        {coverUrl && (
+          <Image
+            src={coverUrl}
+            alt={artist.name}
+            fill
+            className={`object-cover transition-opacity duration-200 ${isActive ? 'opacity-0' : 'opacity-100'}`}
+            unoptimized
+          />
+        )}
+        {isActive && (
+          <iframe
+            src={source.embedUrl}
+            title={lead?.title ?? `${artist.name}の動画`}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            loading="lazy"
+          />
+        )}
+        <HoverHint visible={!isActive} label="Vimeo" />
+      </>
+    )
+  }
+
+  // 4) Twitter / その他URL → 再生はできないので ▶ アイコンのみ
+  if (source && (source.kind === 'twitter' || source.kind === 'other')) {
     return (
       <>
         {coverUrl && (
           <Image src={coverUrl} alt={artist.name} fill className="object-cover" unoptimized />
         )}
-        <PlayOverlay label={source.kind === 'vimeo' ? 'Vimeo' : 'リンク'} />
+        <HoverHint visible label={source.kind === 'twitter' ? 'X' : 'リンク'} />
       </>
     )
   }
 
-  // 4) 画像 portfolio が lead → そのまま表示
+  // 5) 画像 portfolio が lead → そのまま表示
   if (lead && source?.kind === 'file' && lead.mediaType === 'IMAGE') {
     return (
       <Image
@@ -94,7 +148,7 @@ function MediaHero({
     )
   }
 
-  // 5) カバー画像のみ
+  // 6) カバー画像のみ
   if (coverUrl) {
     return (
       <Image
@@ -113,18 +167,24 @@ function MediaHero({
   return null
 }
 
-function PlayOverlay({ label }: { label: string }) {
+function HoverHint({ visible, label }: { visible: boolean; label: string }) {
   return (
     <>
-      <div className="absolute inset-0 bg-black/20" />
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div
+        className={`absolute inset-0 bg-black/20 transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      />
+      <div
+        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      >
         <div className="w-14 h-14 rounded-full bg-white/90 shadow-lg flex items-center justify-center">
           <svg viewBox="0 0 24 24" className="w-6 h-6 ml-1 text-purple-700 fill-current">
             <path d="M8 5v14l11-7z" />
           </svg>
         </div>
       </div>
-      <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">
+      <span
+        className={`absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      >
         {label}
       </span>
     </>
@@ -188,15 +248,20 @@ function ArtistCard({ artist }: { artist: ArtistItem }) {
     : null
   const { lead, coverUrl } = pickLeadPortfolio(artist.portfolios, resolvedCover)
   const others = artist.portfolios.filter((p) => p.id !== lead?.id).slice(0, 4)
+  const [isActive, setIsActive] = useState(false)
 
   return (
     <Link
       href={`/artists/${artist.id}`}
+      onMouseEnter={() => setIsActive(true)}
+      onMouseLeave={() => setIsActive(false)}
+      onFocus={() => setIsActive(true)}
+      onBlur={() => setIsActive(false)}
       className="bg-white border rounded-2xl overflow-hidden hover:shadow-md hover:border-purple-300 transition group block"
     >
       {/* メインメディア */}
       <div className="relative aspect-[16/10] bg-gradient-to-br from-purple-100 to-indigo-100 overflow-hidden">
-        <MediaHero artist={artist} lead={lead} coverUrl={coverUrl} />
+        <MediaHero artist={artist} lead={lead} coverUrl={coverUrl} isActive={isActive} />
 
         {/* アバター */}
         <div className="absolute -bottom-5 left-4 z-10">
