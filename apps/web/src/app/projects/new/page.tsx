@@ -15,6 +15,7 @@ export default function NewProjectPage() {
   const [contractType, setContractType] = useState<'SPOT' | 'SUBSCRIPTION'>('SPOT')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [isPrivate, setIsPrivate] = useState(false)
 
   const [state, action, isPending] = useActionState(
     async (_prev: { success: boolean; error?: string; field?: string; projectId?: string } | null, formData: FormData) => {
@@ -23,6 +24,7 @@ export default function NewProjectPage() {
       formData.set('description', description)
       selectedGenres.forEach((g) => formData.append('genres', g))
       formData.set('contractType', contractType)
+      formData.set('isPrivate', isPrivate ? 'true' : 'false')
 
       const result = await createProjectAction(null, formData)
       if (result.success) {
@@ -207,6 +209,24 @@ export default function NewProjectPage() {
               </p>
             </div>
 
+            {/* 公開範囲 */}
+            <label className="flex items-start gap-3 bg-pink-50 border border-pink-200 rounded-xl p-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isPrivate}
+                onChange={(e) => setIsPrivate(e.target.checked)}
+                className="mt-1 accent-pink-600"
+              />
+              <div>
+                <p className="text-sm font-medium text-pink-800">
+                  非公開案件として作成（相互紹介ボード用）
+                </p>
+                <p className="text-xs text-pink-700 mt-1">
+                  チェックすると一覧には載らず、マッチング済みの相手にチャットから紹介できます。
+                </p>
+              </div>
+            </label>
+
             {/* 確認サマリー */}
             <div className="bg-gray-50 rounded-xl p-5 text-sm space-y-2">
               <p className="font-medium text-gray-700 mb-3">公開内容の確認</p>
@@ -220,6 +240,7 @@ export default function NewProjectPage() {
               <p className="text-gray-500">
                 契約形態: {contractType === 'SPOT' ? 'スポット（単発）' : 'サブスク（継続）'}
               </p>
+              <p className="text-gray-500">公開範囲: {isPrivate ? '非公開（相互紹介）' : '公開（誰でも応募可）'}</p>
             </div>
 
             {errorState?.error && (

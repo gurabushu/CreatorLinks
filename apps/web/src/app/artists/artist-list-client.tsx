@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { listArtistsAction } from '@/server/actions/artist'
+import { toggleLikeAction } from '@/server/actions/like'
 import {
   resolveMediaSource,
   pickLeadPortfolio,
@@ -257,8 +259,86 @@ function ThumbnailStrip({ works }: { works: Portfolio[] }) {
   )
 }
 
+// ---- いいねボタン ----
+function LikeButton({
+  artistId,
+  liked,
+  onChange,
+  onMatched,
+  loggedIn,
+}: {
+  artistId: string
+  liked: boolean
+  onChange: (next: boolean) => void
+  onMatched: (matchId: string) => void
+  loggedIn: boolean
+}) {
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
+
+  const handleClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (busy) return
+    if (!loggedIn) {
+      router.push('/login?next=/artists')
+      return
+    }
+    setBusy(true)
+    onChange(!liked) // 楽観的更新
+    const result = await toggleLikeAction({ targetId: artistId })
+    setBusy(false)
+    if (!result.success) {
+      onChange(liked) // ロールバック
+      return
+    }
+    if (result.status === 'matched') {
+      onMatched(result.matchId)
+    } else if (result.status === 'unliked') {
+      onChange(false)
+    } else if (result.status === 'liked') {
+      onChange(true)
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={busy}
+      aria-pressed={liked}
+      aria-label={liked ? 'いいねを取り消す' : 'いいねする'}
+      className={`shrink-0 w-9 h-9 rounded-full border flex items-center justify-center transition ${
+        liked
+          ? 'bg-pink-50 border-pink-300 text-pink-600 hover:bg-pink-100'
+          : 'bg-white border-gray-200 text-gray-400 hover:border-pink-300 hover:text-pink-500'
+      } ${busy ? 'opacity-60' : ''}`}
+    >
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+        <path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" />
+      </svg>
+    </button>
+  )
+}
+
 // ---- アーティストカード ----
-function ArtistCard({ artist, withSound }: { artist: ArtistItem; withSound: boolean }) {
+function ArtistCard({
+  artist,
+  withSound,
+  liked,
+  onLikeChange,
+  onMatched,
+  loggedIn,
+  isMe,
+}: {
+  artist: ArtistItem
+  withSound: boolean
+  liked: boolean
+  onLikeChange: (next: boolean) => void
+  onMatched: (matchId: string) => void
+  loggedIn: boolean
+  isMe: boolean
+}) {
   const resolvedCover = artist.coverUrl
     ? artist.coverUrl.startsWith('http')
       ? artist.coverUrl
@@ -312,6 +392,15 @@ function ArtistCard({ artist, withSound }: { artist: ArtistItem; withSound: bool
             <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-bold shrink-0">
               PRO
             </span>
+          )}
+          {!isMe && (
+            <LikeButton
+              artistId={artist.id}
+              liked={liked}
+              onChange={onLikeChange}
+              onMatched={onMatched}
+              loggedIn={loggedIn}
+            />
           )}
         </div>
 
@@ -370,9 +459,13 @@ function SkeletonCard() {
 export function ArtistListClient({
   initialArtists,
   initialNextCursor,
+  initialLikedIds,
+  currentUserId,
 }: {
   initialArtists: ArtistItem[]
   initialNextCursor: string | null
+  initialLikedIds: string[]
+  currentUserId: string | null
 }) {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [artists, setArtists] = useState<ArtistItem[]>(initialArtists)
@@ -381,7 +474,23 @@ export function ArtistListClient({
   const [isError, setIsError] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [withSound, setWithSound] = useState(false)
+  const [likedSet, setLikedSet] = useState<Set<string>>(() => new Set(initialLikedIds))
+  const [matchBanner, setMatchBanner] = useState<{ matchId: string; name: string } | null>(null)
   const loaderRef = useRef<HTMLDivElement>(null)
+
+  const setLiked = (artistId: string, next: boolean) => {
+    setLikedSet((prev) => {
+      const copy = new Set(prev)
+      if (next) copy.add(artistId)
+      else copy.delete(artistId)
+      return copy
+    })
+  }
+
+  const handleMatched = (artist: ArtistItem, matchId: string) => {
+    setLiked(artist.id, true)
+    setMatchBanner({ matchId, name: artist.name })
+  }
 
   // localStorage から音声設定を復元
   useEffect(() => {
@@ -462,6 +571,31 @@ export function ArtistListClient({
 
   return (
     <div>
+      {/* マッチ成立バナー */}
+      {matchBanner && (
+        <div className="mb-6 rounded-xl border border-pink-200 bg-gradient-to-r from-pink-50 to-purple-50 p-4 flex items-center gap-4">
+          <div className="text-3xl">🎉</div>
+          <div className="flex-1">
+            <p className="font-bold text-pink-700">マッチング成立！</p>
+            <p className="text-sm text-gray-600">{matchBanner.name} さんとマッチしました。チャットで案件を相互紹介できます。</p>
+          </div>
+          <Link
+            href={`/dashboard/chat/${matchBanner.matchId}`}
+            className="bg-pink-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-pink-700 transition shrink-0"
+          >
+            チャットを開く
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMatchBanner(null)}
+            aria-label="閉じる"
+            className="text-gray-400 hover:text-gray-600 shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* フィルタ + 音声トグル */}
       <div className="flex items-start justify-between gap-4 mb-8">
         <div className="flex gap-2 flex-wrap">
@@ -515,7 +649,16 @@ export function ArtistListClient({
         {isPending
           ? Array.from({ length: LIMIT }).map((_, i) => <SkeletonCard key={i} />)
           : artists.map((artist) => (
-              <ArtistCard key={artist.id} artist={artist} withSound={withSound} />
+              <ArtistCard
+                key={artist.id}
+                artist={artist}
+                withSound={withSound}
+                liked={likedSet.has(artist.id)}
+                onLikeChange={(next) => setLiked(artist.id, next)}
+                onMatched={(matchId) => handleMatched(artist, matchId)}
+                loggedIn={!!currentUserId}
+                isMe={currentUserId === artist.id}
+              />
             ))}
         {isFetchingMore &&
           Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`more-${i}`} />)}

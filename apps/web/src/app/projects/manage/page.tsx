@@ -42,6 +42,7 @@ export default async function ProjectManagePage() {
     OPEN: '募集中',
     MATCHING: 'マッチング中',
     CLOSED: 'クローズ',
+    PRIVATE: '非公開（相互紹介）',
   }
 
   return (
@@ -77,6 +78,8 @@ export default async function ProjectManagePage() {
                           ? 'bg-green-100 text-green-700'
                           : project.status === 'MATCHING'
                           ? 'bg-blue-100 text-blue-700'
+                          : project.status === 'PRIVATE'
+                          ? 'bg-pink-100 text-pink-700'
                           : 'bg-gray-100 text-gray-500'
                       }`}
                     >

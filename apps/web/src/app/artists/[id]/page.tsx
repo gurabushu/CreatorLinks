@@ -4,6 +4,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { PortfolioGallery } from './portfolio-gallery'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -85,18 +86,16 @@ export default async function ArtistDetailPage({ params }: Props) {
       {/* ポートフォリオ */}
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-4">ポートフォリオ</h2>
-        {user.portfolios.length === 0 ? (
-          <p className="text-gray-500">まだポートフォリオはありません</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {user.portfolios.map((p) => (
-              <div key={p.id} className="bg-gray-100 rounded-xl p-4">
-                <p className="font-medium text-sm">{p.title}</p>
-                <p className="text-xs text-gray-500 mt-1">{p.mediaType}</p>
-              </div>
-            ))}
-          </div>
-        )}
+        <PortfolioGallery
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          portfolios={user.portfolios.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            mediaType: p.mediaType,
+            fileKey: p.fileKey,
+          }))}
+        />
       </section>
     </div>
   )

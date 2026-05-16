@@ -22,6 +22,9 @@ export async function updateMatchStatusAction(
   })
 
   if (!match) return { success: false, error: 'マッチングが見つかりません' }
+  if (!match.project || !match.projectId) {
+    return { success: false, error: '案件付きマッチではありません' }
+  }
   if (match.project.clientId !== session.user.id) {
     return { success: false, error: '権限がありません' }
   }
@@ -75,6 +78,9 @@ export async function completeMatchAction(matchId: string): Promise<MatchActionR
   })
 
   if (!match) return { success: false, error: 'マッチングが見つかりません' }
+  if (!match.projectId) {
+    return { success: false, error: '案件付きマッチではありません' }
+  }
   if (match.artistId !== session.user.id) {
     return { success: false, error: '権限がありません' }
   }
@@ -111,6 +117,9 @@ export async function createReviewAction(
   })
 
   if (!match) return { success: false, error: 'マッチングが見つかりません' }
+  if (!match.project) {
+    return { success: false, error: '案件付きマッチではありません' }
+  }
   if (match.status !== 'COMPLETED') {
     return { success: false, error: '完了済みの案件のみレビューできます' }
   }
@@ -164,7 +173,9 @@ export async function sendMessageAction(
   if (!match) return { success: false, error: 'チャットが見つかりません' }
 
   const isParticipant =
-    match.artistId === session.user.id || match.project.clientId === session.user.id
+    match.artistId === session.user.id ||
+    match.partnerUserId === session.user.id ||
+    (match.project && match.project.clientId === session.user.id)
   if (!isParticipant) return { success: false, error: '権限がありません' }
 
   const message = await prisma.message.create({
@@ -192,8 +203,14 @@ export async function sendMessageAction(
   }
 
   // 受信者へのメール通知（5分 debounce でまとめ送信）
-  const recipientId =
-    match.artistId === session.user.id ? match.project.clientId : match.artistId
+  let recipientId: string
+  if (match.project) {
+    recipientId = match.artistId === session.user.id ? match.project.clientId : match.artistId
+  } else {
+    // P2P マッチ: artistId と partnerUserId のうち自分でない方
+    recipientId =
+      match.artistId === session.user.id ? match.partnerUserId! : match.artistId
+  }
   const recipient = await prisma.user.findUnique({
     where: { id: recipientId },
     select: { email: true, name: true },

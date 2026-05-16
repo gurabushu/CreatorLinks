@@ -16,18 +16,83 @@ interface Message {
   sender: { id: string; name: string; avatarUrl: string | null }
 }
 
+interface PrivateProject {
+  id: string
+  title: string
+  description: string | null
+  budget: number | null
+  contractType: 'SPOT' | 'SUBSCRIPTION'
+}
+
 interface Props {
   matchId: string
   currentUserId: string
   isArtist: boolean
   match: {
     status: string
-    projectTitle: string
-    projectId: string
+    projectTitle: string | null
+    projectId: string | null
+    isP2P: boolean
     partnerName: string
     partnerAvatar: string | null
   }
+  myPrivateProjects?: PrivateProject[]
   initialMessages: Message[]
+}
+
+// シェアされた非公開案件メッセージのプレフィックス
+const SHARED_PROJECT_PREFIX = '__PROJECT__::'
+function encodeSharedProject(p: PrivateProject): string {
+  // パイプ区切り：title / description / budget / contractType / id
+  const safe = (s: string | null) => (s ?? '').replace(/\|/g, '/').replace(/\n/g, ' ')
+  return `${SHARED_PROJECT_PREFIX}${p.id}|${safe(p.title)}|${safe(p.description)}|${p.budget ?? ''}|${p.contractType}`
+}
+function decodeSharedProject(
+  body: string,
+): { id: string; title: string; description: string | null; budget: number | null; contractType: string } | null {
+  if (!body.startsWith(SHARED_PROJECT_PREFIX)) return null
+  const rest = body.slice(SHARED_PROJECT_PREFIX.length)
+  const [id, title, description, budgetStr, contractType] = rest.split('|')
+  if (!id || !title) return null
+  return {
+    id,
+    title,
+    description: description || null,
+    budget: budgetStr ? Number(budgetStr) : null,
+    contractType: contractType ?? 'SPOT',
+  }
+}
+
+function SharedProjectCard({
+  project,
+  isMe,
+}: {
+  project: NonNullable<ReturnType<typeof decodeSharedProject>>
+  isMe: boolean
+}) {
+  return (
+    <div
+      className={`max-w-[80%] rounded-2xl border p-3 ${
+        isMe ? 'bg-pink-50 border-pink-200' : 'bg-white border-pink-200 shadow-sm'
+      }`}
+    >
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-xs font-bold bg-pink-600 text-white px-2 py-0.5 rounded-full">非公開案件</span>
+        <span className="text-xs text-gray-500">
+          {project.contractType === 'SPOT' ? 'スポット' : 'サブスク'}
+        </span>
+      </div>
+      <p className="font-bold text-sm">{project.title}</p>
+      {project.description && (
+        <p className="text-xs text-gray-600 mt-1 line-clamp-3 whitespace-pre-wrap">{project.description}</p>
+      )}
+      {project.budget !== null && (
+        <p className="text-pink-700 font-bold text-sm mt-2">
+          ¥{project.budget.toLocaleString()}
+        </p>
+      )}
+    </div>
+  )
 }
 
 // ---- レビューモーダル ----
@@ -130,6 +195,7 @@ export function ChatClient({
   currentUserId,
   isArtist,
   match,
+  myPrivateProjects = [],
   initialMessages,
 }: Props) {
   const router = useRouter()
@@ -139,6 +205,7 @@ export function ChatClient({
   const [isCompleting, startCompleteTransition] = useTransition()
   const [showReview, setShowReview] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
+  const [showShareMenu, setShowShareMenu] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isCompleted = match.status === 'COMPLETED'
@@ -225,6 +292,27 @@ export function ChatClient({
     }
   }
 
+  const handleShareProject = async (project: PrivateProject) => {
+    setShowShareMenu(false)
+    const body = encodeSharedProject(project)
+    const optimistic: Message = {
+      id: `tmp-${Date.now()}`,
+      senderId: currentUserId,
+      body,
+      createdAt: new Date().toISOString(),
+      readAt: null,
+      sender: { id: currentUserId, name: 'あなた', avatarUrl: null },
+    }
+    setMessages((prev) => [...prev, optimistic])
+    startSendTransition(async () => {
+      const result = await sendMessageAction(matchId, body)
+      if (!result.success) {
+        setMessages((prev) => prev.filter((m) => m.id !== optimistic.id))
+        setSendError(result.error ?? '共有に失敗しました')
+      }
+    })
+  }
+
   const handleComplete = () => {
     if (!confirm('納品を完了してよろしいですか？この操作は取り消せません。')) return
     startCompleteTransition(async () => {
@@ -254,17 +342,21 @@ export function ChatClient({
           )}
           <div>
             <p className="font-medium text-sm leading-none">{match.partnerName}</p>
-            <Link
-              href={`/projects/${match.projectId}`}
-              className="text-xs text-gray-400 hover:text-purple-600"
-            >
-              {match.projectTitle}
-            </Link>
+            {match.isP2P ? (
+              <p className="text-xs text-pink-500">アーティスト同士のマッチ</p>
+            ) : (
+              <Link
+                href={`/projects/${match.projectId}`}
+                className="text-xs text-gray-400 hover:text-purple-600"
+              >
+                {match.projectTitle}
+              </Link>
+            )}
           </div>
         </div>
 
-        {/* 完了ボタン（アーティスト & ACCEPTED 状態のみ） */}
-        {isArtist && !isCompleted && (
+        {/* 完了ボタン（Project Match のみ表示 / P2P では非表示） */}
+        {isArtist && !isCompleted && !match.isP2P && (
           <button
             onClick={handleComplete}
             disabled={isCompleting}
@@ -313,16 +405,22 @@ export function ChatClient({
                   )}
                 </div>
               )}
-              <div className={`max-w-[72%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
-                <div
-                  className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                    isMe
-                      ? 'bg-purple-600 text-white rounded-tr-sm'
-                      : 'bg-white text-gray-800 shadow-sm rounded-tl-sm'
-                  }`}
-                >
-                  {msg.body}
-                </div>
+              <div className={`max-w-[80%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+                {(() => {
+                  const shared = decodeSharedProject(msg.body)
+                  if (shared) return <SharedProjectCard project={shared} isMe={isMe} />
+                  return (
+                    <div
+                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                        isMe
+                          ? 'bg-purple-600 text-white rounded-tr-sm'
+                          : 'bg-white text-gray-800 shadow-sm rounded-tl-sm'
+                      }`}
+                    >
+                      {msg.body}
+                    </div>
+                  )
+                })()}
                 <p className="text-[10px] text-gray-400 mt-0.5 px-1">
                   {new Date(msg.createdAt).toLocaleTimeString('ja-JP', {
                     hour: '2-digit',
@@ -345,6 +443,47 @@ export function ChatClient({
           {sendError && (
             <p className="text-xs text-red-500 mb-2">{sendError}</p>
           )}
+
+          {/* 非公開案件 共有メニュー */}
+          {match.isP2P && (
+            <div className="mb-2 relative">
+              <button
+                type="button"
+                onClick={() => setShowShareMenu((v) => !v)}
+                className="text-xs px-3 py-1.5 rounded-full border border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 transition"
+              >
+                📋 自分の非公開案件を共有
+              </button>
+              {showShareMenu && (
+                <div className="absolute bottom-full left-0 mb-2 w-72 bg-white border border-pink-200 rounded-xl shadow-lg p-2 z-10 max-h-72 overflow-y-auto">
+                  {myPrivateProjects.length === 0 ? (
+                    <div className="p-3 text-xs text-gray-500">
+                      非公開案件はまだありません。
+                      <Link href="/projects/new" className="text-pink-600 hover:underline ml-1">
+                        作成する →
+                      </Link>
+                    </div>
+                  ) : (
+                    myPrivateProjects.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleShareProject(p)}
+                        className="w-full text-left p-2.5 rounded-lg hover:bg-pink-50 transition"
+                      >
+                        <p className="font-medium text-sm truncate">{p.title}</p>
+                        <p className="text-xs text-gray-500">
+                          {p.budget ? `¥${p.budget.toLocaleString()}` : '予算未設定'} ·{' '}
+                          {p.contractType === 'SPOT' ? 'スポット' : 'サブスク'}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-2 items-end">
             <textarea
               ref={inputRef}

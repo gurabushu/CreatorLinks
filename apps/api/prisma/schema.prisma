@@ -37,6 +37,7 @@ enum ProjectStatus {
   OPEN
   MATCHING
   CLOSED
+  PRIVATE // マッチ済みユーザーにだけ相互紹介できる非公開案件
 }
 
 enum MatchStatus {
@@ -81,10 +82,13 @@ model User {
   portfolios        Portfolio[]
   projectsAsClient  Project[]      @relation("ClientProjects")
   matchesAsArtist   Match[]        @relation("ArtistMatches")
+  matchesAsPartner  Match[]        @relation("PartnerMatches")
   sentMessages      Message[]
   reviewsGiven      Review[]       @relation("ReviewerReviews")
   subscriptionsGiven Subscription[] @relation("SubscriberSubs")
   subscriptionsReceived Subscription[] @relation("TargetSubs")
+  likesGiven        Like[]         @relation("LikesGiven")
+  likesReceived     Like[]         @relation("LikesReceived")
   accounts          Account[]
   sessions          Session[]
 
@@ -123,20 +127,37 @@ model Project {
 }
 
 model Match {
-  id        String      @id @default(cuid())
-  projectId String
-  artistId  String
-  status    MatchStatus @default(APPLIED)
-  message   String?     // 応募メッセージ
-  createdAt DateTime    @default(now())
+  id            String      @id @default(cuid())
+  projectId     String?     // P2P マッチでは null
+  artistId      String      // Project 応募の場合: 受注アーティスト / P2P の場合: いいねを先に出した側
+  partnerUserId String?     // P2P マッチでの相手。projectId が null のとき必須
+  status        MatchStatus @default(APPLIED)
+  message       String?     // 応募メッセージ
+  createdAt     DateTime    @default(now())
 
-  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project  Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   artist   User      @relation("ArtistMatches", fields: [artistId], references: [id], onDelete: Cascade)
+  partner  User?     @relation("PartnerMatches", fields: [partnerUserId], references: [id], onDelete: Cascade)
   messages Message[]
   reviews  Review[]
 
-  @@unique([projectId, artistId]) // 同一プロジェクトへの重複応募防止
+  @@unique([projectId, artistId])   // 同一プロジェクトへの重複応募防止（PostgreSQL の NULL は重複扱いされない）
+  @@unique([artistId, partnerUserId]) // 同じ P2P ペアで重複マッチを作らない
   @@map("matches")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  likerId   String   // 「いいね」を付けた人
+  likedId   String   // 「いいね」された人
+  createdAt DateTime @default(now())
+
+  liker User @relation("LikesGiven", fields: [likerId], references: [id], onDelete: Cascade)
+  liked User @relation("LikesReceived", fields: [likedId], references: [id], onDelete: Cascade)
+
+  @@unique([likerId, likedId])
+  @@index([likedId])
+  @@map("likes")
 }
 
 model Subscription {

@@ -25,6 +25,7 @@ export async function createProjectAction(
     genres: formData.getAll('genres') as string[],
     budget: formData.get('budget') ? Number(formData.get('budget')) : undefined,
     contractType: formData.get('contractType'),
+    isPrivate: formData.get('isPrivate') === 'on' || formData.get('isPrivate') === 'true',
   }
 
   const parsed = CreateProjectSchema.safeParse(raw)
@@ -37,9 +38,11 @@ export async function createProjectAction(
     }
   }
 
+  const { isPrivate, ...projectData } = parsed.data
   const project = await prisma.project.create({
     data: {
-      ...parsed.data,
+      ...projectData,
+      status: isPrivate ? 'PRIVATE' : 'OPEN',
       clientId: session.user.id,
     },
   })
@@ -78,8 +81,9 @@ export async function applyToProjectAction(
     },
   })
 
-  // メール通知: 発注者へ応募を通知
-  const client = match.project.client
+  // メール通知: 発注者へ応募を通知（projectId 指定で作成しているので project は必ず存在）
+  const projectInfo = match.project!
+  const client = projectInfo.client
   await inngest.send({
     name: 'match/applied',
     data: {
@@ -87,10 +91,31 @@ export async function applyToProjectAction(
       clientEmail: client.email,
       clientName: client.name,
       artistName: session.user.name ?? 'アーティスト',
-      projectTitle: match.project.title,
+      projectTitle: projectInfo.title,
     },
   }).catch(() => {/* Inngest 未設定時は無視 */})
 
   revalidatePath(`/projects/${projectId}`)
   return { success: true }
+}
+
+// 自分の非公開案件一覧（チャットで共有する選択肢を出すため）
+export async function listMyPrivateProjectsAction() {
+  const session = await auth()
+  if (!session) return []
+  try {
+    return await prisma.project.findMany({
+      where: { clientId: session.user.id, status: 'PRIVATE' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        budget: true,
+        contractType: true,
+      },
+    })
+  } catch {
+    return []
+  }
 }
