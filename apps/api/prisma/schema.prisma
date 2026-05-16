@@ -76,6 +76,7 @@ model User {
   stripeCustomerId String?  @unique
   averageRating    Decimal  @default(0) @db.Decimal(3, 2)
   featuredPortfolioId String? // アーティスト本人が一覧カードのメインに見せる作品
+  isGuest          Boolean  @default(false) // テスト用ゲストアカウント（24h で自動削除）
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -96,6 +97,7 @@ model User {
   accounts          Account[]
   sessions          Session[]
 
+  @@index([isGuest, createdAt])
   @@map("users")
 }
 
