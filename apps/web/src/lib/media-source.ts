@@ -6,10 +6,23 @@
 
 export type MediaSource =
   | { kind: 'file'; url: string }
-  | { kind: 'youtube'; embedUrl: string; thumbnailUrl: string; watchUrl: string }
-  | { kind: 'vimeo'; embedUrl: string; watchUrl: string }
+  | { kind: 'youtube'; videoId: string; embedUrl: string; thumbnailUrl: string; watchUrl: string }
+  | { kind: 'vimeo'; videoId: string; embedUrl: string; watchUrl: string }
   | { kind: 'twitter'; watchUrl: string }
   | { kind: 'other'; watchUrl: string }
+
+export function buildYouTubeEmbed(videoId: string, opts?: { muted?: boolean }): string {
+  const muted = opts?.muted ?? true
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0`
+}
+
+export function buildVimeoEmbed(videoId: string, opts?: { muted?: boolean }): string {
+  const muted = opts?.muted ?? true
+  // background=1 は強制 muted。音を出したい時は通常プレイヤー設定にする
+  return muted
+    ? `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=1&background=1`
+    : `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=0&loop=1&controls=0&title=0&byline=0&portrait=0`
+}
 
 function extractYouTubeId(url: string): string | null {
   // https://www.youtube.com/watch?v=XXXX / https://youtu.be/XXXX / https://www.youtube.com/shorts/XXXX
@@ -32,7 +45,8 @@ export function resolveMediaSource(fileKey: string): MediaSource {
   if (youtubeId) {
     return {
       kind: 'youtube',
-      embedUrl: `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&playsinline=1&rel=0`,
+      videoId: youtubeId,
+      embedUrl: buildYouTubeEmbed(youtubeId, { muted: true }),
       thumbnailUrl: `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
       watchUrl: fileKey,
     }
@@ -42,7 +56,8 @@ export function resolveMediaSource(fileKey: string): MediaSource {
   if (vimeoId) {
     return {
       kind: 'vimeo',
-      embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&background=1`,
+      videoId: vimeoId,
+      embedUrl: buildVimeoEmbed(vimeoId, { muted: true }),
       watchUrl: fileKey,
     }
   }

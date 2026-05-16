@@ -4,7 +4,14 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { listArtistsAction } from '@/server/actions/artist'
-import { resolveMediaSource, pickLeadPortfolio } from '@/lib/media-source'
+import {
+  resolveMediaSource,
+  pickLeadPortfolio,
+  buildYouTubeEmbed,
+  buildVimeoEmbed,
+} from '@/lib/media-source'
+
+const SOUND_PREF_KEY = 'creatorlinks.artist-list.hover-sound'
 
 const GENRES = ['音楽', 'イラスト', '動画', 'デザイン', '写真', '文章', '声優', 'その他']
 const LIMIT = 12
@@ -29,11 +36,13 @@ function MediaHero({
   lead,
   coverUrl,
   isActive,
+  withSound,
 }: {
   artist: ArtistItem
   lead: Portfolio | null
   coverUrl: string | null
   isActive: boolean
+  withSound: boolean
 }) {
   const source = lead ? resolveMediaSource(lead.fileKey) : null
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -44,11 +53,16 @@ function MediaHero({
     if (!v) return
     if (isActive) {
       v.currentTime = 0
-      void v.play().catch(() => {})
+      v.muted = !withSound
+      void v.play().catch(() => {
+        // 音ありで autoplay が弾かれた場合は muted にしてリトライ
+        v.muted = true
+        void v.play().catch(() => {})
+      })
     } else {
       v.pause()
     }
-  }, [isActive])
+  }, [isActive, withSound])
 
   // 1) 動画ファイル → ホバーで再生
   if (lead && source?.kind === 'file' && lead.mediaType === 'VIDEO') {
@@ -70,6 +84,7 @@ function MediaHero({
 
   // 2) YouTube → ホバー時に iframe を mount
   if (source?.kind === 'youtube') {
+    const embedUrl = buildYouTubeEmbed(source.videoId, { muted: !withSound })
     return (
       <>
         <Image
@@ -81,7 +96,8 @@ function MediaHero({
         />
         {isActive && (
           <iframe
-            src={source.embedUrl}
+            key={withSound ? 'on' : 'off'}
+            src={embedUrl}
             title={lead?.title ?? `${artist.name}の動画`}
             className="absolute inset-0 w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media; picture-in-picture"
@@ -95,6 +111,7 @@ function MediaHero({
 
   // 3) Vimeo → ホバー時に iframe を mount
   if (source?.kind === 'vimeo') {
+    const embedUrl = buildVimeoEmbed(source.videoId, { muted: !withSound })
     return (
       <>
         {coverUrl && (
@@ -108,7 +125,8 @@ function MediaHero({
         )}
         {isActive && (
           <iframe
-            src={source.embedUrl}
+            key={withSound ? 'on' : 'off'}
+            src={embedUrl}
             title={lead?.title ?? `${artist.name}の動画`}
             className="absolute inset-0 w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media; picture-in-picture"
@@ -240,7 +258,7 @@ function ThumbnailStrip({ works }: { works: Portfolio[] }) {
 }
 
 // ---- アーティストカード ----
-function ArtistCard({ artist }: { artist: ArtistItem }) {
+function ArtistCard({ artist, withSound }: { artist: ArtistItem; withSound: boolean }) {
   const resolvedCover = artist.coverUrl
     ? artist.coverUrl.startsWith('http')
       ? artist.coverUrl
@@ -261,30 +279,33 @@ function ArtistCard({ artist }: { artist: ArtistItem }) {
     >
       {/* メインメディア */}
       <div className="relative aspect-[16/10] bg-gradient-to-br from-purple-100 to-indigo-100 overflow-hidden">
-        <MediaHero artist={artist} lead={lead} coverUrl={coverUrl} isActive={isActive} />
+        <MediaHero
+          artist={artist}
+          lead={lead}
+          coverUrl={coverUrl}
+          isActive={isActive}
+          withSound={withSound}
+        />
+      </div>
 
-        {/* アバター */}
-        <div className="absolute -bottom-5 left-4 z-10">
-          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white text-lg font-bold shadow">
+      {/* 本文 */}
+      <div className="px-4 pt-3 pb-3">
+        <div className="flex items-center gap-2 mb-1">
+          {/* アバター（名前の左） */}
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white text-sm font-bold shrink-0">
             {artist.avatarUrl ? (
               <Image
                 src={artist.avatarUrl}
                 alt={artist.name}
-                width={48}
-                height={48}
+                width={36}
+                height={36}
                 className="w-full h-full object-cover"
               />
             ) : (
               artist.name.charAt(0)
             )}
           </div>
-        </div>
-      </div>
-
-      {/* 本文 */}
-      <div className="pt-7 px-4 pb-3">
-        <div className="flex items-center gap-2 flex-wrap mb-1">
-          <p className="font-bold text-gray-900 group-hover:text-purple-700 transition truncate">
+          <p className="font-bold text-gray-900 group-hover:text-purple-700 transition truncate flex-1 min-w-0">
             {artist.name}
           </p>
           {artist.role === 'PRO' && (
@@ -330,7 +351,7 @@ function SkeletonCard() {
   return (
     <div className="bg-white border rounded-2xl overflow-hidden animate-pulse">
       <div className="aspect-[16/10] bg-gray-200" />
-      <div className="pt-7 px-4 pb-3 space-y-2">
+      <div className="px-4 pt-3 pb-3 space-y-2">
         <div className="h-4 bg-gray-200 rounded w-1/2" />
         <div className="h-3 bg-gray-100 rounded w-1/3" />
         <div className="h-3 bg-gray-100 rounded w-full" />
@@ -359,7 +380,30 @@ export function ArtistListClient({
   const [isFetchingMore, setIsFetchingMore] = useState(false)
   const [isError, setIsError] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [withSound, setWithSound] = useState(false)
   const loaderRef = useRef<HTMLDivElement>(null)
+
+  // localStorage から音声設定を復元
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SOUND_PREF_KEY)
+      if (saved === '1') setWithSound(true)
+    } catch {
+      // localStorage 不可（プライベートモード等）はデフォルト（OFF）のまま
+    }
+  }, [])
+
+  const toggleSound = () => {
+    setWithSound((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(SOUND_PREF_KEY, next ? '1' : '0')
+      } catch {
+        // 保存できなくても挙動には影響しない
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     setIsError(false)
@@ -418,31 +462,47 @@ export function ArtistListClient({
 
   return (
     <div>
-      {/* ジャンルフィルタ */}
-      <div className="flex gap-2 flex-wrap mb-8">
-        <button
-          onClick={() => setSelectedGenres([])}
-          className={`px-4 py-2 rounded-full text-sm border transition ${
-            selectedGenres.length === 0
-              ? 'bg-purple-600 text-white border-purple-600'
-              : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
-          }`}
-        >
-          すべて
-        </button>
-        {GENRES.map((g) => (
+      {/* フィルタ + 音声トグル */}
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div className="flex gap-2 flex-wrap">
           <button
-            key={g}
-            onClick={() => toggleGenre(g)}
+            onClick={() => setSelectedGenres([])}
             className={`px-4 py-2 rounded-full text-sm border transition ${
-              selectedGenres.includes(g)
+              selectedGenres.length === 0
                 ? 'bg-purple-600 text-white border-purple-600'
                 : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
             }`}
           >
-            {g}
+            すべて
           </button>
-        ))}
+          {GENRES.map((g) => (
+            <button
+              key={g}
+              onClick={() => toggleGenre(g)}
+              className={`px-4 py-2 rounded-full text-sm border transition ${
+                selectedGenres.includes(g)
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={toggleSound}
+          aria-pressed={withSound}
+          title="ホバー時に音声を再生するかを切り替え"
+          className={`shrink-0 px-3 py-2 rounded-full text-sm border transition flex items-center gap-1.5 ${
+            withSound
+              ? 'bg-purple-600 text-white border-purple-600'
+              : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
+          }`}
+        >
+          <span aria-hidden>{withSound ? '🔊' : '🔇'}</span>
+          <span className="hidden sm:inline">{withSound ? 'ホバー音声 ON' : 'ホバー音声 OFF'}</span>
+        </button>
       </div>
 
       {isError && (
@@ -454,7 +514,9 @@ export function ArtistListClient({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isPending
           ? Array.from({ length: LIMIT }).map((_, i) => <SkeletonCard key={i} />)
-          : artists.map((artist) => <ArtistCard key={artist.id} artist={artist} />)}
+          : artists.map((artist) => (
+              <ArtistCard key={artist.id} artist={artist} withSound={withSound} />
+            ))}
         {isFetchingMore &&
           Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`more-${i}`} />)}
       </div>
