@@ -351,9 +351,14 @@ function ArtistCard({
     artist.featuredPortfolioId,
   )
   const others = artist.portfolios.filter((p) => p.id !== lead?.id).slice(0, 4)
-  const [isActive, setIsActive] = useState(false)
+  const [hoverActive, setHoverActive] = useState(false)
+  const [viewportActive, setViewportActive] = useState(false)
   const cardRef = useRef<HTMLAnchorElement | null>(null)
   const [hasHover, setHasHover] = useState(true)
+  // 音あり再生は user gesture 必須なので、hover/focus 起因のときだけ withSound を尊重し、
+  // viewport 自動再生は常にミュート（ブラウザの autoplay-with-sound ポリシー回避）。
+  const isActive = hoverActive || viewportActive
+  const effectiveWithSound = hoverActive ? withSound : false
 
   useEffect(() => {
     const mql = window.matchMedia('(hover: none)')
@@ -372,7 +377,7 @@ function ArtistCard({
       (entries) => {
         const entry = entries[0]
         if (!entry) return
-        setIsActive(entry.intersectionRatio >= 0.5)
+        setViewportActive(entry.intersectionRatio >= 0.5)
       },
       { threshold: [0, 0.5, 1] },
     )
@@ -384,10 +389,10 @@ function ArtistCard({
     <Link
       ref={cardRef}
       href={`/artists/${artist.id}`}
-      onMouseEnter={() => setIsActive(true)}
-      onMouseLeave={() => setIsActive(false)}
-      onFocus={() => setIsActive(true)}
-      onBlur={() => setIsActive(false)}
+      onMouseEnter={() => setHoverActive(true)}
+      onMouseLeave={() => setHoverActive(false)}
+      onFocus={() => setHoverActive(true)}
+      onBlur={() => setHoverActive(false)}
       className="bg-white border rounded-2xl overflow-hidden hover:shadow-md hover:border-purple-300 transition group block"
     >
       {/* メインメディア */}
@@ -397,7 +402,7 @@ function ArtistCard({
           lead={lead}
           coverUrl={coverUrl}
           isActive={isActive}
-          withSound={withSound}
+          withSound={effectiveWithSound}
         />
       </div>
 
