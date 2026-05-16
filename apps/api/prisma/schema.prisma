@@ -91,6 +91,8 @@ model User {
   subscriptionsReceived Subscription[] @relation("TargetSubs")
   likesGiven        Like[]         @relation("LikesGiven")
   likesReceived     Like[]         @relation("LikesReceived")
+  passwordResetTokens PasswordResetToken[] @relation("PasswordResets")
+  emailChangeRequests EmailChangeRequest[] @relation("EmailChanges")
   accounts          Account[]
   sessions          Session[]
 
@@ -161,6 +163,37 @@ model Like {
   @@unique([likerId, likedId])
   @@index([likedId])
   @@map("likes")
+}
+
+// パスワードリセット用ワンタイムトークン
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique // 平文トークンの SHA-256 ハッシュ
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation("PasswordResets", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// メールアドレス変更用ワンタイムトークン（新メアドに送って確認させる）
+model EmailChangeRequest {
+  id        String    @id @default(cuid())
+  userId    String
+  newEmail  String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation("EmailChanges", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_change_requests")
 }
 
 model Subscription {

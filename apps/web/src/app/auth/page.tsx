@@ -3,6 +3,7 @@
 'use client'
 
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
 import { useActionState, useState, Suspense } from 'react'
 import { signUpAction } from '@/server/actions/auth'
 
@@ -76,6 +77,12 @@ function LoginForm() {
       >
         {loading ? 'ログイン中...' : 'ログイン'}
       </button>
+
+      <p className="text-center text-xs">
+        <Link href="/auth/forgot" className="text-gray-500 hover:text-purple-600 hover:underline">
+          パスワードを忘れた方はこちら
+        </Link>
+      </p>
     </form>
   )
 }
