@@ -75,11 +75,13 @@ model User {
   coverUrl         String?  // プロフィールカバー画像（ジャケット）
   stripeCustomerId String?  @unique
   averageRating    Decimal  @default(0) @db.Decimal(3, 2)
+  featuredPortfolioId String? // アーティスト本人が一覧カードのメインに見せる作品
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   // Relations
   portfolios        Portfolio[]
+  featuredPortfolio Portfolio?     @relation("FeaturedPortfolio", fields: [featuredPortfolioId], references: [id], onDelete: SetNull)
   projectsAsClient  Project[]      @relation("ClientProjects")
   matchesAsArtist   Match[]        @relation("ArtistMatches")
   matchesAsPartner  Match[]        @relation("PartnerMatches")
@@ -89,6 +91,8 @@ model User {
   subscriptionsReceived Subscription[] @relation("TargetSubs")
   likesGiven        Like[]         @relation("LikesGiven")
   likesReceived     Like[]         @relation("LikesReceived")
+  passwordResetTokens PasswordResetToken[] @relation("PasswordResets")
+  emailChangeRequests EmailChangeRequest[] @relation("EmailChanges")
   accounts          Account[]
   sessions          Session[]
 
@@ -104,7 +108,8 @@ model Portfolio {
   fileKey     String    // Uploadthing ファイルキー
   createdAt   DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  featuredByUsers User[] @relation("FeaturedPortfolio")
 
   @@map("portfolios")
 }
@@ -158,6 +163,37 @@ model Like {
   @@unique([likerId, likedId])
   @@index([likedId])
   @@map("likes")
+}
+
+// パスワードリセット用ワンタイムトークン
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique // 平文トークンの SHA-256 ハッシュ
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation("PasswordResets", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// メールアドレス変更用ワンタイムトークン（新メアドに送って確認させる）
+model EmailChangeRequest {
+  id        String    @id @default(cuid())
+  userId    String
+  newEmail  String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation("EmailChanges", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_change_requests")
 }
 
 model Subscription {

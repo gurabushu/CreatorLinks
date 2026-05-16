@@ -16,7 +16,11 @@ export async function GET(
 
   const match = await prisma.match.findUnique({
     where: { id: matchId },
-    select: { artistId: true, project: { select: { clientId: true } } },
+    select: {
+      artistId: true,
+      partnerUserId: true,
+      project: { select: { clientId: true } },
+    },
   })
 
   if (!match) {
@@ -24,7 +28,9 @@ export async function GET(
   }
 
   const isParticipant =
-    match.artistId === session.user.id || match.project.clientId === session.user.id
+    match.artistId === session.user.id ||
+    match.partnerUserId === session.user.id ||
+    match.project?.clientId === session.user.id
   if (!isParticipant) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }

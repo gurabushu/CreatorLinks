@@ -3,14 +3,12 @@
 'use client'
 
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useActionState, useState, Suspense } from 'react'
 import { signUpAction } from '@/server/actions/auth'
 
 // ---- ログインフォーム ----
 function LoginForm() {
-  const router = useRouter()
-
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -26,13 +24,12 @@ function LoginForm() {
       redirect: false,
     })
 
-    setLoading(false)
-
     if (result?.error) {
+      setLoading(false)
       setError('メールアドレスまたはパスワードが正しくありません')
     } else {
-      router.push('/dashboard')
-      router.refresh()
+      // フルリロードで新しい auth cookie をサーバーに確実に伝える
+      window.location.href = '/dashboard'
     }
   }
 
@@ -80,14 +77,18 @@ function LoginForm() {
       >
         {loading ? 'ログイン中...' : 'ログイン'}
       </button>
+
+      <p className="text-center text-xs">
+        <Link href="/auth/forgot" className="text-gray-500 hover:text-purple-600 hover:underline">
+          パスワードを忘れた方はこちら
+        </Link>
+      </p>
     </form>
   )
 }
 
 // ---- サインアップフォーム ----
-function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
-  const router = useRouter()
-
+function SignUpForm({ onSuccess: _onSuccess }: { onSuccess: () => void }) {
   const [state, action, isPending] = useActionState(
     async (_prev: { success: false; error: string; field?: string } | null, formData: FormData) => {
       const email = formData.get('email') as string
@@ -102,9 +103,8 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
         if (signInResult?.error) {
           return { success: false as const, error: 'アカウントは作成されましたが、ログインに失敗しました。ログインページからサインインしてください。', field: 'general' as const }
         }
-        router.push('/dashboard')
-        router.refresh()
-        onSuccess()
+        // フルリロードで新しい auth cookie をサーバーに確実に伝える
+        window.location.href = '/dashboard'
         return null
       }
       return result

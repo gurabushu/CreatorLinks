@@ -39,7 +39,9 @@ export async function POST(req: NextRequest) {
   }
 
   const isParticipant =
-    match.artistId === session.user.id || match.project.clientId === session.user.id
+    match.artistId === session.user.id ||
+    match.partnerUserId === session.user.id ||
+    match.project?.clientId === session.user.id
 
   if (!isParticipant) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

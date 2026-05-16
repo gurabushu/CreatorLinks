@@ -68,10 +68,10 @@ export default async function MatchesPage() {
               return (
                 <div
                   key={match.id}
-                  className="bg-white border border-pink-100 rounded-xl p-5 flex justify-between items-center"
+                  className="bg-white border border-pink-100 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 overflow-hidden flex items-center justify-center text-white font-bold">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
                       {partner?.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={partner.avatarUrl} alt={partner.name} className="w-full h-full object-cover" />
@@ -79,14 +79,14 @@ export default async function MatchesPage() {
                         (partner?.name ?? '?').charAt(0)
                       )}
                     </div>
-                    <div>
-                      <p className="font-medium">{partner?.name ?? '相手'}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{partner?.name ?? '相手'}</p>
                       <p className="text-xs text-gray-500">相互いいねでマッチ — 非公開案件を相互紹介できます</p>
                     </div>
                   </div>
                   <Link
                     href={`/dashboard/chat/${match.id}`}
-                    className="text-sm bg-pink-100 text-pink-700 px-3 py-1 rounded-lg hover:bg-pink-200 transition"
+                    className="text-sm bg-pink-100 text-pink-700 px-3 py-1.5 rounded-lg hover:bg-pink-200 transition shrink-0 text-center w-full sm:w-auto"
                   >
                     チャットへ
                   </Link>
@@ -106,11 +106,11 @@ export default async function MatchesPage() {
             </h2>
             <div className="space-y-3">
               {items.map((match) => (
-                <div key={match.id} className="bg-white border rounded-xl p-5 flex justify-between items-start">
-                  <div>
+                <div key={match.id} className="bg-white border rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                  <div className="min-w-0 flex-1">
                     <Link
                       href={`/projects/${match.projectId}`}
-                      className="font-medium hover:text-purple-600"
+                      className="font-medium hover:text-purple-600 break-words"
                     >
                       {match.project.title}
                     </Link>
@@ -126,7 +126,7 @@ export default async function MatchesPage() {
                   {status === 'ACCEPTED' && (
                     <Link
                       href={`/dashboard/chat/${match.id}`}
-                      className="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-lg hover:bg-purple-200 transition"
+                      className="text-sm bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-200 transition shrink-0 text-center w-full sm:w-auto"
                     >
                       チャットへ
                     </Link>

@@ -49,14 +49,14 @@ export default async function HomePage() {
       <HeroSlideshow />
 
       {/* 新着案件 */}
-      <section className="py-16 px-4 max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold">新着案件</h2>
-          <Link href="/projects" className="text-purple-600 hover:underline">
+      <section className="py-10 sm:py-16 px-4 max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold">新着案件</h2>
+          <Link href="/projects" className="text-sm sm:text-base text-purple-600 hover:underline">
             すべて見る →
           </Link>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {projects.map((project) => (
             <Link
               key={project.id}
@@ -86,15 +86,15 @@ export default async function HomePage() {
       </section>
 
       {/* 注目アーティスト */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-10 sm:py-16 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold">注目のアーティスト</h2>
-            <Link href="/artists" className="text-purple-600 hover:underline">
+          <div className="flex justify-between items-center mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold">注目のアーティスト</h2>
+            <Link href="/artists" className="text-sm sm:text-base text-purple-600 hover:underline">
               すべて見る →
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
             {artists.map((artist) => (
               <Link
                 key={artist.id}
@@ -126,9 +126,9 @@ export default async function HomePage() {
       </section>
 
       {/* 手数料比較 */}
-      <section className="py-16 px-4 max-w-4xl mx-auto text-center">
-        <h2 className="text-2xl font-bold mb-8">手数料の比較</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <section className="py-10 sm:py-16 px-4 max-w-4xl mx-auto text-center">
+        <h2 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">手数料の比較</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[
             { name: 'ランサーズ', fee: '16.5%', highlight: false },
             { name: 'クラウドワークス', fee: '20%', highlight: false },
@@ -137,18 +137,18 @@ export default async function HomePage() {
           ].map((item) => (
             <div
               key={item.name}
-              className={`rounded-xl p-6 ${item.highlight ? 'bg-purple-600 text-white' : 'bg-gray-100'}`}
+              className={`rounded-xl p-4 sm:p-6 ${item.highlight ? 'bg-purple-600 text-white' : 'bg-gray-100'}`}
             >
-              <p className={`text-sm mb-2 ${item.highlight ? 'text-purple-200' : 'text-gray-500'}`}>
+              <p className={`text-xs sm:text-sm mb-2 ${item.highlight ? 'text-purple-200' : 'text-gray-500'}`}>
                 {item.name}
               </p>
-              <p className={`text-3xl font-bold ${item.highlight ? 'text-white' : 'text-gray-700'}`}>
+              <p className={`text-2xl sm:text-3xl font-bold ${item.highlight ? 'text-white' : 'text-gray-700'}`}>
                 {item.fee}
               </p>
             </div>
           ))}
         </div>
-        <p className="text-gray-500 mt-6 text-sm">
+        <p className="text-gray-500 mt-6 text-xs sm:text-sm">
           ※ 1万円案件の場合、CreatorLinks は手取り ¥9,000（業界最高水準）
         </p>
       </section>

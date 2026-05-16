@@ -27,12 +27,12 @@ export default async function ProjectsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-12 px-4">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">案件一覧</h1>
+    <div className="max-w-6xl mx-auto py-8 sm:py-12 px-4">
+      <div className="flex justify-between items-center mb-6 sm:mb-8 gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold">案件一覧</h1>
         <Link
           href="/projects/new"
-          className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition"
+          className="bg-purple-600 text-white text-sm sm:text-base px-4 sm:px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition shrink-0 whitespace-nowrap"
         >
           案件を作成
         </Link>
@@ -43,10 +43,10 @@ export default async function ProjectsPage() {
           <Link
             key={project.id}
             href={`/projects/${project.id}`}
-            className="border rounded-xl p-6 hover:shadow-md transition flex justify-between items-start"
+            className="border rounded-xl p-4 sm:p-6 hover:shadow-md transition flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4"
           >
-            <div>
-              <div className="flex items-center gap-2 mb-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
                   {project.contractType === 'SPOT' ? 'スポット' : 'サブスク'}
                 </span>
@@ -54,7 +54,7 @@ export default async function ProjectsPage() {
                   応募 {project._count.matches}件
                 </span>
               </div>
-              <h2 className="font-bold text-lg">{project.title}</h2>
+              <h2 className="font-bold text-base sm:text-lg break-words">{project.title}</h2>
               {project.description && (
                 <p className="text-gray-600 text-sm mt-1 line-clamp-2">{project.description}</p>
               )}
@@ -67,7 +67,7 @@ export default async function ProjectsPage() {
               </div>
             </div>
             {project.budget && (
-              <p className="text-purple-600 font-bold shrink-0 ml-4">
+              <p className="text-purple-600 font-bold shrink-0 sm:ml-4 text-base sm:text-lg">
                 ¥{project.budget.toLocaleString()}
               </p>
             )}

@@ -41,3 +41,28 @@ export async function deletePortfolioAction(id: string) {
     return { success: false as const, error: '削除に失敗しました' }
   }
 }
+
+// アーティスト一覧のメインに表示する作品を 1 件設定（null で解除）
+export async function setFeaturedPortfolioAction(portfolioId: string | null) {
+  const session = await auth()
+  if (!session) return { success: false as const, error: '認証が必要です' }
+
+  try {
+    if (portfolioId) {
+      const p = await prisma.portfolio.findUnique({ where: { id: portfolioId } })
+      if (!p || p.userId !== session.user.id) {
+        return { success: false as const, error: 'ポートフォリオが見つかりません' }
+      }
+    }
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { featuredPortfolioId: portfolioId },
+    })
+    revalidatePath('/dashboard/portfolio')
+    revalidatePath('/artists')
+    revalidatePath(`/artists/${session.user.id}`)
+    return { success: true as const }
+  } catch {
+    return { success: false as const, error: 'メイン作品の更新に失敗しました' }
+  }
+}
