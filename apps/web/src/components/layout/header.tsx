@@ -14,11 +14,11 @@ export async function Header() {
   return (
     <header className="border-b bg-white sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
-        <Link href="/" className="font-bold text-lg sm:text-xl text-purple-600 shrink-0">
+        <Link href="/" className="font-bold text-base sm:text-xl text-purple-600 shrink-0">
           CreatorLinks
         </Link>
 
-        <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm flex-1 min-w-0">
+        <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm shrink-0">
           <Link href="/artists" className="text-gray-600 hover:text-purple-600 transition">
             アーティスト
           </Link>
@@ -27,12 +27,12 @@ export async function Header() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
           {session ? (
             <>
               <Link
                 href="/dashboard"
-                className="text-xs sm:text-sm text-gray-600 hover:text-purple-600 transition"
+                className="hidden sm:inline text-sm text-gray-600 hover:text-purple-600 transition"
               >
                 マイページ
               </Link>
@@ -46,7 +46,7 @@ export async function Header() {
               >
                 <button
                   type="submit"
-                  className="text-xs sm:text-sm border border-gray-300 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-gray-50 transition whitespace-nowrap"
+                  className="text-[11px] sm:text-sm border border-gray-300 px-2 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-gray-50 transition whitespace-nowrap"
                 >
                   ログアウト
                 </button>
@@ -62,7 +62,7 @@ export async function Header() {
               </Link>
               <Link
                 href="/auth"
-                className="text-xs sm:text-sm bg-purple-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-purple-700 transition whitespace-nowrap"
+                className="text-[11px] sm:text-sm bg-purple-600 text-white px-2.5 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-purple-700 transition whitespace-nowrap"
               >
                 無料登録
               </Link>
