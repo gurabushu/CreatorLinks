@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { auth } from '@/lib/auth'
-import { signOut } from '@/lib/auth'
+import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
+import { auth, signOut } from '@/lib/auth'
 
 export async function Header() {
   let session: Awaited<ReturnType<typeof auth>> = null
@@ -38,7 +39,9 @@ export async function Header() {
               <form
                 action={async () => {
                   'use server'
-                  await signOut({ redirectTo: '/' })
+                  await signOut({ redirect: false })
+                  revalidatePath('/', 'layout')
+                  redirect('/')
                 }}
               >
                 <button

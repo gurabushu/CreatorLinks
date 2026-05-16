@@ -3,15 +3,13 @@
 'use client'
 
 import { signIn } from 'next-auth/react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useActionState, useState, Suspense } from 'react'
 import { signUpAction } from '@/server/actions/auth'
 
 // ---- ログインフォーム ----
 function LoginForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard'
 
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -33,7 +31,7 @@ function LoginForm() {
     if (result?.error) {
       setError('メールアドレスまたはパスワードが正しくありません')
     } else {
-      router.push(callbackUrl)
+      router.push('/dashboard')
       router.refresh()
     }
   }
@@ -205,8 +203,6 @@ function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
 // ---- メインページ ----
 function AuthPageInner() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard'
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
@@ -241,7 +237,7 @@ function AuthPageInner() {
 
         {/* Google OAuth */}
         <button
-          onClick={() => signIn('google', { callbackUrl })}
+          onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
           className="w-full border border-gray-300 rounded-lg py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition mb-5 text-sm font-medium text-gray-700"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">

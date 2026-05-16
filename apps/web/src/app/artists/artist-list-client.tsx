@@ -3,8 +3,17 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { listArtistsAction } from '@/server/actions/artist'
-import { resolveMediaSource, pickLeadPortfolio } from '@/lib/media-source'
+import { toggleLikeAction } from '@/server/actions/like'
+import {
+  resolveMediaSource,
+  pickLeadPortfolio,
+  buildYouTubeEmbed,
+  buildVimeoEmbed,
+} from '@/lib/media-source'
+
+const SOUND_PREF_KEY = 'creatorlinks.artist-list.hover-sound'
 
 const GENRES = ['音楽', 'イラスト', '動画', 'デザイン', '写真', '文章', '声優', 'その他']
 const LIMIT = 12
@@ -23,62 +32,127 @@ type ArtistItem = {
   portfolios: Portfolio[]
 }
 
-// ---- メインメディア（自動再生 / YouTube サムネ / カバー画像） ----
+// ---- メインメディア（ホバー時のみ再生：TikTok 風） ----
 function MediaHero({
   artist,
   lead,
   coverUrl,
+  isActive,
+  withSound,
 }: {
   artist: ArtistItem
   lead: Portfolio | null
   coverUrl: string | null
+  isActive: boolean
+  withSound: boolean
 }) {
   const source = lead ? resolveMediaSource(lead.fileKey) : null
+  const videoRef = useRef<HTMLVideoElement | null>(null)
 
-  // 1) 動画ファイル → ループ自動再生
+  // 動画ファイル: isActive で play/pause を切り替え
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+    if (isActive) {
+      v.currentTime = 0
+      v.muted = !withSound
+      void v.play().catch(() => {
+        // 音ありで autoplay が弾かれた場合は muted にしてリトライ
+        v.muted = true
+        void v.play().catch(() => {})
+      })
+    } else {
+      v.pause()
+    }
+  }, [isActive, withSound])
+
+  // 1) 動画ファイル → ホバーで再生
   if (lead && source?.kind === 'file' && lead.mediaType === 'VIDEO') {
     return (
-      <video
-        src={source.url}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      <>
+        <video
+          ref={videoRef}
+          src={`${source.url}#t=0.1`}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <HoverHint visible={!isActive} label="動画" />
+      </>
     )
   }
 
-  // 2) YouTube → 高画質サムネ + ▶ オーバーレイ
+  // 2) YouTube → ホバー時に iframe を mount
   if (source?.kind === 'youtube') {
+    const embedUrl = buildYouTubeEmbed(source.videoId, { muted: !withSound })
     return (
       <>
         <Image
           src={source.thumbnailUrl}
           alt={lead?.title ?? `${artist.name}の動画`}
           fill
-          className="object-cover"
+          className={`object-cover transition-opacity duration-200 ${isActive ? 'opacity-0' : 'opacity-100'}`}
           unoptimized
         />
-        <PlayOverlay label="YouTube" />
+        {isActive && (
+          <iframe
+            key={withSound ? 'on' : 'off'}
+            src={embedUrl}
+            title={lead?.title ?? `${artist.name}の動画`}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            loading="lazy"
+          />
+        )}
+        <HoverHint visible={!isActive} label="YouTube" />
       </>
     )
   }
 
-  // 3) Vimeo / Twitter / その他URL → 汎用 ▶
-  if (source && (source.kind === 'vimeo' || source.kind === 'twitter' || source.kind === 'other')) {
+  // 3) Vimeo → ホバー時に iframe を mount
+  if (source?.kind === 'vimeo') {
+    const embedUrl = buildVimeoEmbed(source.videoId, { muted: !withSound })
+    return (
+      <>
+        {coverUrl && (
+          <Image
+            src={coverUrl}
+            alt={artist.name}
+            fill
+            className={`object-cover transition-opacity duration-200 ${isActive ? 'opacity-0' : 'opacity-100'}`}
+            unoptimized
+          />
+        )}
+        {isActive && (
+          <iframe
+            key={withSound ? 'on' : 'off'}
+            src={embedUrl}
+            title={lead?.title ?? `${artist.name}の動画`}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            loading="lazy"
+          />
+        )}
+        <HoverHint visible={!isActive} label="Vimeo" />
+      </>
+    )
+  }
+
+  // 4) Twitter / その他URL → 再生はできないので ▶ アイコンのみ
+  if (source && (source.kind === 'twitter' || source.kind === 'other')) {
     return (
       <>
         {coverUrl && (
           <Image src={coverUrl} alt={artist.name} fill className="object-cover" unoptimized />
         )}
-        <PlayOverlay label={source.kind === 'vimeo' ? 'Vimeo' : 'リンク'} />
+        <HoverHint visible label={source.kind === 'twitter' ? 'X' : 'リンク'} />
       </>
     )
   }
 
-  // 4) 画像 portfolio が lead → そのまま表示
+  // 5) 画像 portfolio が lead → そのまま表示
   if (lead && source?.kind === 'file' && lead.mediaType === 'IMAGE') {
     return (
       <Image
@@ -94,7 +168,7 @@ function MediaHero({
     )
   }
 
-  // 5) カバー画像のみ
+  // 6) カバー画像のみ
   if (coverUrl) {
     return (
       <Image
@@ -113,18 +187,24 @@ function MediaHero({
   return null
 }
 
-function PlayOverlay({ label }: { label: string }) {
+function HoverHint({ visible, label }: { visible: boolean; label: string }) {
   return (
     <>
-      <div className="absolute inset-0 bg-black/20" />
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div
+        className={`absolute inset-0 bg-black/20 transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      />
+      <div
+        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      >
         <div className="w-14 h-14 rounded-full bg-white/90 shadow-lg flex items-center justify-center">
           <svg viewBox="0 0 24 24" className="w-6 h-6 ml-1 text-purple-700 fill-current">
             <path d="M8 5v14l11-7z" />
           </svg>
         </div>
       </div>
-      <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">
+      <span
+        className={`absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      >
         {label}
       </span>
     </>
@@ -179,8 +259,86 @@ function ThumbnailStrip({ works }: { works: Portfolio[] }) {
   )
 }
 
+// ---- いいねボタン ----
+function LikeButton({
+  artistId,
+  liked,
+  onChange,
+  onMatched,
+  loggedIn,
+}: {
+  artistId: string
+  liked: boolean
+  onChange: (next: boolean) => void
+  onMatched: (matchId: string) => void
+  loggedIn: boolean
+}) {
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
+
+  const handleClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (busy) return
+    if (!loggedIn) {
+      router.push('/login?next=/artists')
+      return
+    }
+    setBusy(true)
+    onChange(!liked) // 楽観的更新
+    const result = await toggleLikeAction({ targetId: artistId })
+    setBusy(false)
+    if (!result.success) {
+      onChange(liked) // ロールバック
+      return
+    }
+    if (result.status === 'matched') {
+      onMatched(result.matchId)
+    } else if (result.status === 'unliked') {
+      onChange(false)
+    } else if (result.status === 'liked') {
+      onChange(true)
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={busy}
+      aria-pressed={liked}
+      aria-label={liked ? 'いいねを取り消す' : 'いいねする'}
+      className={`shrink-0 w-9 h-9 rounded-full border flex items-center justify-center transition ${
+        liked
+          ? 'bg-pink-50 border-pink-300 text-pink-600 hover:bg-pink-100'
+          : 'bg-white border-gray-200 text-gray-400 hover:border-pink-300 hover:text-pink-500'
+      } ${busy ? 'opacity-60' : ''}`}
+    >
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+        <path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" />
+      </svg>
+    </button>
+  )
+}
+
 // ---- アーティストカード ----
-function ArtistCard({ artist }: { artist: ArtistItem }) {
+function ArtistCard({
+  artist,
+  withSound,
+  liked,
+  onLikeChange,
+  onMatched,
+  loggedIn,
+  isMe,
+}: {
+  artist: ArtistItem
+  withSound: boolean
+  liked: boolean
+  onLikeChange: (next: boolean) => void
+  onMatched: (matchId: string) => void
+  loggedIn: boolean
+  isMe: boolean
+}) {
   const resolvedCover = artist.coverUrl
     ? artist.coverUrl.startsWith('http')
       ? artist.coverUrl
@@ -188,44 +346,61 @@ function ArtistCard({ artist }: { artist: ArtistItem }) {
     : null
   const { lead, coverUrl } = pickLeadPortfolio(artist.portfolios, resolvedCover)
   const others = artist.portfolios.filter((p) => p.id !== lead?.id).slice(0, 4)
+  const [isActive, setIsActive] = useState(false)
 
   return (
     <Link
       href={`/artists/${artist.id}`}
+      onMouseEnter={() => setIsActive(true)}
+      onMouseLeave={() => setIsActive(false)}
+      onFocus={() => setIsActive(true)}
+      onBlur={() => setIsActive(false)}
       className="bg-white border rounded-2xl overflow-hidden hover:shadow-md hover:border-purple-300 transition group block"
     >
       {/* メインメディア */}
       <div className="relative aspect-[16/10] bg-gradient-to-br from-purple-100 to-indigo-100 overflow-hidden">
-        <MediaHero artist={artist} lead={lead} coverUrl={coverUrl} />
+        <MediaHero
+          artist={artist}
+          lead={lead}
+          coverUrl={coverUrl}
+          isActive={isActive}
+          withSound={withSound}
+        />
+      </div>
 
-        {/* アバター */}
-        <div className="absolute -bottom-5 left-4 z-10">
-          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white text-lg font-bold shadow">
+      {/* 本文 */}
+      <div className="px-4 pt-3 pb-3">
+        <div className="flex items-center gap-2 mb-1">
+          {/* アバター（名前の左） */}
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white text-sm font-bold shrink-0">
             {artist.avatarUrl ? (
               <Image
                 src={artist.avatarUrl}
                 alt={artist.name}
-                width={48}
-                height={48}
+                width={36}
+                height={36}
                 className="w-full h-full object-cover"
               />
             ) : (
               artist.name.charAt(0)
             )}
           </div>
-        </div>
-      </div>
-
-      {/* 本文 */}
-      <div className="pt-7 px-4 pb-3">
-        <div className="flex items-center gap-2 flex-wrap mb-1">
-          <p className="font-bold text-gray-900 group-hover:text-purple-700 transition truncate">
+          <p className="font-bold text-gray-900 group-hover:text-purple-700 transition truncate flex-1 min-w-0">
             {artist.name}
           </p>
           {artist.role === 'PRO' && (
             <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-bold shrink-0">
               PRO
             </span>
+          )}
+          {!isMe && (
+            <LikeButton
+              artistId={artist.id}
+              liked={liked}
+              onChange={onLikeChange}
+              onMatched={onMatched}
+              loggedIn={loggedIn}
+            />
           )}
         </div>
 
@@ -265,7 +440,7 @@ function SkeletonCard() {
   return (
     <div className="bg-white border rounded-2xl overflow-hidden animate-pulse">
       <div className="aspect-[16/10] bg-gray-200" />
-      <div className="pt-7 px-4 pb-3 space-y-2">
+      <div className="px-4 pt-3 pb-3 space-y-2">
         <div className="h-4 bg-gray-200 rounded w-1/2" />
         <div className="h-3 bg-gray-100 rounded w-1/3" />
         <div className="h-3 bg-gray-100 rounded w-full" />
@@ -284,9 +459,13 @@ function SkeletonCard() {
 export function ArtistListClient({
   initialArtists,
   initialNextCursor,
+  initialLikedIds,
+  currentUserId,
 }: {
   initialArtists: ArtistItem[]
   initialNextCursor: string | null
+  initialLikedIds: string[]
+  currentUserId: string | null
 }) {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [artists, setArtists] = useState<ArtistItem[]>(initialArtists)
@@ -294,7 +473,46 @@ export function ArtistListClient({
   const [isFetchingMore, setIsFetchingMore] = useState(false)
   const [isError, setIsError] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [withSound, setWithSound] = useState(false)
+  const [likedSet, setLikedSet] = useState<Set<string>>(() => new Set(initialLikedIds))
+  const [matchBanner, setMatchBanner] = useState<{ matchId: string; name: string } | null>(null)
   const loaderRef = useRef<HTMLDivElement>(null)
+
+  const setLiked = (artistId: string, next: boolean) => {
+    setLikedSet((prev) => {
+      const copy = new Set(prev)
+      if (next) copy.add(artistId)
+      else copy.delete(artistId)
+      return copy
+    })
+  }
+
+  const handleMatched = (artist: ArtistItem, matchId: string) => {
+    setLiked(artist.id, true)
+    setMatchBanner({ matchId, name: artist.name })
+  }
+
+  // localStorage から音声設定を復元
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SOUND_PREF_KEY)
+      if (saved === '1') setWithSound(true)
+    } catch {
+      // localStorage 不可（プライベートモード等）はデフォルト（OFF）のまま
+    }
+  }, [])
+
+  const toggleSound = () => {
+    setWithSound((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(SOUND_PREF_KEY, next ? '1' : '0')
+      } catch {
+        // 保存できなくても挙動には影響しない
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     setIsError(false)
@@ -353,31 +571,72 @@ export function ArtistListClient({
 
   return (
     <div>
-      {/* ジャンルフィルタ */}
-      <div className="flex gap-2 flex-wrap mb-8">
-        <button
-          onClick={() => setSelectedGenres([])}
-          className={`px-4 py-2 rounded-full text-sm border transition ${
-            selectedGenres.length === 0
-              ? 'bg-purple-600 text-white border-purple-600'
-              : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
-          }`}
-        >
-          すべて
-        </button>
-        {GENRES.map((g) => (
+      {/* マッチ成立バナー */}
+      {matchBanner && (
+        <div className="mb-6 rounded-xl border border-pink-200 bg-gradient-to-r from-pink-50 to-purple-50 p-4 flex items-center gap-4">
+          <div className="text-3xl">🎉</div>
+          <div className="flex-1">
+            <p className="font-bold text-pink-700">マッチング成立！</p>
+            <p className="text-sm text-gray-600">{matchBanner.name} さんとマッチしました。チャットで案件を相互紹介できます。</p>
+          </div>
+          <Link
+            href={`/dashboard/chat/${matchBanner.matchId}`}
+            className="bg-pink-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-pink-700 transition shrink-0"
+          >
+            チャットを開く
+          </Link>
           <button
-            key={g}
-            onClick={() => toggleGenre(g)}
+            type="button"
+            onClick={() => setMatchBanner(null)}
+            aria-label="閉じる"
+            className="text-gray-400 hover:text-gray-600 shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* フィルタ + 音声トグル */}
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setSelectedGenres([])}
             className={`px-4 py-2 rounded-full text-sm border transition ${
-              selectedGenres.includes(g)
+              selectedGenres.length === 0
                 ? 'bg-purple-600 text-white border-purple-600'
                 : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
             }`}
           >
-            {g}
+            すべて
           </button>
-        ))}
+          {GENRES.map((g) => (
+            <button
+              key={g}
+              onClick={() => toggleGenre(g)}
+              className={`px-4 py-2 rounded-full text-sm border transition ${
+                selectedGenres.includes(g)
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={toggleSound}
+          aria-pressed={withSound}
+          title="ホバー時に音声を再生するかを切り替え"
+          className={`shrink-0 px-3 py-2 rounded-full text-sm border transition flex items-center gap-1.5 ${
+            withSound
+              ? 'bg-purple-600 text-white border-purple-600'
+              : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
+          }`}
+        >
+          <span aria-hidden>{withSound ? '🔊' : '🔇'}</span>
+          <span className="hidden sm:inline">{withSound ? 'ホバー音声 ON' : 'ホバー音声 OFF'}</span>
+        </button>
       </div>
 
       {isError && (
@@ -389,7 +648,18 @@ export function ArtistListClient({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isPending
           ? Array.from({ length: LIMIT }).map((_, i) => <SkeletonCard key={i} />)
-          : artists.map((artist) => <ArtistCard key={artist.id} artist={artist} />)}
+          : artists.map((artist) => (
+              <ArtistCard
+                key={artist.id}
+                artist={artist}
+                withSound={withSound}
+                liked={likedSet.has(artist.id)}
+                onLikeChange={(next) => setLiked(artist.id, next)}
+                onMatched={(matchId) => handleMatched(artist, matchId)}
+                loggedIn={!!currentUserId}
+                isMe={currentUserId === artist.id}
+              />
+            ))}
         {isFetchingMore &&
           Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`more-${i}`} />)}
       </div>

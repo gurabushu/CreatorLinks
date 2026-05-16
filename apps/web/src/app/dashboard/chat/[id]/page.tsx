@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { ChatClient } from './chat-client'
+import { listMyPrivateProjectsAction } from '@/server/actions/project'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -23,17 +24,23 @@ export default async function ChatPage({ params }: Props) {
       artist: {
         select: { id: true, name: true, avatarUrl: true },
       },
+      partner: {
+        select: { id: true, name: true, avatarUrl: true },
+      },
     },
   })
 
   if (!match) notFound()
 
+  const isP2P = match.projectId === null
+
   // 当事者チェック
   const isArtist = match.artistId === session.user.id
-  const isClient = match.project.clientId === session.user.id
-  if (!isArtist && !isClient) redirect('/dashboard')
+  const isClient = !isP2P && match.project?.clientId === session.user.id
+  const isPartner = isP2P && match.partnerUserId === session.user.id
+  if (!isArtist && !isClient && !isPartner) redirect('/dashboard')
 
-  // 権限チェック: ACCEPTED 以上のみチャット可
+  // 権限チェック: ACCEPTED 以上のみチャット可（P2P は最初から ACCEPTED）
   if (match.status === 'APPLIED' || match.status === 'REJECTED') {
     redirect('/dashboard/matches')
   }
@@ -53,6 +60,36 @@ export default async function ChatPage({ params }: Props) {
     data: { readAt: new Date() },
   })
 
+  // 相手の情報（P2P と Project Match で経路が異なる）
+  let partnerName: string
+  let partnerAvatar: string | null
+  if (isP2P) {
+    // P2P: 自分でない方が相手
+    if (isArtist) {
+      partnerName = match.partner?.name ?? '相手'
+      partnerAvatar = match.partner?.avatarUrl ?? null
+    } else {
+      partnerName = match.artist.name
+      partnerAvatar = match.artist.avatarUrl
+    }
+  } else {
+    // Project: アーティスト側から見ると発注者、発注者側から見るとアーティスト
+    if (isArtist) {
+      const client = await prisma.user.findUnique({
+        where: { id: match.project!.clientId },
+        select: { name: true, avatarUrl: true },
+      })
+      partnerName = client?.name ?? '発注者'
+      partnerAvatar = client?.avatarUrl ?? null
+    } else {
+      partnerName = match.artist.name
+      partnerAvatar = match.artist.avatarUrl
+    }
+  }
+
+  // P2P マッチの場合のみ、自分の非公開案件を取得して共有候補にする
+  const myPrivateProjects = isP2P ? await listMyPrivateProjectsAction() : []
+
   return (
     <ChatClient
       matchId={matchId}
@@ -60,11 +97,19 @@ export default async function ChatPage({ params }: Props) {
       isArtist={isArtist}
       match={{
         status: match.status,
-        projectTitle: match.project.title,
-        projectId: match.project.id,
-        partnerName: isArtist ? match.project.clientId : match.artist.name,
-        partnerAvatar: isArtist ? null : match.artist.avatarUrl,
+        projectTitle: isP2P ? null : match.project!.title,
+        projectId: isP2P ? null : match.project!.id,
+        isP2P,
+        partnerName,
+        partnerAvatar,
       }}
+      myPrivateProjects={myPrivateProjects.map((p) => ({
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        budget: p.budget,
+        contractType: p.contractType,
+      }))}
       initialMessages={initialMessages.map((m) => ({
         id: m.id,
         senderId: m.senderId,

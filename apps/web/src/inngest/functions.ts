@@ -123,5 +123,57 @@ export const notifyNewMessage = inngest.createFunction(
   }
 )
 
+// ---- P2P マッチ成立通知（双方へ） ----
+export const notifyP2PMatched = inngest.createFunction(
+  { id: 'notify-p2p-matched', name: 'P2P マッチ成立通知' },
+  { event: 'match/p2p-matched' },
+  async ({ event }) => {
+    const { matchId, userAEmail, userAName, userBEmail, userBName } = event.data
+
+    const template = (to: string, name: string, partner: string) => `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+        <h1 style="color: #db2777; font-size: 22px; margin-bottom: 16px;">マッチング成立 🎉</h1>
+        <p>${name} さん、こんにちは。</p>
+        <p>
+          <strong>${partner}</strong> さんと相互いいねでマッチしました。
+          チャットで非公開案件を相互紹介できます。
+        </p>
+        <div style="margin: 24px 0;">
+          <a
+            href="${APP_URL}/dashboard/chat/${matchId}"
+            style="background: #db2777; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;"
+          >
+            チャットを開く
+          </a>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <p style="color: #9ca3af; font-size: 12px;">
+          ${SITE_NAME} — 個人アーティストのための営業プラットフォーム
+        </p>
+      </div>
+    `
+
+    await Promise.all([
+      sendEmail({
+        to: userAEmail,
+        subject: `【${SITE_NAME}】${userBName} さんとマッチしました`,
+        html: template(userAEmail, userAName, userBName),
+      }),
+      sendEmail({
+        to: userBEmail,
+        subject: `【${SITE_NAME}】${userAName} さんとマッチしました`,
+        html: template(userBEmail, userBName, userAName),
+      }),
+    ])
+
+    return { sent: true, matchId }
+  }
+)
+
 // 全関数をまとめてエクスポート
-export const functions = [notifyMatchAccepted, notifyMatchApplied, notifyNewMessage]
+export const functions = [
+  notifyMatchAccepted,
+  notifyMatchApplied,
+  notifyNewMessage,
+  notifyP2PMatched,
+]

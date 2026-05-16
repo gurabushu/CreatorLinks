@@ -38,4 +38,14 @@ export type CreatorLinksEvents = {
       projectTitle: string
     }
   }
+  // P2P マッチ成立（双方の Like 完成）
+  'match/p2p-matched': {
+    data: {
+      matchId: string
+      userAEmail: string
+      userAName: string
+      userBEmail: string
+      userBName: string
+    }
+  }
 }

@@ -55,6 +55,10 @@ export const matchRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'マッチングが見つかりません' })
       }
 
+      if (!match.project) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '案件付きマッチではありません' })
+      }
+
       if (match.project.clientId !== ctx.user.id) {
         throw new TRPCError({ code: 'FORBIDDEN', message: '権限がありません' })
       }
@@ -103,9 +107,11 @@ export const messageRouter = router({
 
       const isParticipant =
         match.artistId === ctx.user.id ||
-        (await ctx.prisma.project
-          .findUnique({ where: { id: match.projectId } })
-          .then((p: { clientId: string } | null) => p?.clientId === ctx.user.id))
+        match.partnerUserId === ctx.user.id ||
+        (match.projectId !== null &&
+          (await ctx.prisma.project
+            .findUnique({ where: { id: match.projectId } })
+            .then((p: { clientId: string } | null) => p?.clientId === ctx.user.id)))
 
       if (!isParticipant) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'アクセス権限がありません' })
@@ -150,6 +156,10 @@ export const reviewRouter = router({
 
     if (match.status !== 'COMPLETED') {
       throw new TRPCError({ code: 'BAD_REQUEST', message: '完了済みの案件のみレビューできます' })
+    }
+
+    if (!match.project) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: '案件付きマッチではありません' })
     }
 
     const isParticipant =

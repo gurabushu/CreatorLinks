@@ -13,7 +13,12 @@ export default async function MatchesPage() {
   let matches: any[] = []
   try {
     matches = await prisma.match.findMany({
-      where: { artistId: session.user.id },
+      where: {
+        OR: [
+          { artistId: session.user.id },
+          { partnerUserId: session.user.id },
+        ],
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         project: {
@@ -21,17 +26,22 @@ export default async function MatchesPage() {
             client: { select: { name: true, avatarUrl: true } },
           },
         },
+        artist: { select: { id: true, name: true, avatarUrl: true } },
+        partner: { select: { id: true, name: true, avatarUrl: true } },
       },
     })
   } catch {
     // DB unreachable — show empty state
   }
 
+  const p2pMatches = matches.filter((m) => m.projectId === null)
+  const projectMatches = matches.filter((m) => m.projectId !== null)
+
   const statusGroups = {
-    APPLIED: matches.filter((m) => m.status === 'APPLIED'),
-    ACCEPTED: matches.filter((m) => m.status === 'ACCEPTED'),
-    COMPLETED: matches.filter((m) => m.status === 'COMPLETED'),
-    REJECTED: matches.filter((m) => m.status === 'REJECTED'),
+    APPLIED: projectMatches.filter((m) => m.status === 'APPLIED'),
+    ACCEPTED: projectMatches.filter((m) => m.status === 'ACCEPTED'),
+    COMPLETED: projectMatches.filter((m) => m.status === 'COMPLETED'),
+    REJECTED: projectMatches.filter((m) => m.status === 'REJECTED'),
   }
 
   const STATUS_LABELS = {
@@ -43,7 +53,49 @@ export default async function MatchesPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
-      <h1 className="text-2xl font-bold mb-8">応募管理</h1>
+      <h1 className="text-2xl font-bold mb-8">マッチング管理</h1>
+
+      {/* P2P マッチ */}
+      {p2pMatches.length > 0 && (
+        <section className="mb-10">
+          <h2 className="font-bold mb-3 text-lg">
+            アーティスト同士のマッチ
+            <span className="ml-2 text-sm text-gray-400">({p2pMatches.length}件)</span>
+          </h2>
+          <div className="space-y-3">
+            {p2pMatches.map((match) => {
+              const partner = match.artistId === session.user.id ? match.partner : match.artist
+              return (
+                <div
+                  key={match.id}
+                  className="bg-white border border-pink-100 rounded-xl p-5 flex justify-between items-center"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 overflow-hidden flex items-center justify-center text-white font-bold">
+                      {partner?.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={partner.avatarUrl} alt={partner.name} className="w-full h-full object-cover" />
+                      ) : (
+                        (partner?.name ?? '?').charAt(0)
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium">{partner?.name ?? '相手'}</p>
+                      <p className="text-xs text-gray-500">相互いいねでマッチ — 非公開案件を相互紹介できます</p>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/dashboard/chat/${match.id}`}
+                    className="text-sm bg-pink-100 text-pink-700 px-3 py-1 rounded-lg hover:bg-pink-200 transition"
+                  >
+                    チャットへ
+                  </Link>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {Object.entries(statusGroups).map(([status, items]) =>
         items.length > 0 ? (
@@ -88,10 +140,15 @@ export default async function MatchesPage() {
 
       {matches.length === 0 && (
         <div className="text-center py-16 text-gray-400">
-          <p>まだ案件に応募していません</p>
-          <Link href="/projects" className="text-purple-600 hover:underline mt-2 inline-block">
-            案件を探す →
-          </Link>
+          <p>まだマッチがありません</p>
+          <div className="flex gap-3 justify-center mt-3">
+            <Link href="/projects" className="text-purple-600 hover:underline">
+              案件を探す →
+            </Link>
+            <Link href="/artists" className="text-pink-600 hover:underline">
+              アーティストを探す →
+            </Link>
+          </div>
         </div>
       )}
     </div>
