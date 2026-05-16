@@ -642,8 +642,9 @@ export function ArtistListClient({
         <button
           onClick={toggleSound}
           aria-pressed={withSound}
-          title="ホバー時に音声を再生するかを切り替え"
-          className={`shrink-0 px-3 py-2 rounded-full text-sm border transition flex items-center gap-1.5 ${
+          aria-label={withSound ? 'ホバー音声 ON' : 'ホバー音声 OFF'}
+          title={withSound ? 'ホバー音声 ON（クリックで OFF）' : 'ホバー音声 OFF（クリックで ON）'}
+          className={`relative shrink-0 px-3 py-2 rounded-full text-sm border transition flex items-center gap-1.5 ${
             withSound
               ? 'bg-purple-600 text-white border-purple-600'
               : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
@@ -651,6 +652,16 @@ export function ArtistListClient({
         >
           <span aria-hidden>{withSound ? '🔊' : '🔇'}</span>
           <span className="hidden sm:inline">{withSound ? 'ホバー音声 ON' : 'ホバー音声 OFF'}</span>
+          <span
+            aria-hidden
+            className={`sm:hidden absolute -top-1.5 -right-1.5 px-1 text-[10px] leading-tight font-bold rounded-full border bg-white shadow-sm ${
+              withSound
+                ? 'text-purple-700 border-purple-400'
+                : 'text-gray-600 border-gray-300'
+            }`}
+          >
+            {withSound ? 'ON' : 'OFF'}
+          </span>
         </button>
       </div>
 
