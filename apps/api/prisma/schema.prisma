@@ -75,11 +75,13 @@ model User {
   coverUrl         String?  // プロフィールカバー画像（ジャケット）
   stripeCustomerId String?  @unique
   averageRating    Decimal  @default(0) @db.Decimal(3, 2)
+  featuredPortfolioId String? // アーティスト本人が一覧カードのメインに見せる作品
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   // Relations
   portfolios        Portfolio[]
+  featuredPortfolio Portfolio?     @relation("FeaturedPortfolio", fields: [featuredPortfolioId], references: [id], onDelete: SetNull)
   projectsAsClient  Project[]      @relation("ClientProjects")
   matchesAsArtist   Match[]        @relation("ArtistMatches")
   matchesAsPartner  Match[]        @relation("PartnerMatches")
@@ -104,7 +106,8 @@ model Portfolio {
   fileKey     String    // Uploadthing ファイルキー
   createdAt   DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  featuredByUsers User[] @relation("FeaturedPortfolio")
 
   @@map("portfolios")
 }

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
-import { createPortfolioAction, deletePortfolioAction } from '@/server/actions/portfolio'
+import { createPortfolioAction, deletePortfolioAction, setFeaturedPortfolioAction } from '@/server/actions/portfolio'
 import { compressImage } from '@/lib/compress-image'
 import { uploadBlob } from '@/lib/blob-upload'
 import { resolveMediaSource } from '@/lib/media-source'
@@ -30,6 +30,7 @@ interface Portfolio {
 
 interface Props {
   initialPortfolios: Portfolio[]
+  initialFeaturedId: string | null
 }
 
 const MEDIA_ICON: Record<MediaType, string> = {
@@ -113,8 +114,9 @@ function FileDropzone({
   )
 }
 
-export default function PortfolioClient({ initialPortfolios }: Props) {
+export default function PortfolioClient({ initialPortfolios, initialFeaturedId }: Props) {
   const [portfolios, setPortfolios] = useState<Portfolio[]>(initialPortfolios)
+  const [featuredId, setFeaturedId] = useState<string | null>(initialFeaturedId)
   const [showForm, setShowForm] = useState(false)
   const [inputMode, setInputMode] = useState<'upload' | 'url'>('upload')
   const [urlInput, setUrlInput] = useState('')
@@ -220,6 +222,20 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
       const result = await deletePortfolioAction(id)
       if (result.success) {
         setPortfolios((prev) => prev.filter((p) => p.id !== id))
+        // メイン作品を削除した場合は state もクリア（DB 側は onDelete: SetNull）
+        if (featuredId === id) setFeaturedId(null)
+      }
+    })
+  }
+
+  const handleToggleFeatured = (id: string) => {
+    const next = featuredId === id ? null : id
+    const prev = featuredId
+    setFeaturedId(next) // 楽観的更新
+    startTransition(async () => {
+      const result = await setFeaturedPortfolioAction(next)
+      if (!result.success) {
+        setFeaturedId(prev) // ロールバック
       }
     })
   }
@@ -362,7 +378,13 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {portfolios.map((p) => (
-            <PortfolioCard key={p.id} portfolio={p} onDelete={() => handleDelete(p.id)} />
+            <PortfolioCard
+              key={p.id}
+              portfolio={p}
+              isFeatured={featuredId === p.id}
+              onDelete={() => handleDelete(p.id)}
+              onToggleFeatured={() => handleToggleFeatured(p.id)}
+            />
           ))}
         </div>
       )}
@@ -370,7 +392,17 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
   )
 }
 
-function PortfolioCard({ portfolio, onDelete }: { portfolio: Portfolio; onDelete: () => void }) {
+function PortfolioCard({
+  portfolio,
+  isFeatured,
+  onDelete,
+  onToggleFeatured,
+}: {
+  portfolio: Portfolio
+  isFeatured: boolean
+  onDelete: () => void
+  onToggleFeatured: () => void
+}) {
   const { title, mediaType, fileKey } = portfolio
   const source = resolveMediaSource(fileKey)
   const thumb =
@@ -381,7 +413,34 @@ function PortfolioCard({ portfolio, onDelete }: { portfolio: Portfolio; onDelete
         : null
 
   return (
-    <div className="bg-white border rounded-xl overflow-hidden relative group hover:shadow-md transition">
+    <div
+      className={`bg-white border rounded-xl overflow-hidden relative group hover:shadow-md transition ${
+        isFeatured ? 'border-amber-400 ring-2 ring-amber-200' : ''
+      }`}
+    >
+      {/* 星ボタン（メイン作品トグル） */}
+      <button
+        type="button"
+        onClick={onToggleFeatured}
+        title={isFeatured ? '一覧カードのメイン解除' : '一覧カードのメインに設定'}
+        aria-pressed={isFeatured}
+        className={`absolute top-2 left-2 z-10 w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm ${
+          isFeatured
+            ? 'bg-amber-400 text-white hover:bg-amber-500'
+            : 'bg-white/90 text-gray-400 hover:text-amber-500 opacity-0 group-hover:opacity-100'
+        }`}
+      >
+        <svg viewBox="0 0 24 24" className="w-4 h-4" fill={isFeatured ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+          <path d="M12 2l2.39 7.36H22l-6.18 4.49L18.18 21 12 16.51 5.82 21l2.36-7.15L2 9.36h7.61L12 2z" />
+        </svg>
+      </button>
+
+      {isFeatured && (
+        <span className="absolute top-2 left-12 z-10 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+          メイン
+        </span>
+      )}
+
       <div className="bg-gray-100 h-28 flex items-center justify-center overflow-hidden relative">
         {thumb ? (
           <Image

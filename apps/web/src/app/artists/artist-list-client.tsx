@@ -29,6 +29,7 @@ type ArtistItem = {
   avatarUrl: string | null
   coverUrl: string | null
   averageRating: number
+  featuredPortfolioId: string | null
   portfolios: Portfolio[]
 }
 
@@ -344,7 +345,11 @@ function ArtistCard({
       ? artist.coverUrl
       : `https://utfs.io/f/${artist.coverUrl}`
     : null
-  const { lead, coverUrl } = pickLeadPortfolio(artist.portfolios, resolvedCover)
+  const { lead, coverUrl } = pickLeadPortfolio(
+    artist.portfolios,
+    resolvedCover,
+    artist.featuredPortfolioId,
+  )
   const others = artist.portfolios.filter((p) => p.id !== lead?.id).slice(0, 4)
   const [isActive, setIsActive] = useState(false)
 

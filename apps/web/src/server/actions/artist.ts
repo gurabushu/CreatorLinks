@@ -11,6 +11,10 @@ const ARTIST_SELECT = {
   avatarUrl: true,
   coverUrl: true,
   averageRating: true,
+  featuredPortfolioId: true,
+  featuredPortfolio: {
+    select: { id: true, mediaType: true, title: true, fileKey: true },
+  },
   portfolios: {
     take: 6,
     select: { id: true, mediaType: true, title: true, fileKey: true },
@@ -33,7 +37,18 @@ export async function listArtistsAction(params: {
   })
   const nextCursor = items.length > limit ? items.pop()!.id : null
   return {
-    items: items.map((u) => ({ ...u, averageRating: Number(u.averageRating) })),
+    items: items.map((u) => {
+      // featured が portfolios.take: 6 の範囲外にあった場合は先頭にマージ
+      const portfolios =
+        u.featuredPortfolio && !u.portfolios.some((p) => p.id === u.featuredPortfolio!.id)
+          ? [u.featuredPortfolio, ...u.portfolios]
+          : u.portfolios
+      return {
+        ...u,
+        portfolios,
+        averageRating: Number(u.averageRating),
+      }
+    }),
     nextCursor,
   }
 }

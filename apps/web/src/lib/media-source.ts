@@ -77,7 +77,13 @@ type PortfolioLike = { id: string; mediaType: string; title: string; fileKey: st
 export function pickLeadPortfolio<T extends PortfolioLike>(
   portfolios: T[],
   coverUrl: string | null,
+  featuredPortfolioId?: string | null,
 ): { lead: T | null; coverUrl: string | null } {
+  // アーティスト本人が指定した「メイン作品」を最優先
+  if (featuredPortfolioId) {
+    const featured = portfolios.find((p) => p.id === featuredPortfolioId)
+    if (featured) return { lead: featured, coverUrl }
+  }
   const video = portfolios.find((p) => p.mediaType === 'VIDEO')
   if (video) return { lead: video, coverUrl }
   // cover があるならそれを最優先で見せる（lead=null＋coverUrlで描画）

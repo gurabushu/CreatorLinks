@@ -10,10 +10,21 @@ export default async function PortfolioPage() {
   const session = await auth()
   if (!session) redirect('/auth')
 
-  const portfolios = await prisma.portfolio.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: 'desc' },
-  })
+  const [portfolios, user] = await Promise.all([
+    prisma.portfolio.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { featuredPortfolioId: true },
+    }),
+  ])
 
-  return <PortfolioClient initialPortfolios={portfolios} />
+  return (
+    <PortfolioClient
+      initialPortfolios={portfolios}
+      initialFeaturedId={user?.featuredPortfolioId ?? null}
+    />
+  )
 }
