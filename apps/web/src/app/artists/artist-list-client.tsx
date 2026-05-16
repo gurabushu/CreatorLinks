@@ -4,9 +4,12 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { listArtistsAction } from '@/server/actions/artist'
+import { resolveMediaSource, pickLeadPortfolio } from '@/lib/media-source'
 
 const GENRES = ['音楽', 'イラスト', '動画', 'デザイン', '写真', '文章', '声優', 'その他']
 const LIMIT = 12
+
+type Portfolio = { id: string; mediaType: string; title: string; fileKey: string }
 
 type ArtistItem = {
   id: string
@@ -17,42 +20,186 @@ type ArtistItem = {
   avatarUrl: string | null
   coverUrl: string | null
   averageRating: number
-  portfolios: { id: string; mediaType: string; title: string; fileKey: string }[]
+  portfolios: Portfolio[]
 }
 
-function resolveUrl(fileKey: string): string {
-  return fileKey.startsWith('http') ? fileKey : `https://utfs.io/f/${fileKey}`
+// ---- メインメディア（自動再生 / YouTube サムネ / カバー画像） ----
+function MediaHero({
+  artist,
+  lead,
+  coverUrl,
+}: {
+  artist: ArtistItem
+  lead: Portfolio | null
+  coverUrl: string | null
+}) {
+  const source = lead ? resolveMediaSource(lead.fileKey) : null
+
+  // 1) 動画ファイル → ループ自動再生
+  if (lead && source?.kind === 'file' && lead.mediaType === 'VIDEO') {
+    return (
+      <video
+        src={source.url}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+    )
+  }
+
+  // 2) YouTube → 高画質サムネ + ▶ オーバーレイ
+  if (source?.kind === 'youtube') {
+    return (
+      <>
+        <Image
+          src={source.thumbnailUrl}
+          alt={lead?.title ?? `${artist.name}の動画`}
+          fill
+          className="object-cover"
+          unoptimized
+        />
+        <PlayOverlay label="YouTube" />
+      </>
+    )
+  }
+
+  // 3) Vimeo / Twitter / その他URL → 汎用 ▶
+  if (source && (source.kind === 'vimeo' || source.kind === 'twitter' || source.kind === 'other')) {
+    return (
+      <>
+        {coverUrl && (
+          <Image src={coverUrl} alt={artist.name} fill className="object-cover" unoptimized />
+        )}
+        <PlayOverlay label={source.kind === 'vimeo' ? 'Vimeo' : 'リンク'} />
+      </>
+    )
+  }
+
+  // 4) 画像 portfolio が lead → そのまま表示
+  if (lead && source?.kind === 'file' && lead.mediaType === 'IMAGE') {
+    return (
+      <Image
+        src={source.url}
+        alt={lead.title}
+        fill
+        className="object-cover"
+        unoptimized
+        onError={(e) => {
+          ;(e.target as HTMLImageElement).style.display = 'none'
+        }}
+      />
+    )
+  }
+
+  // 5) カバー画像のみ
+  if (coverUrl) {
+    return (
+      <Image
+        src={coverUrl}
+        alt={`${artist.name}の作品`}
+        fill
+        className="object-cover"
+        unoptimized
+        onError={(e) => {
+          ;(e.target as HTMLImageElement).style.display = 'none'
+        }}
+      />
+    )
+  }
+
+  return null
+}
+
+function PlayOverlay({ label }: { label: string }) {
+  return (
+    <>
+      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-full bg-white/90 shadow-lg flex items-center justify-center">
+          <svg viewBox="0 0 24 24" className="w-6 h-6 ml-1 text-purple-700 fill-current">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      </div>
+      <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">
+        {label}
+      </span>
+    </>
+  )
+}
+
+// ---- サムネ列（lead 以外を最大4件） ----
+function ThumbnailStrip({ works }: { works: Portfolio[] }) {
+  if (works.length === 0) return null
+  return (
+    <div className="grid grid-cols-4 gap-1.5 px-4 pb-4">
+      {works.map((p) => {
+        const src = resolveMediaSource(p.fileKey)
+        const isImageFile = p.mediaType === 'IMAGE' && src.kind === 'file'
+        const previewUrl =
+          isImageFile ? src.url : src.kind === 'youtube' ? src.thumbnailUrl : null
+        const overlay =
+          p.mediaType === 'VIDEO' || src.kind === 'youtube' || src.kind === 'vimeo'
+            ? '▶'
+            : p.mediaType === 'AUDIO'
+              ? '🎵'
+              : null
+        return (
+          <div
+            key={p.id}
+            className="relative aspect-square rounded-md overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100"
+            title={p.title}
+          >
+            {previewUrl && (
+              <Image
+                src={previewUrl}
+                alt={p.title}
+                fill
+                className="object-cover"
+                unoptimized
+                onError={(e) => {
+                  ;(e.target as HTMLImageElement).style.display = 'none'
+                }}
+              />
+            )}
+            {overlay && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white text-sm font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
+                  {overlay}
+                </span>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 // ---- アーティストカード ----
 function ArtistCard({ artist }: { artist: ArtistItem }) {
-  // ジャケット画像優先、なければポートフォリオの1枚目画像をフォールバック
-  const fallbackPortfolio = artist.portfolios.find((p) => p.mediaType === 'IMAGE')
-  const coverUrl = artist.coverUrl
-    ? resolveUrl(artist.coverUrl)
-    : fallbackPortfolio
-    ? resolveUrl(fallbackPortfolio.fileKey)
+  const resolvedCover = artist.coverUrl
+    ? artist.coverUrl.startsWith('http')
+      ? artist.coverUrl
+      : `https://utfs.io/f/${artist.coverUrl}`
     : null
+  const { lead, coverUrl } = pickLeadPortfolio(artist.portfolios, resolvedCover)
+  const others = artist.portfolios.filter((p) => p.id !== lead?.id).slice(0, 4)
 
   return (
     <Link
       href={`/artists/${artist.id}`}
       className="bg-white border rounded-2xl overflow-hidden hover:shadow-md hover:border-purple-300 transition group block"
     >
-      {/* カバー画像 */}
-      <div className="relative h-36 bg-gradient-to-br from-purple-100 to-indigo-100 overflow-hidden">
-        {coverUrl && (
-          <Image
-            src={coverUrl}
-            alt={`${artist.name}の作品`}
-            fill
-            className="object-cover"
-            unoptimized
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-          />
-        )}
-        {/* アバター（カバー底面に重ねる） */}
-        <div className="absolute -bottom-5 left-4">
+      {/* メインメディア */}
+      <div className="relative aspect-[16/10] bg-gradient-to-br from-purple-100 to-indigo-100 overflow-hidden">
+        <MediaHero artist={artist} lead={lead} coverUrl={coverUrl} />
+
+        {/* アバター */}
+        <div className="absolute -bottom-5 left-4 z-10">
           <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white text-lg font-bold shadow">
             {artist.avatarUrl ? (
               <Image
@@ -70,7 +217,7 @@ function ArtistCard({ artist }: { artist: ArtistItem }) {
       </div>
 
       {/* 本文 */}
-      <div className="pt-7 px-4 pb-4">
+      <div className="pt-7 px-4 pb-3">
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <p className="font-bold text-gray-900 group-hover:text-purple-700 transition truncate">
             {artist.name}
@@ -103,11 +250,12 @@ function ArtistCard({ artist }: { artist: ArtistItem }) {
               {artist.averageRating.toFixed(1)}
             </span>
           )}
-          {artist.portfolios.length > 0 && (
-            <span>作品 {artist.portfolios.length} 件</span>
-          )}
+          {artist.portfolios.length > 0 && <span>作品 {artist.portfolios.length} 件</span>}
         </div>
       </div>
+
+      {/* サムネ列 */}
+      <ThumbnailStrip works={others} />
     </Link>
   )
 }
@@ -116,12 +264,17 @@ function ArtistCard({ artist }: { artist: ArtistItem }) {
 function SkeletonCard() {
   return (
     <div className="bg-white border rounded-2xl overflow-hidden animate-pulse">
-      <div className="h-36 bg-gray-200" />
-      <div className="pt-7 px-4 pb-4 space-y-2">
+      <div className="aspect-[16/10] bg-gray-200" />
+      <div className="pt-7 px-4 pb-3 space-y-2">
         <div className="h-4 bg-gray-200 rounded w-1/2" />
         <div className="h-3 bg-gray-100 rounded w-1/3" />
         <div className="h-3 bg-gray-100 rounded w-full" />
         <div className="h-3 bg-gray-100 rounded w-4/5" />
+      </div>
+      <div className="grid grid-cols-4 gap-1.5 px-4 pb-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="aspect-square bg-gray-100 rounded-md" />
+        ))}
       </div>
     </div>
   )

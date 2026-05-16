@@ -5,8 +5,19 @@ import Image from 'next/image'
 import { createPortfolioAction, deletePortfolioAction } from '@/server/actions/portfolio'
 import { compressImage } from '@/lib/compress-image'
 import { uploadBlob } from '@/lib/blob-upload'
+import { resolveMediaSource } from '@/lib/media-source'
 
 type MediaType = 'IMAGE' | 'AUDIO' | 'VIDEO'
+
+function detectMediaTypeFromUrl(url: string): MediaType {
+  const lower = url.toLowerCase()
+  if (/(youtube\.com|youtu\.be|vimeo\.com|twitter\.com|x\.com|tiktok\.com|instagram\.com)/.test(lower)) {
+    return 'VIDEO'
+  }
+  if (/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/.test(lower)) return 'IMAGE'
+  if (/\.(mp3|wav|m4a|ogg|flac)(\?|$)/.test(lower)) return 'AUDIO'
+  return 'VIDEO'
+}
 
 interface Portfolio {
   id: string
@@ -105,6 +116,8 @@ function FileDropzone({
 export default function PortfolioClient({ initialPortfolios }: Props) {
   const [portfolios, setPortfolios] = useState<Portfolio[]>(initialPortfolios)
   const [showForm, setShowForm] = useState(false)
+  const [inputMode, setInputMode] = useState<'upload' | 'url'>('upload')
+  const [urlInput, setUrlInput] = useState('')
   const [uploadedFile, setUploadedFile] = useState<{ url: string; name: string; type: MediaType } | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -119,6 +132,8 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
     setTitle('')
     setDescription('')
     setUploadedFile(null)
+    setUrlInput('')
+    setInputMode('upload')
     setUploadError(null)
     setFormError(null)
     setShowForm(false)
@@ -155,15 +170,31 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!uploadedFile || !title.trim()) return
+    if (!title.trim()) return
+
+    let fileKey: string
+    let mediaType: MediaType
+    if (inputMode === 'upload') {
+      if (!uploadedFile) return
+      fileKey = uploadedFile.url
+      mediaType = uploadedFile.type
+    } else {
+      const trimmed = urlInput.trim()
+      if (!/^https?:\/\//.test(trimmed)) {
+        setFormError('https:// から始まる URL を入力してください')
+        return
+      }
+      fileKey = trimmed
+      mediaType = detectMediaTypeFromUrl(trimmed)
+    }
 
     setFormError(null)
     startTransition(async () => {
       const result = await createPortfolioAction({
         title: title.trim(),
         description: description.trim() || undefined,
-        mediaType: uploadedFile.type,
-        fileKey: uploadedFile.url,
+        mediaType,
+        fileKey,
       })
       if (result.success) {
         setPortfolios((prev) => [
@@ -171,8 +202,8 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
             id: `temp-${Date.now()}`,
             title: title.trim(),
             description: description.trim() || null,
-            mediaType: uploadedFile.type,
-            fileKey: uploadedFile.url,
+            mediaType,
+            fileKey,
             createdAt: new Date(),
           },
           ...prev,
@@ -211,33 +242,71 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
         <form onSubmit={handleSubmit} className="bg-gray-50 border rounded-xl p-6 mb-8 space-y-5">
           <h2 className="font-bold text-lg">新しい作品を追加</h2>
 
-          {!uploadedFile ? (
-            <div>
-              <label className="block text-sm font-medium mb-2">ファイルをアップロード *</label>
-              <FileDropzone
-                onFile={handleFile}
-                isCompressing={isCompressing}
-                isUploading={isUploading}
-                uploadProgress={uploadProgress}
-              />
-              {uploadError && <p className="text-red-500 text-sm mt-2">{uploadError}</p>}
-            </div>
+          {/* モード切替 */}
+          <div className="inline-flex bg-white border rounded-lg p-1 text-sm">
+            <button
+              type="button"
+              onClick={() => setInputMode('upload')}
+              className={`px-3 py-1.5 rounded-md transition ${
+                inputMode === 'upload' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:text-purple-600'
+              }`}
+            >
+              ファイル
+            </button>
+            <button
+              type="button"
+              onClick={() => setInputMode('url')}
+              className={`px-3 py-1.5 rounded-md transition ${
+                inputMode === 'url' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:text-purple-600'
+              }`}
+            >
+              URL（YouTube / SNS）
+            </button>
+          </div>
+
+          {inputMode === 'upload' ? (
+            !uploadedFile ? (
+              <div>
+                <label className="block text-sm font-medium mb-2">ファイルをアップロード *</label>
+                <FileDropzone
+                  onFile={handleFile}
+                  isCompressing={isCompressing}
+                  isUploading={isUploading}
+                  uploadProgress={uploadProgress}
+                />
+                {uploadError && <p className="text-red-500 text-sm mt-2">{uploadError}</p>}
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 bg-white border rounded-lg p-4">
+                <div className="w-16 h-16 rounded-lg bg-purple-50 flex items-center justify-center text-3xl flex-shrink-0">
+                  {uploadedFile.type === 'IMAGE' ? (
+                    <Image src={uploadedFile.url} alt={uploadedFile.name} width={64} height={64} className="w-16 h-16 object-cover rounded-lg" />
+                  ) : (
+                    MEDIA_ICON[uploadedFile.type]
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{uploadedFile.name}</p>
+                  <p className="text-xs text-gray-500">{uploadedFile.type}</p>
+                </div>
+                <button type="button" onClick={() => setUploadedFile(null)} className="text-gray-400 hover:text-red-500 text-sm px-2 py-1 rounded transition">
+                  変更
+                </button>
+              </div>
+            )
           ) : (
-            <div className="flex items-center gap-4 bg-white border rounded-lg p-4">
-              <div className="w-16 h-16 rounded-lg bg-purple-50 flex items-center justify-center text-3xl flex-shrink-0">
-                {uploadedFile.type === 'IMAGE' ? (
-                  <Image src={uploadedFile.url} alt={uploadedFile.name} width={64} height={64} className="w-16 h-16 object-cover rounded-lg" />
-                ) : (
-                  MEDIA_ICON[uploadedFile.type]
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{uploadedFile.name}</p>
-                <p className="text-xs text-gray-500">{uploadedFile.type}</p>
-              </div>
-              <button type="button" onClick={() => setUploadedFile(null)} className="text-gray-400 hover:text-red-500 text-sm px-2 py-1 rounded transition">
-                変更
-              </button>
+            <div>
+              <label className="block text-sm font-medium mb-2">作品 URL *</label>
+              <input
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                placeholder="例：https://www.youtube.com/watch?v=..."
+                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                YouTube・Vimeo・X（Twitter）など、本人の作品が公開されているページの URL を貼り付けてください。
+              </p>
             </div>
           )}
 
@@ -271,7 +340,11 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
             </button>
             <button
               type="submit"
-              disabled={isPending || !uploadedFile || !title.trim()}
+              disabled={
+                isPending ||
+                !title.trim() ||
+                (inputMode === 'upload' ? !uploadedFile : !urlInput.trim())
+              }
               className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-bold hover:bg-purple-700 transition disabled:opacity-50"
             >
               {isPending ? '保存中...' : '保存する'}
@@ -299,15 +372,20 @@ export default function PortfolioClient({ initialPortfolios }: Props) {
 
 function PortfolioCard({ portfolio, onDelete }: { portfolio: Portfolio; onDelete: () => void }) {
   const { title, mediaType, fileKey } = portfolio
-  const fileUrl = fileKey?.startsWith('http') ? fileKey : `https://utfs.io/f/${fileKey}`
-  const isImage = mediaType === 'IMAGE'
+  const source = resolveMediaSource(fileKey)
+  const thumb =
+    mediaType === 'IMAGE' && source.kind === 'file'
+      ? source.url
+      : source.kind === 'youtube'
+        ? source.thumbnailUrl
+        : null
 
   return (
     <div className="bg-white border rounded-xl overflow-hidden relative group hover:shadow-md transition">
-      <div className="bg-gray-100 h-28 flex items-center justify-center overflow-hidden">
-        {isImage ? (
+      <div className="bg-gray-100 h-28 flex items-center justify-center overflow-hidden relative">
+        {thumb ? (
           <Image
-            src={fileUrl}
+            src={thumb}
             alt={title}
             width={200}
             height={112}
@@ -318,10 +396,20 @@ function PortfolioCard({ portfolio, onDelete }: { portfolio: Portfolio; onDelete
         ) : (
           <span className="text-4xl">{MEDIA_ICON[mediaType as MediaType]}</span>
         )}
+        {(mediaType === 'VIDEO' || source.kind === 'youtube' || source.kind === 'vimeo') && thumb && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+            <span className="text-white text-2xl drop-shadow">▶</span>
+          </div>
+        )}
       </div>
       <div className="p-3">
         <p className="font-medium text-sm line-clamp-1">{title}</p>
-        <p className="text-xs text-gray-400 mt-0.5">{mediaType}</p>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {mediaType}
+          {source.kind === 'youtube' && ' · YouTube'}
+          {source.kind === 'vimeo' && ' · Vimeo'}
+          {source.kind === 'twitter' && ' · X'}
+        </p>
       </div>
       <button
         onClick={onDelete}
