@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyRevenueCatWebhook, PRO_ENTITLEMENT_ID } from '@/lib/revenuecat'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 // Node ランタイム必須（node:crypto を使うため）
 export const runtime = 'nodejs'
@@ -27,6 +28,16 @@ const GRANT_EVENTS = new Set(['INITIAL_PURCHASE', 'RENEWAL', 'PRODUCT_CHANGE', '
 const REVOKE_EVENTS = new Set(['CANCELLATION', 'EXPIRATION'])
 
 export async function POST(req: NextRequest) {
+  // HMAC 検証済みだが、署名総当たり / リプレイ抑止として IP ベースの上限をかける
+  const ip = getClientIp(req.headers)
+  const rl = await checkRateLimit('webhook', ip)
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'rate limited' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+    )
+  }
+
   const rawBody = await req.text()
   const signature = req.headers.get('x-revenuecat-webhook-signature')
 

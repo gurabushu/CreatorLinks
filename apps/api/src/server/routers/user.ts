@@ -87,7 +87,7 @@ export const userRouter = router({
       })
     }),
 
-  // アバター URL 更新（Uploadthing アップロード完了後に呼び出す）
+  // アバター URL 更新（Vercel Blob アップロード完了後に呼び出す）
   updateAvatar: protectedProcedure
     .input(z.object({ avatarUrl: z.string().url('有効な URL を指定してください') }))
     .mutation(async ({ ctx, input }) => {

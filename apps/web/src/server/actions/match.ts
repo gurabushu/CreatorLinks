@@ -2,6 +2,7 @@
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { revalidatePath } from 'next/cache'
 import {
   getPusherServer,
@@ -200,6 +201,15 @@ export async function sendMessageAction(
   const session = await auth()
   if (!session) return { success: false, error: 'ログインが必要です' }
   if (!body.trim()) return { success: false, error: 'メッセージを入力してください' }
+
+  // ユーザー単位のレートリミット（スパム防止）
+  const rl = await checkRateLimit('message', `user:${session.user.id}`)
+  if (!rl.ok) {
+    return {
+      success: false,
+      error: `送信が速すぎます。${rl.retryAfterSec} 秒後に再試行してください`,
+    }
+  }
 
   const match = await prisma.match.findUnique({
     where: { id: matchId },

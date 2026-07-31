@@ -3,9 +3,11 @@
 import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { assignEarlyBirdIfAvailable } from '@/lib/early-bird'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail, SITE_NAME, APP_URL } from '@/lib/resend'
 import {
   SignUpSchema,
@@ -23,7 +25,7 @@ export type SignUpResult =
 // テスト用ゲストアカウント
 // ===========================================
 // サービス展開前に、登録なしでアーティストに触ってもらうための一時アカウント。
-// 24 時間後に cron で自動削除される。Stripe / メール送信 / メアド変更は制限。
+// 24 時間後に cron で自動削除される。課金 / メール送信 / メアド変更は制限。
 const GUEST_EMAIL_DOMAIN = 'demo.local'
 
 export async function signUpAsGuestAction(): Promise<
@@ -56,6 +58,16 @@ export async function signUpAsGuestAction(): Promise<
 }
 
 export async function signUpAction(formData: FormData): Promise<SignUpResult> {
+  const ip = getClientIp(await headers())
+  const rl = await checkRateLimit('auth', ip)
+  if (!rl.ok) {
+    return {
+      success: false,
+      error: `試行回数が多すぎます。${rl.retryAfterSec} 秒後に再試行してください`,
+      field: 'general',
+    }
+  }
+
   const raw = {
     name: formData.get('name'),
     email: formData.get('email'),
@@ -128,6 +140,11 @@ function generateToken(): { plain: string; hash: string } {
 export async function requestPasswordResetAction(
   data: { email: string },
 ): Promise<{ success: true }> {
+  // レート制限（エニュメレーション対策と同様、成功レスポンスに揃える）
+  const ip = getClientIp(await headers())
+  const rl = await checkRateLimit('auth', ip)
+  if (!rl.ok) return { success: true }
+
   // 入力検証は緩めにし、メアド存在の有無にかかわらず常に同じレスポンスを返す（エニュメレーション防止）
   const parsed = RequestPasswordResetSchema.safeParse(data)
   if (!parsed.success) return { success: true }
