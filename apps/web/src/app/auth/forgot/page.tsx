@@ -27,7 +27,6 @@ export default function ForgotPasswordPage() {
 
         {submitted ? (
           <div className="text-center space-y-4">
-            <div className="text-4xl">📧</div>
             <p className="font-medium text-gray-800">
               入力されたメールアドレスにリセット用リンクを送信しました
             </p>

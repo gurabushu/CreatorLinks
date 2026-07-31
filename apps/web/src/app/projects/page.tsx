@@ -59,7 +59,7 @@ export default async function ProjectsPage() {
                 <p className="text-gray-600 text-sm mt-1 line-clamp-2">{project.description}</p>
               )}
               <div className="flex gap-1 mt-2 flex-wrap">
-                {project.genres.map((g) => (
+                {project.genres.map((g: string) => (
                   <span key={g} className="text-xs bg-gray-100 px-2 py-0.5 rounded">
                     {g}
                   </span>

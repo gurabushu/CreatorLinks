@@ -110,7 +110,8 @@ export default async function ProjectManagePage() {
                 <p className="px-6 py-5 text-sm text-gray-400">まだ応募者がいません</p>
               ) : (
                 <div className="divide-y">
-                  {project.matches.map((match) => (
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {project.matches.map((match: any) => (
                     <div key={match.id} className="px-6 py-4 flex items-start justify-between gap-4">
                       {/* アーティスト情報 */}
                       <div className="flex items-start gap-3 min-w-0">
@@ -134,7 +135,7 @@ export default async function ProjectManagePage() {
                             {match.artist.name}
                           </Link>
                           <p className="text-xs text-gray-400">
-                            ⭐ {Number(match.artist.averageRating).toFixed(1)}
+                            評価 {Number(match.artist.averageRating).toFixed(1)}
                             {match.artist.genres.length > 0 &&
                               ` · ${match.artist.genres.slice(0, 2).join(', ')}`}
                           </p>

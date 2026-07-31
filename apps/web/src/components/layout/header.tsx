@@ -28,7 +28,22 @@ export async function Header() {
           />
         </Link>
 
-        <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm shrink-0">
+        <nav className="hidden md:flex items-center gap-6 text-sm shrink-0">
+          <Link href="/#features" className="text-gray-600 hover:text-purple-600 transition">
+            機能紹介
+          </Link>
+          <Link href="/#how-it-works" className="text-gray-600 hover:text-purple-600 transition">
+            ご利用の流れ
+          </Link>
+          <Link href="/#pricing" className="text-gray-600 hover:text-purple-600 transition">
+            料金プラン
+          </Link>
+          <Link href="/#faq" className="text-gray-600 hover:text-purple-600 transition">
+            よくある質問
+          </Link>
+        </nav>
+
+        <nav className="flex md:hidden items-center gap-3 text-xs shrink-0">
           <Link href="/artists" className="text-gray-600 hover:text-purple-600 transition">
             アーティスト
           </Link>
@@ -61,15 +76,15 @@ export async function Header() {
             <>
               <Link
                 href="/auth"
-                className="hidden sm:inline text-sm text-gray-600 hover:text-purple-600 transition"
+                className="hidden sm:inline text-sm border border-purple-600 text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-50 transition"
               >
                 ログイン
               </Link>
               <Link
                 href="/auth"
-                className="text-[11px] sm:text-sm bg-purple-600 text-white px-2.5 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-purple-700 transition whitespace-nowrap"
+                className="text-[11px] sm:text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold px-2.5 sm:px-4 py-1 sm:py-2 rounded-lg shadow-sm hover:opacity-95 transition whitespace-nowrap"
               >
-                無料登録
+                無料で始める
               </Link>
             </>
           )}

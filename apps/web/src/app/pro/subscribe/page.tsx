@@ -69,6 +69,17 @@ function ProSubscribeContent() {
         </div>
       </div>
 
+      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-6 mb-8">
+        <div className="mb-2">
+          <h2 className="font-bold text-base text-amber-900">創設メンバー枠（先着 100 名）</h2>
+        </div>
+        <p className="text-sm text-amber-900/80 leading-relaxed">
+          サインアップ時に自動付与。PRO プランを <strong>6ヶ月無料</strong>で利用できる上、
+          <strong>「創設メンバー #001 / 100」</strong> のスロット番号入りバッジがプロフィール・一覧に永久表示されます。
+          6ヶ月後は通常プランに自動で戻り、継続したい場合のみ有料課金に切り替わります。
+        </p>
+      </div>
+
       <div className="border-2 border-purple-400 rounded-2xl p-6 mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
           おすすめ

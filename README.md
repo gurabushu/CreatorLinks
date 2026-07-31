@@ -73,7 +73,7 @@ creatorLinks/
 
 ### 課金
 - PRO プラン（RevenueCat Web Billing 月額サブスク）
-- 先着 30 名 PRO 永久無料キャンペーン（サインアップ順で自動付与）
+- 創設メンバー枠：先着 100 名に **PRO 6ヶ月無料 + スロット番号入り永久バッジ**（サインアップ順で自動付与、6ヶ月後は Inngest 日次 cron で GENERAL に自動失効）
 - ファン支援（アーティストへの月額サブスク）は現在停止中
 
 ### 管理
@@ -202,7 +202,7 @@ REVENUECAT_WEBHOOK_SIGNING_SECRET="whsec_..."
 - [x] 管理画面
 - [x] **Vercel Blob ファイルアップロード**（ブラウザ → CDN 直接、自動 WebP 圧縮）
 - [x] RevenueCat Web Billing 課金（PRO プラン、Webhook で role 同期）
-- [x] 先着 30 名 PRO 永久無料キャンペーン（サインアップ順で自動付与、Webhook では剥奪しない）
+- [x] 創設メンバー枠（先着 100 名 PRO 6ヶ月無料 + 永久バッジ、Inngest cron で自動失効。旧・先着 30 名の永久 PRO 組は約束通り継続）
 - [x] Pusher リアルタイムチャット（環境変数設定時のみ有効・未設定はポーリング）
 - [x] メール通知（Resend + Inngest バックグラウンドジョブ）
 - [x] **トップページヒーロースライドショー**（自動切替・サブスク継続案件訴求）

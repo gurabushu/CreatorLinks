@@ -11,6 +11,7 @@ const ARTIST_SELECT = {
   avatarUrl: true,
   coverUrl: true,
   averageRating: true,
+  earlyBirdSlot: true,
   featuredPortfolioId: true,
   featuredPortfolio: {
     select: { id: true, mediaType: true, title: true, fileKey: true },

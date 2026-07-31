@@ -72,7 +72,7 @@ export default async function ProjectDetailPage({ params }: Props) {
           <div>
             <div className="flex gap-2 mb-3">
               <span className="bg-purple-100 text-purple-700 text-xs px-3 py-1 rounded-full font-medium">
-                {project.contractType === 'SPOT' ? '🎯 スポット' : '🔄 サブスク'}
+                {project.contractType === 'SPOT' ? 'スポット' : 'サブスク'}
               </span>
               <span
                 className={`text-xs px-3 py-1 rounded-full font-medium ${
@@ -90,7 +90,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
           {/* ジャンル */}
           <div className="flex gap-2 flex-wrap">
-            {project.genres.map((g) => (
+            {project.genres.map((g: string) => (
               <span key={g} className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
                 {g}
               </span>
@@ -144,7 +144,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               </div>
               <div>
                 <p className="font-medium text-sm">{project.client.name}</p>
-                <p className="text-xs text-gray-400">⭐ {Number(project.client.averageRating).toFixed(1)}</p>
+                <p className="text-xs text-gray-400">評価 {Number(project.client.averageRating).toFixed(1)}</p>
               </div>
             </div>
           </div>

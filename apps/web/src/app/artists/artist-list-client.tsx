@@ -12,6 +12,7 @@ import {
   buildYouTubeEmbed,
   buildVimeoEmbed,
 } from '@/lib/media-source'
+import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
 
 const SOUND_PREF_KEY = 'creatorlinks.artist-list.hover-sound'
 
@@ -29,6 +30,7 @@ type ArtistItem = {
   avatarUrl: string | null
   coverUrl: string | null
   averageRating: number
+  earlyBirdSlot: number | null
   featuredPortfolioId: string | null
   portfolios: Portfolio[]
 }
@@ -226,7 +228,7 @@ function ThumbnailStrip({ works }: { works: Portfolio[] }) {
           p.mediaType === 'VIDEO' || src.kind === 'youtube' || src.kind === 'vimeo'
             ? '▶'
             : p.mediaType === 'AUDIO'
-              ? '🎵'
+              ? '音声'
               : null
         return (
           <div
@@ -431,6 +433,8 @@ function ArtistCard({
               PRO
             </span>
           )}
+          <FoundingMemberBadge slot={artist.earlyBirdSlot} />
+
           {!isMe && (
             <LikeButton
               artistId={artist.id}
@@ -459,7 +463,9 @@ function ArtistCard({
         <div className="flex items-center gap-3 text-xs text-gray-400">
           {artist.averageRating > 0 && (
             <span className="flex items-center gap-1">
-              <span className="text-yellow-400">★</span>
+              <svg className="w-3.5 h-3.5 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.9 6.9L22 9.7l-5.5 4.8L18 22l-6-3.6L6 22l1.5-7.5L2 9.7l7.1-.8L12 2z" />
+              </svg>
               {artist.averageRating.toFixed(1)}
             </span>
           )}
@@ -613,7 +619,6 @@ export function ArtistListClient({
       {matchBanner && (
         <div className="mb-6 rounded-xl border border-pink-200 bg-gradient-to-r from-pink-50 to-purple-50 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="text-2xl sm:text-3xl shrink-0">🎉</div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-pink-700 text-sm sm:text-base">マッチング成立！</p>
               <p className="text-xs sm:text-sm text-gray-600">{matchBanner.name} さんとマッチしました。チャットで案件を相互紹介できます。</p>
@@ -683,7 +688,20 @@ export function ArtistListClient({
               : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'
           }`}
         >
-          <span aria-hidden>{withSound ? '🔊' : '🔇'}</span>
+          <span aria-hidden className="inline-flex">
+            {withSound ? (
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4z" />
+                <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+                <path d="M18 5a9 9 0 0 1 0 14" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4z" />
+                <path d="M23 9l-6 6M17 9l6 6" />
+              </svg>
+            )}
+          </span>
           <span className="hidden sm:inline">{withSound ? 'ホバー音声 ON' : 'ホバー音声 OFF'}</span>
           <span
             aria-hidden
@@ -725,7 +743,6 @@ export function ArtistListClient({
 
       {!isPending && !isError && artists.length === 0 && (
         <div className="text-center py-20 text-gray-400">
-          <p className="text-4xl mb-4">🎨</p>
           <p className="font-medium">該当するアーティストが見つかりません</p>
           <p className="text-sm mt-1">別のジャンルで検索してみましょう</p>
         </div>

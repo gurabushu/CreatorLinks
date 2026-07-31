@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyRevenueCatWebhook, PRO_ENTITLEMENT_ID } from '@/lib/revenuecat'
+import { isEarlyBirdFreeActive } from '@/lib/early-bird'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 // Node ランタイム必須（node:crypto を使うため）
@@ -71,18 +72,37 @@ export async function POST(req: NextRequest) {
   const userId = event.app_user_id
 
   if (GRANT_EVENTS.has(event.type)) {
-    await prisma.user.update({ where: { id: userId }, data: { role: 'PRO' } }).catch(() => null)
+    // 本課金アクティブフラグを立てる。失効 cron はこのフラグ true のユーザーを対象外にする
+    await prisma.user
+      .update({
+        where: { id: userId },
+        data: { role: 'PRO', hasPaidSubscription: true },
+      })
+      .catch(() => null)
     return NextResponse.json({ ok: true })
   }
 
   if (REVOKE_EVENTS.has(event.type)) {
-    // 先着 30 名 PRO 永久無料スロット保持者は剥奪しない
     const user = await prisma.user
-      .findUnique({ where: { id: userId }, select: { earlyBirdSlot: true, role: true } })
+      .findUnique({
+        where: { id: userId },
+        select: { earlyBirdSlot: true, earlyBirdExpiresAt: true, role: true },
+      })
       .catch(() => null)
-    if (user && user.earlyBirdSlot === null && user.role === 'PRO') {
-      await prisma.user.update({ where: { id: userId }, data: { role: 'GENERAL' } }).catch(() => null)
-    }
+    if (!user) return NextResponse.json({ ok: true })
+
+    // 常に hasPaidSubscription は false に落とす（本課金は終了）。
+    // 創設メンバーの無料期間中（旧永久組を含む）は role は PRO のまま維持する
+    const shouldRevokeRole = user.role === 'PRO' && !isEarlyBirdFreeActive(user)
+    await prisma.user
+      .update({
+        where: { id: userId },
+        data: {
+          hasPaidSubscription: false,
+          ...(shouldRevokeRole ? { role: 'GENERAL' as const } : {}),
+        },
+      })
+      .catch(() => null)
     return NextResponse.json({ ok: true })
   }
 

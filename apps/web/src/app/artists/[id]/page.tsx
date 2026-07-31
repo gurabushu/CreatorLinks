@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { PortfolioGallery } from './portfolio-gallery'
+import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -68,9 +69,10 @@ export default async function ArtistDetailPage({ params }: Props) {
                 PRO
               </span>
             )}
+            <FoundingMemberBadge slot={user.earlyBirdSlot} size="md" />
           </div>
           <div className="flex gap-1.5 mt-1 flex-wrap">
-            {user.genres.map((g) => (
+            {user.genres.map((g: string) => (
               <span key={g} className="bg-gray-100 text-gray-600 text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded">
                 {g}
               </span>
@@ -78,7 +80,7 @@ export default async function ArtistDetailPage({ params }: Props) {
           </div>
           {user.bio && <p className="text-sm sm:text-base text-gray-600 mt-2 whitespace-pre-wrap">{user.bio}</p>}
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            ⭐ {Number(user.averageRating).toFixed(1)}
+            評価 {Number(user.averageRating).toFixed(1)}
           </p>
         </div>
       </div>

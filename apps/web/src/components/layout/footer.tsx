@@ -1,10 +1,21 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+// サイドバー（DashboardShell / projects/manage）の下敷きになるページでは
+// フッターの中身も同じぶんだけ右にオフセットしてロゴ・リンクが隠れないようにする
+const SIDEBAR_ROUTES = ['/dashboard', '/projects/manage']
 
 export function Footer() {
+  const pathname = usePathname()
+  const hasSidebar = SIDEBAR_ROUTES.some((p) => pathname?.startsWith(p))
+  const offsetClass = hasSidebar ? 'md:pl-72 lg:pl-80' : ''
+
   return (
     <footer className="border-t bg-gray-50 py-10 mt-auto">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className={`max-w-6xl mx-auto px-4 ${offsetClass}`}>
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           <div>
             <Image

@@ -155,7 +155,7 @@ export default function NewProjectPage() {
                     }`}
                   >
                     <p className="font-medium text-sm">
-                      {type === 'SPOT' ? '🎯 スポット' : '🔄 サブスク'}
+                      {type === 'SPOT' ? 'スポット' : 'サブスク'}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {type === 'SPOT' ? '単発の案件依頼' : '継続的な長期契約'}
@@ -262,7 +262,7 @@ export default function NewProjectPage() {
                 disabled={isPending}
                 className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition disabled:opacity-50"
               >
-                {isPending ? '公開中...' : '🚀 案件を公開する'}
+                {isPending ? '公開中...' : '案件を公開する'}
               </button>
             </div>
           </div>

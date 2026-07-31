@@ -116,7 +116,7 @@ export async function signUpAction(formData: FormData): Promise<SignUpResult> {
     return { success: false, error: 'アカウント作成に失敗しました。しばらく後で再試行してください。', field: 'general' }
   }
 
-  // 先着 30 名 PRO 永久無料スロットの割当（失敗しても登録自体は成功扱い）
+  // 創設メンバー枠（先着 100 名 PRO 6ヶ月無料 + 永久バッジ）の割当（失敗しても登録自体は成功扱い）
   await assignEarlyBirdIfAvailable(createdUserId).catch(() => null)
   // トップページの残数バナーの ISR を無効化
   revalidatePath('/')

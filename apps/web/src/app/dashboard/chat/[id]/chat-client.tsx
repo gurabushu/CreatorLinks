@@ -120,7 +120,6 @@ function ReviewModal({
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center">
-          <div className="text-4xl mb-3">⭐</div>
           <p className="font-bold text-lg mb-1">レビューを投稿しました</p>
           <p className="text-gray-500 text-sm mb-5">ありがとうございます</p>
           <button
@@ -147,11 +146,14 @@ function ReviewModal({
                   key={s}
                   type="button"
                   onClick={() => setScore(s)}
-                  className={`w-10 h-10 rounded-full text-lg transition ${
+                  aria-label={`${s}点`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
                     score >= s ? 'text-yellow-400' : 'text-gray-200'
                   }`}
                 >
-                  ★
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l2.9 6.9L22 9.7l-5.5 4.8L18 22l-6-3.6L6 22l1.5-7.5L2 9.7l7.1-.8L12 2z" />
+                  </svg>
                 </button>
               ))}
             </div>
@@ -362,7 +364,7 @@ export function ChatClient({
             disabled={isCompleting}
             className="shrink-0 text-[11px] sm:text-xs bg-blue-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 whitespace-nowrap"
           >
-            {isCompleting ? '処理中' : '✅ 納品完了'}
+            {isCompleting ? '処理中' : '納品完了'}
           </button>
         )}
 
@@ -452,7 +454,7 @@ export function ChatClient({
                 onClick={() => setShowShareMenu((v) => !v)}
                 className="text-xs px-3 py-1.5 rounded-full border border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 transition"
               >
-                📋 自分の非公開案件を共有
+                自分の非公開案件を共有
               </button>
               {showShareMenu && (
                 <div className="absolute bottom-full left-0 right-0 sm:right-auto sm:w-72 mb-2 bg-white border border-pink-200 rounded-xl shadow-lg p-2 z-10 max-h-72 overflow-y-auto">

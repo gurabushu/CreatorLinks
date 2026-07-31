@@ -157,7 +157,6 @@ function MediaFrame({
   if (source.kind === 'file' && current.mediaType === 'AUDIO') {
     return (
       <div className="text-center">
-        <div className="text-7xl mb-4">🎵</div>
         <audio src={source.url} controls autoPlay className="w-full max-w-md" />
       </div>
     )
@@ -176,7 +175,6 @@ function MediaFrame({
   // twitter / other → 単純なリンク誘導
   return (
     <div className="text-center text-white">
-      <div className="text-5xl mb-3">🔗</div>
       <p className="text-sm">このメディアは外部リンクで公開されています</p>
     </div>
   )

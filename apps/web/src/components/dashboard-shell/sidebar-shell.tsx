@@ -1,0 +1,193 @@
+'use client'
+
+import { useState, type ReactNode } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import type { UserRole } from '@creator-links/shared'
+
+type User = { name: string; role: UserRole }
+
+type NavItem = {
+  href: string
+  label: string
+  icon: ReactNode
+  matchExact?: boolean
+  badge?: number
+}
+
+const iconClass = 'w-5 h-5'
+const iconProps = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+}
+
+const HomeIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z" />
+  </svg>
+)
+const UserIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+)
+const GalleryIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="9" cy="9" r="1.5" />
+    <path d="M21 15l-5-5-8 8" />
+  </svg>
+)
+const InboxIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+    <path d="M5.5 5h13l3.5 7v6a2 2 0 0 1-2 2h-16a2 2 0 0 1-2-2v-6z" />
+  </svg>
+)
+const ClipboardIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <rect x="8" y="3" width="8" height="4" rx="1" />
+    <path d="M8 5H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+  </svg>
+)
+
+function SidebarNav({
+  user,
+  items,
+  isActive,
+  onNavigate,
+}: {
+  user: User
+  items: NavItem[]
+  isActive: (item: NavItem) => boolean
+  onNavigate: () => void
+}) {
+  return (
+    <>
+      <div className="px-4 pt-4 pb-3 border-b">
+        <p className="text-[10px] text-gray-400 uppercase tracking-wider">Signed in as</p>
+        <p className="font-bold text-gray-900 truncate">{user.name}</p>
+        {user.role === 'PRO' && (
+          <span className="mt-1 inline-block bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+            PRO
+          </span>
+        )}
+      </div>
+
+      <nav className="p-2 flex-1">
+        {items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 transition ${
+              isActive(item)
+                ? 'bg-purple-50 text-purple-700 font-bold'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <span className="shrink-0 text-current">{item.icon}</span>
+            <span className="flex-1 truncate">{item.label}</span>
+            {item.badge != null && item.badge > 0 && (
+              <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold min-w-[18px] text-center">
+                {item.badge > 99 ? '99+' : item.badge}
+              </span>
+            )}
+          </Link>
+        ))}
+      </nav>
+
+      {user.role !== 'PRO' && (
+        <div className="p-3 border-t">
+          <Link
+            href="/pro/subscribe"
+            onClick={onNavigate}
+            className="block text-center bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-3 py-2 rounded-lg transition"
+          >
+            PRO にアップグレード
+          </Link>
+        </div>
+      )}
+    </>
+  )
+}
+
+export function SidebarShell({
+  user,
+  unreadCount,
+  children,
+}: {
+  user: User
+  unreadCount: number
+  children: React.ReactNode
+}) {
+  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const items: NavItem[] = [
+    { href: '/dashboard', label: 'マイページ', icon: <HomeIcon />, matchExact: true },
+    { href: '/dashboard/profile', label: 'プロフィール', icon: <UserIcon /> },
+    { href: '/dashboard/portfolio', label: 'ポートフォリオ', icon: <GalleryIcon /> },
+    { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },
+    { href: '/projects/manage', label: '案件管理', icon: <ClipboardIcon /> },
+  ]
+
+  const isActive = (item: NavItem) =>
+    item.matchExact ? pathname === item.href : pathname.startsWith(item.href)
+
+  const close = () => setMobileOpen(false)
+
+  return (
+    <div>
+      <div className="md:hidden sticky top-14 sm:top-16 z-30 bg-white border-b flex items-center h-11 px-4">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          aria-label="メニューを開く"
+          className="text-gray-600 hover:text-purple-600 flex items-center gap-2 text-sm"
+        >
+          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <span>メニュー</span>
+        </button>
+      </div>
+
+      {mobileOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="メニューを閉じる"
+            onClick={close}
+            className="md:hidden fixed inset-0 bg-black/40 z-40"
+          />
+          <aside className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-white border-r z-50 flex flex-col overflow-y-auto">
+            <div className="px-4 py-3 border-b flex items-center justify-between">
+              <p className="font-bold text-purple-600">メニュー</p>
+              <button
+                type="button"
+                onClick={close}
+                aria-label="閉じる"
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <SidebarNav user={user} items={items} isActive={isActive} onNavigate={close} />
+          </aside>
+        </>
+      )}
+
+      <aside className="hidden md:flex md:flex-col md:fixed md:left-0 md:top-16 md:bottom-0 md:w-60 md:overflow-y-auto md:border-r bg-white z-30">
+        <SidebarNav user={user} items={items} isActive={isActive} onNavigate={close} />
+      </aside>
+
+      <div className="md:ml-72 lg:ml-80 min-w-0">{children}</div>
+    </div>
+  )
+}

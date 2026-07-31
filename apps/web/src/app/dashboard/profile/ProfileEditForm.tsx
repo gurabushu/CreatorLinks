@@ -150,7 +150,7 @@ export default function ProfileEditForm({ user }: Props) {
 
         {saveSuccess && (
           <p className="text-center text-green-600 font-medium">
-            ✓ プロフィールを更新しました
+            プロフィールを更新しました
           </p>
         )}
       </form>

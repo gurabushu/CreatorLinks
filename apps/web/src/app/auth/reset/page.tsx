@@ -55,7 +55,6 @@ function ResetPasswordInner() {
 
         {done ? (
           <div className="text-center space-y-3">
-            <div className="text-4xl">✅</div>
             <p className="font-medium text-gray-800">パスワードを更新しました</p>
             <p className="text-xs text-gray-500">まもなくログイン画面に移動します</p>
           </div>

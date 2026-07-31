@@ -62,7 +62,7 @@ export function ApplyButton({ projectId, isLoggedIn, isOwner, alreadyApplied, pr
   if (alreadyApplied || state?.success) {
     return (
       <div className="text-center py-3">
-        <span className="text-green-600 font-medium text-sm">✅ 応募済み</span>
+        <span className="text-green-600 font-medium text-sm">応募済み</span>
         <p className="text-xs text-gray-400 mt-1">依頼者からの返信をお待ちください</p>
       </div>
     )

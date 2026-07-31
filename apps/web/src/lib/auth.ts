@@ -72,7 +72,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   events: {
     // PrismaAdapter が新規ユーザーを作った直後（Google OAuth の初回サインイン）
-    // 先着 30 名 PRO 永久無料スロットを割り当てる
+    // 創設メンバー枠を割り当てる
     async createUser({ user }) {
       if (!user.id) return
       await assignEarlyBirdIfAvailable(user.id).catch(() => null)
