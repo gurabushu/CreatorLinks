@@ -114,7 +114,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               <div>
                 <p className="text-xs text-gray-400">予算</p>
                 <p className="text-2xl font-bold text-purple-600">{formatCurrency(project.budget)}</p>
-                <p className="text-xs text-gray-400">（手数料10%差引き後の手取り: {formatCurrency(project.budget * 0.9)}）</p>
+                <p className="text-xs text-gray-400">（手数料7%差引き後の手取り: {formatCurrency(project.budget * 0.93)}）</p>
               </div>
             )}
             <div>

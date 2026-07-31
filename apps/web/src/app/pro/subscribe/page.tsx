@@ -56,7 +56,7 @@ function ProSubscribeContent() {
           {[
             { title: '案件一覧での優先表示', desc: '検索結果の上位に PRO マーク付きで掲載' },
             { title: 'レコメンドアルゴリズム優遇', desc: 'AI マッチングでの上位掲載' },
-            { title: '手数料 10%（業界最安）', desc: '他プラットフォームの半分以下' },
+            { title: '手数料 7%（業界最安）', desc: '他プラットフォームの1/3以下' },
           ].map((item) => (
             <div key={item.title} className="flex gap-4 items-start">
               <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-2.5 shrink-0" />

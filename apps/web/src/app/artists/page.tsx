@@ -6,7 +6,7 @@ import { auth } from '@/lib/auth'
 
 export const metadata: Metadata = {
   title: 'アーティスト一覧 | CreatorLinks',
-  description: '音楽・イラスト・動画などのクリエイターを探せます。手数料10%で直接マッチング。',
+  description: '音楽・イラスト・動画などのクリエイターを探せます。手数料7%で直接マッチング。',
 }
 
 export const dynamic = 'force-dynamic'

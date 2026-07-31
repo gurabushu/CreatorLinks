@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 export function Footer() {
@@ -6,7 +7,13 @@ export function Footer() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           <div>
-            <p className="font-bold text-purple-600 mb-2">CreatorLinks</p>
+            <Image
+              src="/logo.png"
+              alt="CreatorLinks"
+              width={1032}
+              height={193}
+              className="h-7 w-auto mb-3"
+            />
             <p className="text-sm text-gray-500">
               才能あるアーティストと<br />クライアントをつなぐプラットフォーム
             </p>

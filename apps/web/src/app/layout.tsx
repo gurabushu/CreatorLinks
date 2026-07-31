@@ -9,18 +9,35 @@ import { Footer } from '@/components/layout/footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
   title: {
     default: 'CreatorLinks — 個人アーティストの営業プラットフォーム',
     template: '%s | CreatorLinks',
   },
   description:
-    '才能あるアーティストと企業・個人をつなぐ、手数料業界最安10%のマッチングプラットフォーム。',
+    '才能あるアーティストと企業・個人をつなぐ、手数料業界最安7%のマッチングプラットフォーム。',
   keywords: ['アーティスト', 'フリーランス', 'マッチング', '音楽', 'イラスト', '動画'],
+  icons: {
+    icon: '/favicon-32.png',
+    apple: '/apple-icon.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'ja_JP',
     url: process.env.NEXT_PUBLIC_APP_URL,
     siteName: 'CreatorLinks',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'CreatorLinks',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/og-image.png'],
   },
 }
 

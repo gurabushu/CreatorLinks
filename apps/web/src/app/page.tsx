@@ -9,7 +9,7 @@ import { EarlyBirdBanner } from '@/components/early-bird/early-bird-banner'
 
 export const metadata: Metadata = {
   title: 'CreatorLinks — 個人アーティストの営業プラットフォーム',
-  description: '手数料業界最安10%。アーティストと企業を繋ぐマッチングサービス。',
+  description: '手数料業界最安7%。アーティストと企業を繋ぐマッチングサービス。',
 }
 
 // SSG: ビルド時生成
@@ -137,7 +137,7 @@ export default async function HomePage() {
             { name: 'ランサーズ', fee: '16.5%', highlight: false },
             { name: 'クラウドワークス', fee: '20%', highlight: false },
             { name: 'ココナラ', fee: '22%', highlight: false },
-            { name: 'CreatorLinks', fee: '10%', highlight: true },
+            { name: 'CreatorLinks', fee: '7%', highlight: true },
           ].map((item) => (
             <div
               key={item.name}
