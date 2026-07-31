@@ -11,7 +11,7 @@ export const userRouter = router({
       const user = await ctx.prisma.user.findUnique({
         where: { id: input.userId },
         include: { portfolios: true },
-        omit: { passwordHash: true, stripeCustomerId: true },
+        omit: { passwordHash: true },
       })
 
       if (!user) {
@@ -87,7 +87,7 @@ export const userRouter = router({
       })
     }),
 
-  // アバター URL 更新（Uploadthing アップロード完了後に呼び出す）
+  // アバター URL 更新（Vercel Blob アップロード完了後に呼び出す）
   updateAvatar: protectedProcedure
     .input(z.object({ avatarUrl: z.string().url('有効な URL を指定してください') }))
     .mutation(async ({ ctx, input }) => {

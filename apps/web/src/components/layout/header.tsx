@@ -1,10 +1,13 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import type { Session } from 'next-auth'
 import { auth, signOut } from '@/lib/auth'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 
 export async function Header() {
-  let session: Awaited<ReturnType<typeof auth>> = null
+  let session: Session | null = null
   try {
     session = await auth()
   } catch {
@@ -14,8 +17,15 @@ export async function Header() {
   return (
     <header className="border-b bg-white sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
-        <Link href="/" className="font-bold text-base sm:text-xl text-purple-600 shrink-0">
-          CreatorLinks
+        <Link href="/" className="shrink-0" aria-label="CreatorLinks">
+          <Image
+            src="/logo.png"
+            alt="CreatorLinks"
+            width={1032}
+            height={193}
+            priority
+            className="h-7 sm:h-9 w-auto"
+          />
         </Link>
 
         <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm shrink-0">
@@ -30,12 +40,7 @@ export async function Header() {
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
           {session ? (
             <>
-              <Link
-                href="/dashboard"
-                className="hidden sm:inline text-sm text-gray-600 hover:text-purple-600 transition"
-              >
-                マイページ
-              </Link>
+              <NotificationBell userId={session.user.id} />
               <form
                 action={async () => {
                   'use server'

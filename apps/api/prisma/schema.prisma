@@ -47,18 +47,6 @@ enum MatchStatus {
   REJECTED
 }
 
-enum PlanType {
-  MONTHLY
-  QUARTERLY
-  YEARLY
-}
-
-enum SubStatus {
-  ACTIVE
-  CANCELLED
-  PAUSED
-}
-
 // =============================================
 // モデル定義
 // =============================================
@@ -73,7 +61,7 @@ model User {
   bio              String?
   avatarUrl        String?  // Uploadthing ファイルキー
   coverUrl         String?  // プロフィールカバー画像（ジャケット）
-  stripeCustomerId String?  @unique
+  earlyBirdSlot    Int?     @unique // 先着 30 名の PRO 永久無料スロット。1..30。null なら通常ユーザー
   averageRating    Decimal  @default(0) @db.Decimal(3, 2)
   featuredPortfolioId String? // アーティスト本人が一覧カードのメインに見せる作品
   isGuest          Boolean  @default(false) // テスト用ゲストアカウント（24h で自動削除）
@@ -88,8 +76,6 @@ model User {
   matchesAsPartner  Match[]        @relation("PartnerMatches")
   sentMessages      Message[]
   reviewsGiven      Review[]       @relation("ReviewerReviews")
-  subscriptionsGiven Subscription[] @relation("SubscriberSubs")
-  subscriptionsReceived Subscription[] @relation("TargetSubs")
   likesGiven        Like[]         @relation("LikesGiven")
   likesReceived     Like[]         @relation("LikesReceived")
   passwordResetTokens PasswordResetToken[] @relation("PasswordResets")
@@ -196,21 +182,6 @@ model EmailChangeRequest {
 
   @@index([userId])
   @@map("email_change_requests")
-}
-
-model Subscription {
-  id                   String    @id @default(cuid())
-  subscriberId         String
-  targetId             String
-  stripeSubscriptionId String    @unique
-  plan                 PlanType
-  status               SubStatus @default(ACTIVE)
-  createdAt            DateTime  @default(now())
-
-  subscriber User @relation("SubscriberSubs", fields: [subscriberId], references: [id], onDelete: Cascade)
-  target     User @relation("TargetSubs", fields: [targetId], references: [id], onDelete: Cascade)
-
-  @@map("subscriptions")
 }
 
 model Message {

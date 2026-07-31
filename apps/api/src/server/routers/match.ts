@@ -72,9 +72,7 @@ export const matchRouter = router({
         data: { status: input.status },
       })
 
-      // ACCEPTED 時: Pusher でチャットルーム開放通知
-      // if (input.status === 'ACCEPTED') { ... }
-
+      // 本番の Pusher 配信は apps/web/src/server/actions/match.ts で実施
       return updated
     }),
 
@@ -138,7 +136,7 @@ export const messageRouter = router({
         sender: { select: { id: true, name: true, avatarUrl: true } },
       },
     })
-    // TODO: Pusher Channel でリアルタイム配信
+    // 本番の Pusher 配信は apps/web/src/server/actions/match.ts:sendMessageAction で実施
   }),
 })
 

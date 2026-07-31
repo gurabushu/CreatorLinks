@@ -205,7 +205,7 @@ export default function NewProjectPage() {
                 />
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                ※ 成立時に手数料10%が差し引かれます（業界最安水準）。未設定でも公開できます。
+                ※ 成立時に手数料7%が差し引かれます（業界最安水準）。未設定でも公開できます。
               </p>
             </div>
 

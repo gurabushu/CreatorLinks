@@ -42,7 +42,7 @@ export default async function ArtistDetailPage({ params }: Props) {
         portfolios: { orderBy: { createdAt: 'desc' } },
         reviewsGiven: false,
       },
-      omit: { passwordHash: true, stripeCustomerId: true },
+      omit: { passwordHash: true },
     })
   } catch {
     notFound()

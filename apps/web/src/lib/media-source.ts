@@ -1,6 +1,6 @@
 // Portfolio.fileKey に格納された値が
-// - Uploadthing のファイルキー
-// - Vercel Blob などの直接 URL
+// - Vercel Blob などの直接 URL（新規はこれ）
+// - 旧 Uploadthing のファイルキー（legacy、utfs.io にフォールバック）
 // - YouTube / Vimeo / Twitter(X) などの埋め込み可能な URL
 // のどれであるかを判定し、表示に必要な情報を返す。
 

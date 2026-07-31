@@ -2,8 +2,17 @@
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { revalidatePath } from 'next/cache'
-import { getPusherServer, getChatChannel, MESSAGE_EVENT } from '@/lib/pusher-server'
+import {
+  getPusherServer,
+  getChatChannel,
+  getUserChannel,
+  MESSAGE_EVENT,
+  MATCH_ACCEPTED_EVENT,
+  MATCH_REJECTED_EVENT,
+  MATCH_COMPLETED_EVENT,
+} from '@/lib/pusher-server'
 import { inngest } from '@/lib/inngest'
 
 export type MatchActionResult = { success: boolean; error?: string }
@@ -60,6 +69,19 @@ export async function updateMatchStatusAction(
     }
   }
 
+  // Pusher: アーティストのユーザーチャンネルへリアルタイム通知
+  const pusher = await getPusherServer()
+  if (pusher) {
+    const event = status === 'ACCEPTED' ? MATCH_ACCEPTED_EVENT : MATCH_REJECTED_EVENT
+    await pusher.trigger(getUserChannel(match.artistId), event, {
+      matchId,
+      projectId: match.projectId,
+      projectTitle: match.project.title,
+      counterpartName: session.user.name ?? '発注者',
+      createdAt: new Date().toISOString(),
+    })
+  }
+
   revalidatePath('/projects/manage')
   revalidatePath('/dashboard/matches')
   revalidatePath(`/projects/${match.projectId}`)
@@ -95,6 +117,20 @@ export async function completeMatchAction(matchId: string): Promise<MatchActionR
     where: { id: match.projectId },
     data: { status: 'CLOSED' },
   })
+
+  // Pusher: 発注者のユーザーチャンネルへ完了通知
+  if (match.project) {
+    const pusher = await getPusherServer()
+    if (pusher) {
+      await pusher.trigger(getUserChannel(match.project.clientId), MATCH_COMPLETED_EVENT, {
+        matchId,
+        projectId: match.projectId,
+        projectTitle: match.project.title,
+        counterpartName: session.user.name ?? 'アーティスト',
+        createdAt: new Date().toISOString(),
+      })
+    }
+  }
 
   revalidatePath(`/dashboard/chat/${matchId}`)
   revalidatePath('/dashboard/matches')
@@ -165,6 +201,15 @@ export async function sendMessageAction(
   const session = await auth()
   if (!session) return { success: false, error: 'ログインが必要です' }
   if (!body.trim()) return { success: false, error: 'メッセージを入力してください' }
+
+  // ユーザー単位のレートリミット（スパム防止）
+  const rl = await checkRateLimit('message', `user:${session.user.id}`)
+  if (!rl.ok) {
+    return {
+      success: false,
+      error: `送信が速すぎます。${rl.retryAfterSec} 秒後に再試行してください`,
+    }
+  }
 
   const match = await prisma.match.findUnique({
     where: { id: matchId },
