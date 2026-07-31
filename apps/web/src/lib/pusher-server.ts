@@ -26,3 +26,20 @@ export async function getPusherServer() {
 // チャンネル名の命名規則: private-chat-{matchId}
 export const getChatChannel = (matchId: string) => `private-chat-${matchId}`
 export const MESSAGE_EVENT = 'new-message'
+
+// ユーザーごとの通知チャンネル: private-user-{userId}
+// マッチのライフサイクル通知（応募着信・承認・却下・完了）を配信する
+export const getUserChannel = (userId: string) => `private-user-${userId}`
+
+export const MATCH_APPLIED_EVENT = 'match:applied'
+export const MATCH_ACCEPTED_EVENT = 'match:accepted'
+export const MATCH_REJECTED_EVENT = 'match:rejected'
+export const MATCH_COMPLETED_EVENT = 'match:completed'
+
+export type MatchNotificationPayload = {
+  matchId: string
+  projectId: string | null
+  projectTitle: string
+  counterpartName: string
+  createdAt: string
+}

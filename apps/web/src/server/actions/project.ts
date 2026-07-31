@@ -6,6 +6,11 @@ import { CreateProjectSchema } from '@creator-links/shared'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { inngest } from '@/lib/inngest'
+import {
+  getPusherServer,
+  getUserChannel,
+  MATCH_APPLIED_EVENT,
+} from '@/lib/pusher-server'
 
 export type ProjectActionResult =
   | { success: true; projectId: string }
@@ -94,6 +99,18 @@ export async function applyToProjectAction(
       projectTitle: projectInfo.title,
     },
   }).catch(() => {/* Inngest 未設定時は無視 */})
+
+  // Pusher: 発注者のユーザーチャンネルへリアルタイム通知
+  const pusher = await getPusherServer()
+  if (pusher) {
+    await pusher.trigger(getUserChannel(projectInfo.clientId), MATCH_APPLIED_EVENT, {
+      matchId: match.id,
+      projectId,
+      projectTitle: projectInfo.title,
+      counterpartName: session.user.name ?? 'アーティスト',
+      createdAt: match.createdAt.toISOString(),
+    })
+  }
 
   revalidatePath(`/projects/${projectId}`)
   return { success: true }

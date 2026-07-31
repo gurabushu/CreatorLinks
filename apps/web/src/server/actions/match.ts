@@ -3,7 +3,15 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { getPusherServer, getChatChannel, MESSAGE_EVENT } from '@/lib/pusher-server'
+import {
+  getPusherServer,
+  getChatChannel,
+  getUserChannel,
+  MESSAGE_EVENT,
+  MATCH_ACCEPTED_EVENT,
+  MATCH_REJECTED_EVENT,
+  MATCH_COMPLETED_EVENT,
+} from '@/lib/pusher-server'
 import { inngest } from '@/lib/inngest'
 
 export type MatchActionResult = { success: boolean; error?: string }
@@ -60,6 +68,19 @@ export async function updateMatchStatusAction(
     }
   }
 
+  // Pusher: アーティストのユーザーチャンネルへリアルタイム通知
+  const pusher = await getPusherServer()
+  if (pusher) {
+    const event = status === 'ACCEPTED' ? MATCH_ACCEPTED_EVENT : MATCH_REJECTED_EVENT
+    await pusher.trigger(getUserChannel(match.artistId), event, {
+      matchId,
+      projectId: match.projectId,
+      projectTitle: match.project.title,
+      counterpartName: session.user.name ?? '発注者',
+      createdAt: new Date().toISOString(),
+    })
+  }
+
   revalidatePath('/projects/manage')
   revalidatePath('/dashboard/matches')
   revalidatePath(`/projects/${match.projectId}`)
@@ -95,6 +116,20 @@ export async function completeMatchAction(matchId: string): Promise<MatchActionR
     where: { id: match.projectId },
     data: { status: 'CLOSED' },
   })
+
+  // Pusher: 発注者のユーザーチャンネルへ完了通知
+  if (match.project) {
+    const pusher = await getPusherServer()
+    if (pusher) {
+      await pusher.trigger(getUserChannel(match.project.clientId), MATCH_COMPLETED_EVENT, {
+        matchId,
+        projectId: match.projectId,
+        projectTitle: match.project.title,
+        counterpartName: session.user.name ?? 'アーティスト',
+        createdAt: new Date().toISOString(),
+      })
+    }
+  }
 
   revalidatePath(`/dashboard/chat/${matchId}`)
   revalidatePath('/dashboard/matches')

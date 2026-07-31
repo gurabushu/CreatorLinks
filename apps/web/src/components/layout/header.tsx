@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import type { Session } from 'next-auth'
 import { auth, signOut } from '@/lib/auth'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 
 export async function Header() {
-  let session: Awaited<ReturnType<typeof auth>> = null
+  let session: Session | null = null
   try {
     session = await auth()
   } catch {
@@ -30,12 +32,7 @@ export async function Header() {
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
           {session ? (
             <>
-              <Link
-                href="/dashboard"
-                className="hidden sm:inline text-sm text-gray-600 hover:text-purple-600 transition"
-              >
-                マイページ
-              </Link>
+              <NotificationBell userId={session.user.id} />
               <form
                 action={async () => {
                   'use server'
