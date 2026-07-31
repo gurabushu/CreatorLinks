@@ -2,7 +2,7 @@ import { router } from '../trpc'
 import { userRouter } from './user'
 import { projectRouter } from './project'
 import { matchRouter, messageRouter, reviewRouter } from './match'
-import { subscriptionRouter, portfolioRouter } from './subscription'
+import { portfolioRouter } from './portfolio'
 
 // アプリケーションルートルーター
 export const appRouter = router({
@@ -11,7 +11,6 @@ export const appRouter = router({
   match: matchRouter,
   message: messageRouter,
   review: reviewRouter,
-  subscription: subscriptionRouter,
   portfolio: portfolioRouter,
 })
 

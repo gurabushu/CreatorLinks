@@ -11,7 +11,3 @@ export type ContractType = 'SPOT' | 'SUBSCRIPTION'
 export type ProjectStatus = 'OPEN' | 'MATCHING' | 'CLOSED'
 
 export type MatchStatus = 'APPLIED' | 'ACCEPTED' | 'COMPLETED' | 'REJECTED'
-
-export type PlanType = 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-
-export type SubStatus = 'ACTIVE' | 'CANCELLED' | 'PAUSED'

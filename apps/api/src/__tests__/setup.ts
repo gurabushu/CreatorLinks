@@ -43,14 +43,3 @@ vi.mock('../db/index.js', () => ({
     },
   },
 }))
-
-// stripe をモック
-vi.mock('../lib/stripe.js', () => ({
-  stripe: {
-    checkout: { sessions: { create: vi.fn() } },
-    subscriptions: { cancel: vi.fn() },
-  },
-  PRO_PRICE_ID: 'price_test_pro',
-  PLAN_AMOUNTS: { MONTHLY: 500, QUARTERLY: 1425, YEARLY: 5400 },
-  SPOT_FEE_RATE: 0.1,
-}))

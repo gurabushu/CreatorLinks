@@ -1,17 +1,6 @@
 import { z } from 'zod'
 
 // =============================================
-// Subscription Zod スキーマ
-// =============================================
-
-export const CreateSubSchema = z.object({
-  targetId: z.string().cuid('有効なアーティストIDを指定してください'),
-  plan: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY']),
-})
-
-export type CreateSubInput = z.infer<typeof CreateSubSchema>
-
-// =============================================
 // Portfolio Zod スキーマ
 // =============================================
 

@@ -11,7 +11,7 @@ export const userRouter = router({
       const user = await ctx.prisma.user.findUnique({
         where: { id: input.userId },
         include: { portfolios: true },
-        omit: { passwordHash: true, stripeCustomerId: true },
+        omit: { passwordHash: true },
       })
 
       if (!user) {

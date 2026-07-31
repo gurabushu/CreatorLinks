@@ -31,7 +31,7 @@
 | ORM / DB | Prisma 6 + PostgreSQL（Railway / ローカルは Docker） |
 | 認証 | Auth.js v5 (NextAuth v5 beta, JWT + Google OAuth) |
 | ファイル | **Vercel Blob**（ブラウザ→CDN 直接アップロード + Canvas 圧縮） |
-| 課金 | Stripe |
+| 課金 | RevenueCat Web Billing（PRO サブスクのみ） |
 | リアルタイム | Pusher Channels（未設定時は 3 秒ポーリングにフォールバック） |
 | メール | Resend + react-email + Inngest |
 | モノレポ | Turborepo + pnpm workspaces |
@@ -72,8 +72,9 @@ creatorLinks/
 - 納品完了・レビュー投稿・評価集計
 
 ### 課金
-- PRO プラン（Stripe Checkout 月額サブスク）
-- ファン支援（アーティストへの月額サブスク）
+- PRO プラン（RevenueCat Web Billing 月額サブスク）
+- 先着 30 名 PRO 永久無料キャンペーン（サインアップ順で自動付与）
+- ファン支援（アーティストへの月額サブスク）は現在停止中
 
 ### 管理
 - 管理画面（ユーザー・案件のモデレーション）
@@ -154,9 +155,10 @@ DATABASE_URL="postgresql://creator:creator_pass@localhost:5432/creator_links_dev
 # Auth.js v5（任意の文字列でOK）
 AUTH_SECRET="local-dev-secret"
 
-# Stripe（テストキー・任意）
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_PUBLISHABLE_KEY="pk_test_..."
+# RevenueCat Web Billing（任意・未設定なら PRO 課金ボタンでエラー表示）
+NEXT_PUBLIC_REVENUECAT_WEB_BILLING_PUBLIC_API_KEY="rcb_..."
+NEXT_PUBLIC_REVENUECAT_PRO_ENTITLEMENT_ID="pro"
+REVENUECAT_WEBHOOK_SIGNING_SECRET="whsec_..."
 ```
 
 ### オプション（機能別）
@@ -165,7 +167,7 @@ STRIPE_PUBLISHABLE_KEY="pk_test_..."
 |---|---|---|
 | Google ログイン | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google 認証ボタン非表示・パスワード認証のみ |
 | ファイルアップロード（本番） | `BLOB_READ_WRITE_TOKEN`（Vercel Blob トークン） | アップロード不可 |
-| Stripe PRO プラン | `STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID` | Checkout 不可 |
+| RevenueCat PRO プラン | `NEXT_PUBLIC_REVENUECAT_WEB_BILLING_PUBLIC_API_KEY`, `REVENUECAT_WEBHOOK_SIGNING_SECRET` | Checkout ボタンでエラー・Webhook 401 |
 | リアルタイムチャット | `PUSHER_APP_ID`, `PUSHER_SECRET`, `NEXT_PUBLIC_PUSHER_KEY` | 3 秒ポーリングで動作 |
 | メール通知 | `RESEND_API_KEY` + Inngest Cloud | コンソールログのみ |
 
@@ -199,7 +201,8 @@ STRIPE_PUBLISHABLE_KEY="pk_test_..."
 - [x] 納品完了・レビュー投稿・評価集計
 - [x] 管理画面
 - [x] **Vercel Blob ファイルアップロード**（ブラウザ → CDN 直接、自動 WebP 圧縮）
-- [x] Stripe 課金（PRO プラン Checkout・ファン支援 Checkout）
+- [x] RevenueCat Web Billing 課金（PRO プラン、Webhook で role 同期）
+- [x] 先着 30 名 PRO 永久無料キャンペーン（サインアップ順で自動付与、Webhook では剥奪しない）
 - [x] Pusher リアルタイムチャット（環境変数設定時のみ有効・未設定はポーリング）
 - [x] メール通知（Resend + Inngest バックグラウンドジョブ）
 - [x] **トップページヒーロースライドショー**（自動切替・サブスク継続案件訴求）

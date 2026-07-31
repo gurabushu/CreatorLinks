@@ -1,6 +1,6 @@
 export * from './user'
 export * from './project'
 export * from './match'
-export * from './subscription'
+export * from './portfolio'
 export * from './like'
 export * from './auth'

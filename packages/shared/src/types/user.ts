@@ -13,7 +13,6 @@ export interface User {
   genres: string[]
   bio: string | null
   avatarUrl: string | null
-  stripeCustomerId: string | null
   averageRating: number
   createdAt: Date
   updatedAt: Date
