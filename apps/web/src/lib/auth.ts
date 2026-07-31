@@ -3,7 +3,9 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
+import { revalidatePath } from 'next/cache'
 import { prisma } from './prisma'
+import { assignEarlyBirdIfAvailable } from './early-bird'
 import { SignInSchema } from '@creator-links/shared'
 import type { UserRole } from '@creator-links/shared'
 
@@ -65,6 +67,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role as UserRole
       }
       return session
+    },
+  },
+
+  events: {
+    // PrismaAdapter が新規ユーザーを作った直後（Google OAuth の初回サインイン）
+    // 先着 30 名 PRO 永久無料スロットを割り当てる
+    async createUser({ user }) {
+      if (!user.id) return
+      await assignEarlyBirdIfAvailable(user.id).catch(() => null)
+      revalidatePath('/')
     },
   },
 

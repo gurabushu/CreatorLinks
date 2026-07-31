@@ -2,8 +2,10 @@
 
 import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
+import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { assignEarlyBirdIfAvailable } from '@/lib/early-bird'
 import { sendEmail, SITE_NAME, APP_URL } from '@/lib/resend'
 import {
   SignUpSchema,
@@ -85,8 +87,9 @@ export async function signUpAction(formData: FormData): Promise<SignUpResult> {
   const passwordHash = await bcrypt.hash(password, 12)
 
   // ユーザー作成
+  let createdUserId: string
   try {
-    await prisma.user.create({
+    const created = await prisma.user.create({
       data: {
         name,
         email,
@@ -94,10 +97,17 @@ export async function signUpAction(formData: FormData): Promise<SignUpResult> {
         role: 'GENERAL',
         genres: [],
       },
+      select: { id: true },
     })
+    createdUserId = created.id
   } catch {
     return { success: false, error: 'アカウント作成に失敗しました。しばらく後で再試行してください。', field: 'general' }
   }
+
+  // 先着 30 名 PRO 永久無料スロットの割当（失敗しても登録自体は成功扱い）
+  await assignEarlyBirdIfAvailable(createdUserId).catch(() => null)
+  // トップページの残数バナーの ISR を無効化
+  revalidatePath('/')
 
   return { success: true }
 }

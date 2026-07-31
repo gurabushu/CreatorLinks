@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { HeroSlideshow } from './HeroSlideshow'
+import { EarlyBirdBanner } from '@/components/early-bird/early-bird-banner'
 
 export const metadata: Metadata = {
   title: 'CreatorLinks — 個人アーティストの営業プラットフォーム',
@@ -45,6 +46,9 @@ export default async function HomePage() {
 
   return (
     <div>
+      {/* 先着 30 名 PRO 永久無料バナー */}
+      <EarlyBirdBanner />
+
       {/* Hero スライドショー */}
       <HeroSlideshow />
 

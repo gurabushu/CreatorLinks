@@ -74,6 +74,7 @@ model User {
   avatarUrl        String?  // Uploadthing ファイルキー
   coverUrl         String?  // プロフィールカバー画像（ジャケット）
   stripeCustomerId String?  @unique
+  earlyBirdSlot    Int?     @unique // 先着 30 名の PRO 永久無料スロット。1..30。null なら通常ユーザー
   averageRating    Decimal  @default(0) @db.Decimal(3, 2)
   featuredPortfolioId String? // アーティスト本人が一覧カードのメインに見せる作品
   isGuest          Boolean  @default(false) // テスト用ゲストアカウント（24h で自動削除）
