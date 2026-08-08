@@ -233,10 +233,19 @@ export function ChatClient({
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isCompleted = match.status === 'COMPLETED'
-  // Step 3 (2026-08-09): RevenueCat 移行に伴い Stripe 決済 UI を非表示化。
-  // ロジック本体の除去は Step 4（Match フロー修正）で実施予定。
-  const canShowPayButton = false
-  const canShowReleaseButton = false
+  const canShowPayButton =
+    isClient &&
+    !match.isP2P &&
+    match.status === 'ACCEPTED' &&
+    !!match.projectBudget &&
+    match.projectBudget > 0 &&
+    (!payment || payment.status === 'AWAITING' || payment.status === 'FAILED')
+
+  const canShowReleaseButton =
+    isClient &&
+    !match.isP2P &&
+    isCompleted &&
+    payment?.status === 'HELD'
 
   const handleRelease = () => {
     if (!confirm('送金を確定します。取り消しはできません。よろしいですか？')) return
@@ -401,10 +410,10 @@ export function ChatClient({
           </div>
         </div>
 
-        {/* 決済ステータスバッジ: Step 3 (2026-08-09) で非表示化。物理削除は Phase 5 で。
+        {/* 決済ステータス（支払い済み / 送金済み 等） */}
         {payment && payment.status !== 'AWAITING' && payment.status !== 'FAILED' && (
           <PaymentBadge status={payment.status} />
-        )} */}
+        )}
 
         {/* 支払うボタン（発注者 / ACCEPTED / 未払い のときだけ表示） */}
         {canShowPayButton && (

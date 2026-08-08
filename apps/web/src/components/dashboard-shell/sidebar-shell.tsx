@@ -61,6 +61,22 @@ const WalletIcon = () => (
     <circle cx="16" cy="11" r="1" />
   </svg>
 )
+const CalendarIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+)
+const MicIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+    <line x1="12" y1="19" x2="12" y2="23" />
+    <line x1="8" y1="23" x2="16" y2="23" />
+  </svg>
+)
 const MegaphoneIcon = () => (
   <svg className={iconClass} {...iconProps}>
     <path d="M3 11v2a2 2 0 0 0 2 2h2l6 4V5L7 9H5a2 2 0 0 0-2 2z" />
@@ -174,6 +190,9 @@ export function SidebarShell({
     { href: '/dashboard/portfolio', label: 'ポートフォリオ', icon: <GalleryIcon /> },
     { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },
     { href: '/projects/manage', label: '案件管理', icon: <ClipboardIcon /> },
+    { href: '/dashboard/payouts', label: '入金設定', icon: <WalletIcon /> },
+    { href: '/events', label: 'イベント', icon: <MicIcon /> },
+    { href: '/dashboard/calendar', label: 'カレンダー', icon: <CalendarIcon /> },
     { href: '/dashboard/account', label: 'アカウント設定', icon: <CogIcon /> },
     { href: '/announcements', label: 'お知らせ', icon: <MegaphoneIcon />, badge: announcementUnread },
     { href: '/dashboard/support', label: 'サポートに問い合わせ', icon: <LifeBuoyIcon /> },

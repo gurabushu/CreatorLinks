@@ -225,11 +225,11 @@ export default function NewProjectPage() {
           </div>
         )}
 
-        {/* ステップ 3: 目安金額・公開 */}
+        {/* ステップ 3: 予算・公開 */}
         {step === 3 && (
           <div className="space-y-6">
             <div>
-              <label className="block font-medium mb-1.5">目安金額（円・任意）</label>
+              <label className="block font-medium mb-1.5">予算（円）</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">¥</span>
                 <input
@@ -242,7 +242,7 @@ export default function NewProjectPage() {
                 />
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                案件の目安予算です。実際の金額・支払方法は当事者間で調整してください。未設定でも公開できます。
+                ※ 成立時に手数料7%が差し引かれます（業界最安水準）。未設定でも公開できます。
               </p>
             </div>
 

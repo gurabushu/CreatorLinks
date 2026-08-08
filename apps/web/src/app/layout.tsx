@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: '%s | CreatorLinks',
   },
   description:
-    '音楽アーティスト・ミュージシャンのマッチングとイベント告知・案件管理のプラットフォーム。',
+    '才能あるアーティストと企業・個人をつなぐ、手数料業界最安7%のマッチングプラットフォーム。',
   keywords: [
     'ミュージシャン',
     'アーティスト',
