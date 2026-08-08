@@ -55,21 +55,55 @@ const ClipboardIcon = () => (
     <path d="M8 5H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
   </svg>
 )
+const WalletIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <path d="M3 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v2H5a2 2 0 0 0 0 4h15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <circle cx="16" cy="11" r="1" />
+  </svg>
+)
+const MegaphoneIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <path d="M3 11v2a2 2 0 0 0 2 2h2l6 4V5L7 9H5a2 2 0 0 0-2 2z" />
+    <path d="M17 8a5 5 0 0 1 0 8" />
+  </svg>
+)
+const LifeBuoyIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="4" />
+    <path d="M4.93 4.93l4.24 4.24" />
+    <path d="M14.83 14.83l4.24 4.24" />
+    <path d="M14.83 9.17l4.24-4.24" />
+    <path d="M4.93 19.07l4.24-4.24" />
+  </svg>
+)
+const CogIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+  </svg>
+)
 
 function SidebarNav({
   user,
   items,
   isActive,
   onNavigate,
+  collapsible = false,
 }: {
   user: User
   items: NavItem[]
   isActive: (item: NavItem) => boolean
   onNavigate: () => void
+  collapsible?: boolean
 }) {
+  // collapsible=true のときは通常アイコンだけ表示し、親 <aside class="group"> の hover / focus-within で展開
+  const hideWhenCollapsed = collapsible ? 'hidden group-hover:block group-focus-within:block' : ''
+  const hideInlineWhenCollapsed = collapsible ? 'hidden group-hover:inline group-focus-within:inline' : ''
+
   return (
     <>
-      <div className="px-4 pt-4 pb-3 border-b">
+      <div className={`px-4 pt-4 pb-3 border-b ${hideWhenCollapsed}`}>
         <p className="text-[10px] text-gray-400 uppercase tracking-wider">Signed in as</p>
         <p className="font-bold text-gray-900 truncate">{user.name}</p>
         {user.role === 'PRO' && (
@@ -85,6 +119,7 @@ function SidebarNav({
             key={item.href}
             href={item.href}
             onClick={onNavigate}
+            title={collapsible ? item.label : undefined}
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 transition ${
               isActive(item)
                 ? 'bg-purple-50 text-purple-700 font-bold'
@@ -92,7 +127,9 @@ function SidebarNav({
             }`}
           >
             <span className="shrink-0 text-current">{item.icon}</span>
-            <span className="flex-1 truncate">{item.label}</span>
+            <span className={`flex-1 truncate whitespace-nowrap ${hideInlineWhenCollapsed}`}>
+              {item.label}
+            </span>
             {item.badge != null && item.badge > 0 && (
               <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold min-w-[18px] text-center">
                 {item.badge > 99 ? '99+' : item.badge}
@@ -103,7 +140,7 @@ function SidebarNav({
       </nav>
 
       {user.role !== 'PRO' && (
-        <div className="p-3 border-t">
+        <div className={`p-3 border-t ${hideWhenCollapsed}`}>
           <Link
             href="/pro/subscribe"
             onClick={onNavigate}
@@ -120,10 +157,12 @@ function SidebarNav({
 export function SidebarShell({
   user,
   unreadCount,
+  announcementUnread,
   children,
 }: {
   user: User
   unreadCount: number
+  announcementUnread: number
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -135,6 +174,9 @@ export function SidebarShell({
     { href: '/dashboard/portfolio', label: 'ポートフォリオ', icon: <GalleryIcon /> },
     { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },
     { href: '/projects/manage', label: '案件管理', icon: <ClipboardIcon /> },
+    { href: '/dashboard/account', label: 'アカウント設定', icon: <CogIcon /> },
+    { href: '/announcements', label: 'お知らせ', icon: <MegaphoneIcon />, badge: announcementUnread },
+    { href: '/dashboard/support', label: 'サポートに問い合わせ', icon: <LifeBuoyIcon /> },
   ]
 
   const isActive = (item: NavItem) =>
@@ -183,11 +225,13 @@ export function SidebarShell({
         </>
       )}
 
-      <aside className="hidden md:flex md:flex-col md:fixed md:left-0 md:top-16 md:bottom-0 md:w-60 md:overflow-y-auto md:border-r bg-white z-30">
-        <SidebarNav user={user} items={items} isActive={isActive} onNavigate={close} />
+      <aside
+        className="group hidden md:flex md:flex-col md:fixed md:left-0 md:top-16 md:bottom-0 md:w-14 hover:md:w-60 focus-within:md:w-60 transition-[width] duration-200 md:overflow-y-auto md:overflow-x-hidden md:border-r bg-white z-30 hover:shadow-lg"
+      >
+        <SidebarNav user={user} items={items} isActive={isActive} onNavigate={close} collapsible />
       </aside>
 
-      <div className="md:ml-72 lg:ml-80 min-w-0">{children}</div>
+      <div className="md:ml-14 min-w-0">{children}</div>
     </div>
   )
 }

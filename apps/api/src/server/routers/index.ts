@@ -3,6 +3,8 @@ import { userRouter } from './user'
 import { projectRouter } from './project'
 import { matchRouter, messageRouter, reviewRouter } from './match'
 import { portfolioRouter } from './portfolio'
+import { eventRouter } from './event'
+import { calendarRouter } from './calendar'
 
 // アプリケーションルートルーター
 export const appRouter = router({
@@ -12,6 +14,8 @@ export const appRouter = router({
   message: messageRouter,
   review: reviewRouter,
   portfolio: portfolioRouter,
+  event: eventRouter,
+  calendar: calendarRouter,
 })
 
 // クライアント型推論用エクスポート

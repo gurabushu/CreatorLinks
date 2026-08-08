@@ -5,14 +5,18 @@
 import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createProjectAction } from '@/server/actions/project'
+import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/shared'
 
 const GENRES = ['音楽', 'イラスト', '動画', 'デザイン', '写真', '文章', '声優', 'その他']
+
+const COMMITMENT_LEVEL_OPTIONS: readonly CommitmentLevel[] = ['HOBBY', 'SEMI_PRO', 'PRO'] as const
 
 export default function NewProjectPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [contractType, setContractType] = useState<'SPOT' | 'SUBSCRIPTION'>('SPOT')
+  const [commitmentLevel, setCommitmentLevel] = useState<CommitmentLevel>('HOBBY')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
@@ -24,6 +28,7 @@ export default function NewProjectPage() {
       formData.set('description', description)
       selectedGenres.forEach((g) => formData.append('genres', g))
       formData.set('contractType', contractType)
+      formData.set('commitmentLevel', commitmentLevel)
       formData.set('isPrivate', isPrivate ? 'true' : 'false')
 
       const result = await createProjectAction(null, formData)
@@ -44,14 +49,14 @@ export default function NewProjectPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-1">案件を作成する</h1>
-        <p className="text-gray-400 text-sm">ステップ {step} / 3</p>
+    <div className="max-w-2xl mx-auto py-6 sm:py-12 px-4">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold mb-1">案件を作成する</h1>
+        <p className="text-gray-400 text-xs sm:text-sm">ステップ {step} / 3</p>
       </div>
 
       {/* ステップインジケーター */}
-      <div className="flex gap-2 mb-8">
+      <div className="flex gap-2 mb-6 sm:mb-8">
         {[1, 2, 3].map((s) => (
           <div
             key={s}
@@ -165,6 +170,38 @@ export default function NewProjectPage() {
               </div>
             </div>
 
+            <div>
+              <label className="block font-medium mb-2">
+                案件の本気度 <span className="text-red-500">*</span>
+                <span className="text-gray-400 text-xs font-normal ml-2">
+                  （応募側のモチベ・期待値を揃えるためのラベル）
+                </span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {COMMITMENT_LEVEL_OPTIONS.map((level) => {
+                  const meta = COMMITMENT_LEVEL_LABELS[level]
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setCommitmentLevel(level)}
+                      className={`py-3 px-3 rounded-xl border-2 text-left transition ${
+                        commitmentLevel === level
+                          ? 'border-purple-600 bg-purple-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <p className="font-medium text-sm">{meta.label}</p>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-snug">{meta.description}</p>
+                    </button>
+                  )
+                })}
+              </div>
+              {errorState?.field === 'commitmentLevel' && (
+                <p className="text-xs text-red-600 mt-2">{errorState.error}</p>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <button
                 type="button"
@@ -188,11 +225,11 @@ export default function NewProjectPage() {
           </div>
         )}
 
-        {/* ステップ 3: 予算・公開 */}
+        {/* ステップ 3: 目安金額・公開 */}
         {step === 3 && (
           <div className="space-y-6">
             <div>
-              <label className="block font-medium mb-1.5">予算（円）</label>
+              <label className="block font-medium mb-1.5">目安金額（円・任意）</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">¥</span>
                 <input
@@ -205,7 +242,7 @@ export default function NewProjectPage() {
                 />
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                ※ 成立時に手数料7%が差し引かれます（業界最安水準）。未設定でも公開できます。
+                案件の目安予算です。実際の金額・支払方法は当事者間で調整してください。未設定でも公開できます。
               </p>
             </div>
 
@@ -239,6 +276,10 @@ export default function NewProjectPage() {
               </div>
               <p className="text-gray-500">
                 契約形態: {contractType === 'SPOT' ? 'スポット（単発）' : 'サブスク（継続）'}
+              </p>
+              <p className="text-gray-500">
+                本気度: {COMMITMENT_LEVEL_LABELS[commitmentLevel].label}
+                <span className="text-gray-400 ml-1">（{COMMITMENT_LEVEL_LABELS[commitmentLevel].description}）</span>
               </p>
               <p className="text-gray-500">公開範囲: {isPrivate ? '非公開（相互紹介）' : '公開（誰でも応募可）'}</p>
             </div>
