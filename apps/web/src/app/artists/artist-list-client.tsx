@@ -337,13 +337,13 @@ function LikeButton({
       disabled={busy}
       aria-pressed={liked}
       aria-label={liked ? 'いいねを取り消す' : 'いいねする'}
-      className={`shrink-0 w-9 h-9 rounded-full border flex items-center justify-center transition ${
+      className={`shrink-0 w-12 h-12 rounded-full border-2 flex items-center justify-center transition shadow-sm ${
         liked
-          ? 'bg-pink-50 border-pink-300 text-pink-600 hover:bg-pink-100'
-          : 'bg-white border-gray-200 text-gray-400 hover:border-pink-300 hover:text-pink-500'
+          ? 'bg-pink-50 border-pink-400 text-pink-600 hover:bg-pink-100 shadow-pink-200/60'
+          : 'bg-white border-gray-200 text-gray-400 hover:border-pink-400 hover:text-pink-500 hover:shadow-pink-100'
       } ${busy ? 'opacity-60' : ''}`}
     >
-      <svg viewBox="0 0 24 24" className="w-5 h-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+      <svg viewBox="0 0 24 24" className="w-6 h-6" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
         <path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" />
       </svg>
     </button>

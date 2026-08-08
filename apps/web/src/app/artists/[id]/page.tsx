@@ -11,6 +11,7 @@ import { PortfolioGallery } from './portfolio-gallery'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
 import { ProfileFacts } from '@/components/artist/profile-facts'
 import { FollowButton, FollowerCountBadge } from './follow-button'
+import { ArtistLikeButton } from './like-button'
 import {
   EVENT_TYPE_LABELS,
   EVENT_VISIBILITY_ICONS,
@@ -66,10 +67,10 @@ export default async function ArtistDetailPage({ params }: Props) {
 
   if (!user) notFound()
 
-  // Phase A.6: フォロー状態・フォロワー数
+  // Phase A.6: フォロー状態・フォロワー数 + Like 状態
   const viewerId = session?.user?.id ?? null
   const isSelf = viewerId === id
-  const [followerCount, initialIsFollowing] = await Promise.all([
+  const [followerCount, initialIsFollowing, initialLiked] = await Promise.all([
     prisma.follow.count({ where: { followingId: id } }),
     viewerId && !isSelf
       ? prisma.follow
@@ -80,6 +81,14 @@ export default async function ArtistDetailPage({ params }: Props) {
             select: { id: true },
           })
           .then((f) => !!f)
+      : Promise.resolve(false),
+    viewerId && !isSelf
+      ? prisma.like
+          .findUnique({
+            where: { likerId_likedId: { likerId: viewerId, likedId: id } },
+            select: { id: true },
+          })
+          .then((l) => !!l)
       : Promise.resolve(false),
   ])
   const isFollower = initialIsFollowing
@@ -192,8 +201,20 @@ export default async function ArtistDetailPage({ params }: Props) {
             評価 {Number(user.averageRating).toFixed(1)}
           </p>
 
+          {/* いいね（大きめ、目立つ位置） */}
+          {!isSelf && (
+            <div className="mt-5">
+              <ArtistLikeButton
+                targetUserId={id}
+                initialLiked={initialLiked}
+                isSelf={isSelf}
+                isLoggedIn={!!viewerId}
+              />
+            </div>
+          )}
+
           {/* Phase A.6: フォローボタン・フォロワー数 / イベント・カレンダー動線 */}
-          <div className="mt-5 flex items-center gap-2.5 flex-wrap">
+          <div className="mt-4 flex items-center gap-2.5 flex-wrap">
             {viewerId && !isSelf ? (
               <FollowButton
                 targetUserId={id}
