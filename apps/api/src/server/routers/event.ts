@@ -170,16 +170,18 @@ export const eventRouter = router({
 
       if (event.visibility === 'PUBLIC') return event
 
-      // FOLLOWERS の場合はフォロー関係を確認
+      // FOLLOWERS の場合はフォロー関係を確認（Phase A.6: Follow モデルを使用）
       if (event.visibility === 'FOLLOWERS' && viewerId) {
-        const follows = await ctx.prisma.eventFollow.findFirst({
+        const follow = await ctx.prisma.follow.findUnique({
           where: {
-            followerId: viewerId,
-            OR: [{ eventId: event.id }, { followedUserId: event.creatorId }],
+            followerId_followingId: {
+              followerId: viewerId,
+              followingId: event.creatorId,
+            },
           },
           select: { id: true },
         })
-        if (follows) return event
+        if (follow) return event
       }
 
       // 権限なし: 存在自体を隠すため NOT_FOUND

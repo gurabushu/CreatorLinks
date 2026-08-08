@@ -64,14 +64,17 @@ export default async function EventDetailPage({ params }: Params) {
     if (isCreator || isParticipant) return true
     if (event.visibility === 'PUBLIC') return true
     if (event.visibility === 'FOLLOWERS' && viewerId) {
-      const follows = await prisma.eventFollow.findFirst({
+      // Phase A.6: Follow モデルで判定（EventFollow は通知購読専用）
+      const follow = await prisma.follow.findUnique({
         where: {
-          followerId: viewerId,
-          OR: [{ eventId: event.id }, { followedUserId: event.creatorId }],
+          followerId_followingId: {
+            followerId: viewerId,
+            followingId: event.creatorId,
+          },
         },
         select: { id: true },
       })
-      return !!follows
+      return !!follow
     }
     return false
   })()

@@ -189,6 +189,10 @@ model User {
   eventFollowedBy     EventFollow[]      @relation("EventFollowed")
   eventInterests      EventInterest[]    @relation("EventInterests")
 
+  // Phase A.6: ユーザー間フォロー（SNS 型・visibility=FOLLOWERS の判定基盤）
+  followsGiven    Follow[] @relation("FollowsGiven")
+  followsReceived Follow[] @relation("FollowsReceived")
+
   @@index([isGuest, createdAt])
   @@map("users")
 }
@@ -527,6 +531,25 @@ model EventFollow {
   @@index([eventId])
   @@index([followedUserId])
   @@map("event_follows")
+}
+
+// ユーザー間フォロー（Phase A.6）
+// 「このアーティストの動きを追う」宣言。Event.visibility=FOLLOWERS の判定にも使う。
+// EventFollow (通知購読) とは別概念:
+//   - Follow    = ユーザー間の関係の宣言（visibility 判定・プロフィール表示）
+//   - EventFollow = 特定イベントの通知購読オプトイン
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String // フォローする側
+  followingId String // フォローされる側
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("FollowsGiven", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("FollowsReceived", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId]) // フォロワー一覧・数の取得用
+  @@map("follows")
 }
 
 // ユーザーの参加表明（オーディエンス向けの「行く/興味あり」）
