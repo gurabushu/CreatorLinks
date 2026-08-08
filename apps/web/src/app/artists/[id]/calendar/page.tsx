@@ -160,60 +160,96 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
     <div className="max-w-6xl mx-auto py-6 sm:py-10 px-3 sm:px-6">
       <Link
         href={`/artists/${id}`}
-        className="inline-flex items-center gap-2 mb-4 text-sm text-purple-700 hover:underline"
+        className="inline-flex items-center gap-2 mb-6 text-base sm:text-lg font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 -mx-3 px-4 py-2.5 rounded-xl transition-colors"
       >
-        ← {getDisplayName(artist)} のプロフィール
+        <span aria-hidden className="text-xl leading-none">←</span>
+        <span>{getDisplayName(artist)} のプロフィールに戻る</span>
       </Link>
 
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+      {/* 誰のカレンダーか大きく表示 */}
+      <div className="flex items-center gap-4 mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-50 via-white to-purple-50/40 border border-purple-100/70">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-purple-200 overflow-hidden shrink-0">
+          {artist.avatarUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={artist.avatarUrl}
+              alt={getDisplayName(artist)}
+              className="w-full h-full object-cover"
+            />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[11px] text-purple-500 uppercase tracking-wider font-semibold">
+            Calendar
+          </div>
+          <div className="text-lg sm:text-xl font-bold text-gray-800 truncate">
+            {getDisplayName(artist)}
+          </div>
+          <div className="text-xs text-gray-500 mt-0.5">
+            {isSelf
+              ? 'すべての公開範囲を表示中'
+              : isFollower
+                ? 'フォロワー限定を含めて表示中'
+                : '公開イベントのみ表示中'}
+          </div>
+        </div>
+        <Link
+          href={`/artists/${id}/events`}
+          className="hidden sm:inline-flex items-center gap-2 text-sm font-medium text-purple-700 bg-white hover:bg-purple-100 border border-purple-200 px-4 py-2 rounded-xl transition-colors shrink-0"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <circle cx="4" cy="6" r="1" />
+            <circle cx="4" cy="12" r="1" />
+            <circle cx="4" cy="18" r="1" />
+          </svg>
+          <span>リスト表示</span>
+        </Link>
+      </div>
+
+      {/* 月ナビ */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href={`?ym=${ymString(prev.year, prev.month)}`}
             aria-label="前月"
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-purple-600 hover:bg-purple-50"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-purple-600 hover:bg-purple-50 transition-colors"
           >
             ←
           </Link>
           <Link
             href={`?ym=${ymString(next.year, next.month)}`}
             aria-label="翌月"
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-purple-600 hover:bg-purple-50"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-purple-600 hover:bg-purple-50 transition-colors"
           >
             →
           </Link>
           <Link
             href={`/artists/${id}/calendar`}
-            className="ml-1 text-sm px-3 py-1.5 rounded-lg text-purple-600 border border-purple-200 hover:bg-purple-50"
+            className="ml-1 text-sm px-3 py-1.5 rounded-lg text-purple-600 border border-purple-200 hover:bg-purple-50 transition-colors"
           >
             今日
           </Link>
-          <h1 className="ml-2 text-xl sm:text-2xl font-bold text-gray-800">
+          <h2 className="ml-2 sm:ml-3 text-xl sm:text-2xl font-bold text-gray-800">
             {year}年 {month}月
-          </h1>
+          </h2>
         </div>
         <Link
           href={`/artists/${id}/events`}
-          className="text-sm text-purple-700 hover:underline"
+          className="sm:hidden text-sm text-purple-700 hover:underline"
         >
           リスト表示 →
         </Link>
       </div>
 
-      <p className="text-xs text-gray-500 mb-5">
-        {getDisplayName(artist)} のカレンダー ·{' '}
-        {isSelf
-          ? 'すべての公開範囲を表示'
-          : isFollower
-            ? 'フォロワー限定を含む'
-            : 'PUBLIC のみ表示'}
-      </p>
-
       {/* 曜日行 */}
-      <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-t-xl overflow-hidden border border-gray-200">
+      <div className="grid grid-cols-7 text-center text-xs sm:text-sm border border-purple-100/60 rounded-t-xl overflow-hidden bg-gradient-to-b from-purple-50/60 to-white">
         {WEEKDAYS.map((w, i) => (
           <div
             key={w}
-            className={`bg-white text-center text-xs py-2 font-medium ${
+            className={`py-2 font-semibold ${
               i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-gray-600'
             }`}
           >
@@ -223,50 +259,58 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
       </div>
 
       {/* カレンダーグリッド */}
-      <div className="grid grid-cols-7 gap-px bg-gray-200 border-x border-b border-gray-200 rounded-b-xl overflow-hidden">
-        {cells.map((d) => {
+      <div className="grid grid-cols-7 grid-rows-6 border-l border-r border-b border-purple-100/60 rounded-b-xl overflow-hidden">
+        {cells.map((d, idx) => {
           const inMonth = d.getMonth() + 1 === month
           const k = dateKey(d)
           const isToday = k === todayKey
+          const dow = d.getDay()
           const dayEvents = byDate.get(k) ?? []
+          const visible = dayEvents.slice(0, 3)
+          const overflow = dayEvents.length - visible.length
           return (
             <div
               key={k}
-              className={`bg-white min-h-[80px] sm:min-h-[100px] p-1.5 text-xs ${
-                inMonth ? '' : 'bg-gray-50'
+              className={`min-h-[92px] sm:min-h-[112px] border-t border-purple-100/60 ${
+                idx % 7 !== 0 ? 'border-l' : ''
+              } p-1 sm:p-1.5 flex flex-col gap-1 ${
+                inMonth ? 'bg-white' : 'bg-gray-50/70'
               }`}
             >
-              <div
-                className={`text-right mb-1 ${
-                  isToday
-                    ? 'inline-block bg-purple-600 text-white rounded-full w-6 h-6 text-center leading-6 font-bold'
-                    : inMonth
-                      ? d.getDay() === 0
-                        ? 'text-red-500'
-                        : d.getDay() === 6
-                          ? 'text-blue-500'
-                          : 'text-gray-700'
-                      : 'text-gray-400'
-                }`}
-              >
-                {d.getDate()}
+              <div className="flex items-center justify-between">
+                <span
+                  className={`text-xs sm:text-sm w-6 h-6 flex items-center justify-center rounded-full ${
+                    isToday
+                      ? 'bg-purple-600 text-white font-bold'
+                      : !inMonth
+                        ? 'text-gray-300'
+                        : dow === 0
+                          ? 'text-red-500'
+                          : dow === 6
+                            ? 'text-blue-500'
+                            : 'text-gray-700'
+                  }`}
+                >
+                  {d.getDate()}
+                </span>
               </div>
-              <div className="space-y-0.5">
-                {dayEvents.slice(0, 3).map((e) => (
+              <div className="flex-1 flex flex-col gap-0.5 overflow-hidden">
+                {visible.map((e) => (
                   <Link
                     key={e.id}
                     href={`/events/${e.id}`}
-                    className="block bg-purple-100 text-purple-700 rounded px-1 py-0.5 truncate hover:bg-purple-200"
-                    title={e.title}
+                    title={`${fmtTime(e.startAt)} ${e.title}`}
+                    className={`text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded truncate transition-colors bg-purple-100 text-purple-700 hover:bg-purple-200 ${!inMonth ? 'opacity-60' : ''}`}
                   >
-                    {EVENT_VISIBILITY_ICONS[e.visibility as EventVisibility]}{' '}
+                    <span className="font-medium mr-1">{fmtTime(e.startAt)}</span>
+                    <span aria-hidden className="mr-0.5">
+                      {EVENT_VISIBILITY_ICONS[e.visibility as EventVisibility]}
+                    </span>
                     {e.title}
                   </Link>
                 ))}
-                {dayEvents.length > 3 && (
-                  <div className="text-[10px] text-gray-500 px-1">
-                    +{dayEvents.length - 3}件
-                  </div>
+                {overflow > 0 && (
+                  <div className="text-[10px] text-gray-500 px-1">+{overflow} 件</div>
                 )}
               </div>
             </div>
