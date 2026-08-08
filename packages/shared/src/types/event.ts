@@ -2,7 +2,16 @@
 // Event 関連の型定義（Prisma enum と一致させること）
 // =============================================
 
-export type EventType = 'LIVE' | 'SESSION' | 'RECORDING' | 'WORKSHOP' | 'MEETUP' | 'OTHER'
+export type EventType =
+  | 'LIVE'
+  | 'SESSION'
+  | 'RECORDING'
+  | 'WORKSHOP'
+  | 'MEETUP'
+  | 'REHEARSAL'
+  | 'MEETING'
+  | 'TODO'
+  | 'OTHER'
 
 export const EVENT_TYPES: readonly EventType[] = [
   'LIVE',
@@ -10,6 +19,9 @@ export const EVENT_TYPES: readonly EventType[] = [
   'RECORDING',
   'WORKSHOP',
   'MEETUP',
+  'REHEARSAL',
+  'MEETING',
+  'TODO',
   'OTHER',
 ] as const
 
@@ -19,7 +31,42 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   RECORDING: 'レコーディング',
   WORKSHOP: 'ワークショップ',
   MEETUP: '交流会',
+  REHEARSAL: 'リハーサル',
+  MEETING: '打ち合わせ',
+  TODO: 'タスク',
   OTHER: 'その他',
+}
+
+// Phase A.5: 可視性（status と直交する軸）
+export type EventVisibility = 'PRIVATE' | 'PARTICIPANTS_ONLY' | 'FOLLOWERS' | 'PUBLIC'
+
+export const EVENT_VISIBILITIES: readonly EventVisibility[] = [
+  'PRIVATE',
+  'PARTICIPANTS_ONLY',
+  'FOLLOWERS',
+  'PUBLIC',
+] as const
+
+export const EVENT_VISIBILITY_LABELS: Record<EventVisibility, string> = {
+  PRIVATE: '非公開',
+  PARTICIPANTS_ONLY: '参加者のみ',
+  FOLLOWERS: 'フォロワー',
+  PUBLIC: '一般公開',
+}
+
+export const EVENT_VISIBILITY_DESCRIPTIONS: Record<EventVisibility, string> = {
+  PRIVATE: '本人だけが見られる（個人予定・タスク向け）',
+  PARTICIPANTS_ONLY: '招待した共演者・スタッフだけに公開',
+  FOLLOWERS: 'フォロワーと参加者に公開（限定告知）',
+  PUBLIC: '誰でも閲覧可能（一般告知）',
+}
+
+// UI 用のアイコン絵文字（軽量表示）
+export const EVENT_VISIBILITY_ICONS: Record<EventVisibility, string> = {
+  PRIVATE: '🔒',
+  PARTICIPANTS_ONLY: '👥',
+  FOLLOWERS: '⭐',
+  PUBLIC: '🌐',
 }
 
 export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED'

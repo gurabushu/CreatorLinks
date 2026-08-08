@@ -4,8 +4,19 @@ import { z } from 'zod'
 // Event Zod スキーマ
 // =============================================
 
-export const EventTypeSchema = z.enum(['LIVE', 'SESSION', 'RECORDING', 'WORKSHOP', 'MEETUP', 'OTHER'])
+export const EventTypeSchema = z.enum([
+  'LIVE',
+  'SESSION',
+  'RECORDING',
+  'WORKSHOP',
+  'MEETUP',
+  'REHEARSAL',
+  'MEETING',
+  'TODO',
+  'OTHER',
+])
 export const EventStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED'])
+export const EventVisibilitySchema = z.enum(['PRIVATE', 'PARTICIPANTS_ONLY', 'FOLLOWERS', 'PUBLIC'])
 export const EventParticipantRoleSchema = z.enum(['ORGANIZER', 'PERFORMER', 'STAFF', 'GUEST', 'AUDIENCE'])
 export const EventParticipantStatusSchema = z.enum(['INVITED', 'CONFIRMED', 'DECLINED', 'CANCELLED'])
 export const EventOpenRoleStatusSchema = z.enum(['OPEN', 'FILLED', 'CLOSED'])
@@ -16,8 +27,11 @@ export const CreateEventSchema = z.object({
   title: z.string().min(1, 'タイトルは1文字以上').max(200, 'タイトルは200文字以内'),
   description: z.string().max(5000, '説明は5000文字以内').optional(),
   type: EventTypeSchema.default('LIVE'),
+  visibility: EventVisibilitySchema.default('PRIVATE'), // Phase A.5: デフォルトは非公開
   startAt: z.coerce.date(),
   endAt: z.coerce.date().optional(),
+  isAllDay: z.boolean().default(false),
+  hasSpecificDate: z.boolean().default(true),
   venueName: z.string().max(100).optional(),
   venueAddress: z.string().max(200).optional(),
   venueUrl: z.string().url('URL 形式で入力してください').optional().or(z.literal('')),

@@ -10,8 +10,15 @@ import {
   EVENT_TYPE_LABELS,
   EVENT_PARTICIPANT_ROLE_LABELS,
   EVENT_STATUS_LABELS,
+  EVENT_VISIBILITY_LABELS,
+  EVENT_VISIBILITY_ICONS,
 } from '@creator-links/shared'
-import type { EventType, EventParticipantRole, EventStatus } from '@creator-links/shared'
+import type {
+  EventType,
+  EventParticipantRole,
+  EventStatus,
+  EventVisibility,
+} from '@creator-links/shared'
 import { EventInterestButton, ApplyToRoleButton } from './client-actions'
 
 export const dynamic = 'force-dynamic'
@@ -46,25 +53,54 @@ export default async function EventDetailPage({ params }: Params) {
 
   if (!event) notFound()
 
+  // Phase A.5: visibility チェック
+  const viewerId = session?.user?.id ?? null
+  const isCreator = viewerId && viewerId === event.creatorId
+  const isParticipant = viewerId
+    ? event.participants.some((p) => p.userId === viewerId)
+    : false
+
+  const canView = await (async () => {
+    if (isCreator || isParticipant) return true
+    if (event.visibility === 'PUBLIC') return true
+    if (event.visibility === 'FOLLOWERS' && viewerId) {
+      const follows = await prisma.eventFollow.findFirst({
+        where: {
+          followerId: viewerId,
+          OR: [{ eventId: event.id }, { followedUserId: event.creatorId }],
+        },
+        select: { id: true },
+      })
+      return !!follows
+    }
+    return false
+  })()
+
+  if (!canView) notFound()
+
   const myInterest = session
     ? await prisma.eventInterest.findUnique({
         where: { userId_eventId: { userId: session.user.id, eventId: id } },
       })
     : null
 
-  const isCreator = session?.user.id === event.creatorId
   const isPublished = event.status === 'PUBLISHED'
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       {/* ヘッダー */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-xs text-purple-700 mb-2">
+        <div className="flex items-center gap-2 text-xs text-purple-700 mb-2 flex-wrap">
           <span className="font-medium">
             {EVENT_TYPE_LABELS[event.type as EventType]}
           </span>
           <span>·</span>
           <span>{EVENT_STATUS_LABELS[event.status as EventStatus]}</span>
+          <span>·</span>
+          <span title={EVENT_VISIBILITY_LABELS[event.visibility as EventVisibility]}>
+            {EVENT_VISIBILITY_ICONS[event.visibility as EventVisibility]}{' '}
+            {EVENT_VISIBILITY_LABELS[event.visibility as EventVisibility]}
+          </span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           {event.title}

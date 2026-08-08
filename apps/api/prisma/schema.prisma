@@ -70,13 +70,27 @@ enum PaymentStatus {
 }
 
 // イベント種別（Phase A: イベント告知＋カレンダー機能）
+// Phase A.5: 個人予定・タスク（REHEARSAL/MEETING/TODO）も同じ Event モデルで扱う
 enum EventType {
   LIVE // ライブ・ワンマン・対バン
   SESSION // セッション・ジャム
   RECORDING // レコーディング
   WORKSHOP // ワークショップ・講習
   MEETUP // 交流会・懇親会
+  REHEARSAL // リハーサル・個人練習（通常 PRIVATE or PARTICIPANTS_ONLY）
+  MEETING // 打ち合わせ・ミーティング
+  TODO // タスク・やること（時刻不定でも可）
   OTHER
+}
+
+// イベントの可視性（Phase A.5）
+// status（ライフサイクル）とは直交する軸。誰が閲覧できるかを制御。
+// EventParticipant に含まれる人は visibility に関わらず常に閲覧可能。
+enum EventVisibility {
+  PRIVATE // 本人のみ
+  PARTICIPANTS_ONLY // 招待した共演者・スタッフ・出演者のみ
+  FOLLOWERS // フォロワー + 参加者
+  PUBLIC // 誰でも
 }
 
 // イベントの公開状態
@@ -409,33 +423,36 @@ model PromoRedemption {
 
 // イベント告知本体
 model Event {
-  id             String      @id @default(cuid())
-  creatorId      String // 主催者（共同主催は EventParticipant.ORGANIZER で表現）
-  title          String
-  description    String? // Markdown 想定
-  type           EventType   @default(LIVE)
-  status         EventStatus @default(DRAFT)
+  id              String          @id @default(cuid())
+  creatorId       String // 主催者（共同主催は EventParticipant.ORGANIZER で表現）
+  title           String
+  description     String? // Markdown 想定
+  type            EventType       @default(LIVE)
+  status          EventStatus     @default(DRAFT)
+  visibility      EventVisibility @default(PRIVATE) // Phase A.5: 誰が閲覧できるか（status と直交）
   // 日程・会場
-  startAt        DateTime
-  endAt          DateTime? // 単日なら省略可
-  venueName      String? // 会場名（例: "下北沢SHELTER"）
-  venueAddress   String?
-  venueUrl       String? // ライブハウス公式など
+  startAt         DateTime
+  endAt           DateTime? // 単日なら省略可
+  isAllDay        Boolean         @default(false) // Phase A.5: 終日イベント（時刻は使わない）
+  hasSpecificDate Boolean         @default(true) // Phase A.5: false = 期限未定タスク（インボックス扱い、startAt は便宜的な値）
+  venueName       String? // 会場名（例: "下北沢SHELTER"）
+  venueAddress    String?
+  venueUrl        String? // ライブハウス公式など
   // 分類・検索
-  genres         String[] // User.genres と同じ配列運用
-  city           String? // 検索用のエリア粒度
-  isOnline       Boolean     @default(false)
+  genres          String[] // User.genres と同じ配列運用
+  city            String? // 検索用のエリア粒度
+  isOnline        Boolean         @default(false)
   // チケット
-  ticketUrl      String? // 外部チケット販売リンク（TIGET/ライブポケット等）
-  ticketPriceYen Int? // 参考価格（円）
-  isFree         Boolean     @default(false)
+  ticketUrl       String? // 外部チケット販売リンク（TIGET/ライブポケット等）
+  ticketPriceYen  Int? // 参考価格（円）
+  isFree          Boolean         @default(false)
   // メディア
-  coverUrl       String? // フライヤー画像
+  coverUrl        String? // フライヤー画像
   // 公開制御
-  publishedAt    DateTime? // status が PUBLISHED になった時刻
-  cancelledAt    DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  publishedAt     DateTime? // status が PUBLISHED になった時刻
+  cancelledAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   creator      User               @relation("EventsCreated", fields: [creatorId], references: [id], onDelete: Cascade)
   participants EventParticipant[]
@@ -443,7 +460,7 @@ model Event {
   follows      EventFollow[]
   interests    EventInterest[]
 
-  @@index([status, startAt]) // 公開中の未来イベント検索用
+  @@index([status, visibility, startAt]) // 公開中の閲覧可能イベント検索用
   @@index([creatorId, startAt])
   @@index([city, startAt])
   @@map("events")

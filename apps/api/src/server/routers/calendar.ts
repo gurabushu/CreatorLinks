@@ -85,6 +85,7 @@ export const calendarRouter = router({
     return ctx.prisma.event.findMany({
       where: {
         status: 'PUBLISHED',
+        visibility: 'PUBLIC', // Phase A.5: 公開カレンダーは PUBLIC のみ
         startAt: { gte: from, lte: to },
         ...(genres && genres.length > 0 ? { genres: { hasSome: genres } } : {}),
         ...(city ? { city } : {}),

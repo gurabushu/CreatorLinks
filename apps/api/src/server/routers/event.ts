@@ -85,12 +85,15 @@ export const eventRouter = router({
 
   // ---- 一覧・詳細 ----
 
+  // 公開一覧: PUBLIC visibility のみ返す。
+  // ログインユーザー向けのフォロワー限定・参加者限定の絞り込みは別エンドポイント（feed 系）で提供する予定。
   list: publicProcedure.input(EventFilterSchema).query(async ({ ctx, input }) => {
     const { status, type, genres, city, from, to, hasOpenRoles, cursor, limit } = input
 
     const items = await ctx.prisma.event.findMany({
       where: {
         status,
+        visibility: 'PUBLIC', // Phase A.5: 公開一覧は PUBLIC のみ
         ...(type ? { type } : {}),
         ...(genres && genres.length > 0 ? { genres: { hasSome: genres } } : {}),
         ...(city ? { city } : {}),
@@ -124,6 +127,11 @@ export const eventRouter = router({
     return { items, nextCursor }
   }),
 
+  // 詳細取得: visibility に基づいて閲覧可否をチェックする。
+  // - PUBLIC: 誰でも
+  // - FOLLOWERS: 作成者のフォロワー + 参加者 + 作成者
+  // - PARTICIPANTS_ONLY: 参加者 + 作成者
+  // - PRIVATE: 作成者のみ
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -149,7 +157,33 @@ export const eventRouter = router({
         },
       })
       if (!event) throw new TRPCError({ code: 'NOT_FOUND', message: 'イベントが見つかりません' })
-      return event
+
+      // visibility チェック
+      const viewerId = ctx.session?.user?.id ?? null
+      const isCreator = viewerId && viewerId === event.creatorId
+      const isParticipant = viewerId
+        ? event.participants.some((p) => p.userId === viewerId)
+        : false
+
+      // 参加者・作成者は常に閲覧可
+      if (isCreator || isParticipant) return event
+
+      if (event.visibility === 'PUBLIC') return event
+
+      // FOLLOWERS の場合はフォロー関係を確認
+      if (event.visibility === 'FOLLOWERS' && viewerId) {
+        const follows = await ctx.prisma.eventFollow.findFirst({
+          where: {
+            followerId: viewerId,
+            OR: [{ eventId: event.id }, { followedUserId: event.creatorId }],
+          },
+          select: { id: true },
+        })
+        if (follows) return event
+      }
+
+      // 権限なし: 存在自体を隠すため NOT_FOUND
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'イベントが見つかりません' })
     }),
 
   // ---- 参加者 ----

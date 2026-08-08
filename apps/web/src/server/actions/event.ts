@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma'
 import type {
   EventParticipantRole,
   EventType,
+  EventVisibility,
 } from '@creator-links/shared'
 
 // --- イベント作成 ---
@@ -17,8 +18,11 @@ export type CreateEventFormData = {
   title: string
   description?: string
   type: EventType
+  visibility?: EventVisibility // Phase A.5: 省略時は PRIVATE
   startAt: string // ISO
   endAt?: string // ISO
+  isAllDay?: boolean
+  hasSpecificDate?: boolean
   venueName?: string
   venueAddress?: string
   city?: string
@@ -59,8 +63,11 @@ export async function createEventAction(
       title: data.title.trim(),
       description: data.description?.trim() || null,
       type: data.type,
+      visibility: data.visibility ?? 'PRIVATE', // Phase A.5: 明示指定がなければ非公開
       startAt,
       endAt,
+      isAllDay: data.isAllDay ?? false,
+      hasSpecificDate: data.hasSpecificDate ?? true,
       venueName: data.venueName?.trim() || null,
       venueAddress: data.venueAddress?.trim() || null,
       city: data.city?.trim() || null,
@@ -75,7 +82,34 @@ export async function createEventAction(
   })
 
   revalidatePath('/events')
+  revalidatePath('/dashboard/calendar')
   return { success: true, data: event }
+}
+
+// --- 可視性の変更（主催者のみ） ---
+export async function updateEventVisibilityAction(
+  eventId: string,
+  visibility: EventVisibility,
+): Promise<ActionResult> {
+  const session = await auth()
+  if (!session) return { success: false, error: 'ログインが必要です' }
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { creatorId: true },
+  })
+  if (!event) return { success: false, error: 'イベントが見つかりません' }
+  if (event.creatorId !== session.user.id) {
+    return { success: false, error: '主催者のみ変更できます' }
+  }
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { visibility },
+  })
+  revalidatePath('/events')
+  revalidatePath(`/events/${eventId}`)
+  return { success: true, data: undefined }
 }
 
 // --- 参加表明（自主的な「行く/興味あり」トグル） ---

@@ -27,6 +27,7 @@ export default async function EventsPage() {
   const events = await prisma.event.findMany({
     where: {
       status: 'PUBLISHED',
+      visibility: 'PUBLIC', // Phase A.5: 公開一覧は PUBLIC のみ
       startAt: { gte: now },
     },
     take: 30,

@@ -3,19 +3,29 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createEventAction } from '@/server/actions/event'
-import { EVENT_TYPES, EVENT_TYPE_LABELS } from '@creator-links/shared'
-import type { EventType } from '@creator-links/shared'
+import {
+  EVENT_TYPES,
+  EVENT_TYPE_LABELS,
+  EVENT_VISIBILITIES,
+  EVENT_VISIBILITY_LABELS,
+  EVENT_VISIBILITY_DESCRIPTIONS,
+  EVENT_VISIBILITY_ICONS,
+} from '@creator-links/shared'
+import type { EventType, EventVisibility } from '@creator-links/shared'
 
-export function NewEventForm() {
+export function NewEventForm({ defaultDate }: { defaultDate?: string } = {}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
   const [type, setType] = useState<EventType>('LIVE')
+  const [visibility, setVisibility] = useState<EventVisibility>('PRIVATE')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [startAt, setStartAt] = useState('')
+  // defaultDate（YYYY-MM-DD）が渡された場合は当日 19:00 で初期化
+  const [startAt, setStartAt] = useState(defaultDate ? `${defaultDate}T19:00` : '')
   const [endAt, setEndAt] = useState('')
+  const [isAllDay, setIsAllDay] = useState(false)
   const [venueName, setVenueName] = useState('')
   const [city, setCity] = useState('')
   const [genresText, setGenresText] = useState('')
@@ -23,6 +33,23 @@ export function NewEventForm() {
   const [ticketPriceYen, setTicketPriceYen] = useState('')
   const [isFree, setIsFree] = useState(false)
   const [publishNow, setPublishNow] = useState(true)
+
+  // type 変更時にデフォルト visibility を賢く提案（強制はしない）
+  const changeType = (newType: EventType) => {
+    setType(newType)
+    // 個人系（REHEARSAL / MEETING / TODO）は PRIVATE がデフォルト適
+    // 公開系（LIVE / SESSION / WORKSHOP / MEETUP）は PUBLIC がデフォルト適
+    if (visibility === 'PRIVATE' && ['LIVE', 'SESSION', 'WORKSHOP', 'MEETUP'].includes(newType)) {
+      setVisibility('PUBLIC')
+    } else if (
+      visibility === 'PUBLIC' &&
+      ['REHEARSAL', 'MEETING', 'TODO'].includes(newType)
+    ) {
+      setVisibility('PRIVATE')
+    }
+    // TODO 選択時は終日をデフォルト on
+    if (newType === 'TODO' && !isAllDay) setIsAllDay(true)
+  }
 
   const submit = () => {
     setError(null)
@@ -32,10 +59,12 @@ export function NewEventForm() {
     startTransition(async () => {
       const result = await createEventAction({
         type,
+        visibility,
         title,
         description: description || undefined,
         startAt: new Date(startAt).toISOString(),
         endAt: endAt ? new Date(endAt).toISOString() : undefined,
+        isAllDay,
         venueName: venueName || undefined,
         city: city || undefined,
         genres: genresText
@@ -64,13 +93,13 @@ export function NewEventForm() {
     >
       {/* 種別 */}
       <div>
-        <label className="block text-sm font-medium mb-1.5">イベント種別</label>
+        <label className="block text-sm font-medium mb-1.5">種別</label>
         <div className="flex flex-wrap gap-2">
           {EVENT_TYPES.map((t) => (
             <button
               type="button"
               key={t}
-              onClick={() => setType(t)}
+              onClick={() => changeType(t)}
               className={`px-3 py-1.5 rounded-lg text-xs border transition ${
                 type === t
                   ? 'bg-purple-600 border-purple-600 text-white'
@@ -78,6 +107,32 @@ export function NewEventForm() {
               }`}
             >
               {EVENT_TYPE_LABELS[t]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 可視性（Phase A.5） */}
+      <div>
+        <label className="block text-sm font-medium mb-1.5">公開範囲</label>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {EVENT_VISIBILITIES.map((v) => (
+            <button
+              type="button"
+              key={v}
+              onClick={() => setVisibility(v)}
+              className={`text-left px-3 py-2.5 rounded-lg border transition ${
+                visibility === v
+                  ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500'
+                  : 'bg-white border-gray-300 hover:border-purple-400'
+              }`}
+            >
+              <div className="text-xs font-medium mb-0.5">
+                {EVENT_VISIBILITY_ICONS[v]} {EVENT_VISIBILITY_LABELS[v]}
+              </div>
+              <div className="text-[11px] text-gray-500 leading-snug">
+                {EVENT_VISIBILITY_DESCRIPTIONS[v]}
+              </div>
             </button>
           ))}
         </div>
@@ -107,24 +162,42 @@ export function NewEventForm() {
       </div>
 
       {/* 日程 */}
-      <div className="grid sm:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium mb-1.5">開始日時 *</label>
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm">
           <input
-            type="datetime-local"
-            value={startAt}
-            onChange={(e) => setStartAt(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm"
+            type="checkbox"
+            checked={isAllDay}
+            onChange={(e) => setIsAllDay(e.target.checked)}
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1.5">終了日時</label>
-          <input
-            type="datetime-local"
-            value={endAt}
-            onChange={(e) => setEndAt(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm"
-          />
+          終日イベント（時刻を指定しない）
+        </label>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium mb-1.5">
+              {isAllDay ? '日付 *' : '開始日時 *'}
+            </label>
+            <input
+              type={isAllDay ? 'date' : 'datetime-local'}
+              value={
+                isAllDay && startAt
+                  ? startAt.split('T')[0]
+                  : startAt
+              }
+              onChange={(e) => setStartAt(isAllDay ? `${e.target.value}T00:00` : e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm"
+            />
+          </div>
+          {!isAllDay && (
+            <div>
+              <label className="block text-sm font-medium mb-1.5">終了日時</label>
+              <input
+                type="datetime-local"
+                value={endAt}
+                onChange={(e) => setEndAt(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm"
+              />
+            </div>
+          )}
         </div>
       </div>
 
