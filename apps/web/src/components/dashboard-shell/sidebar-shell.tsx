@@ -119,11 +119,11 @@ function SidebarNav({
 
   return (
     <>
-      <div className={`px-4 pt-4 pb-3 border-b ${hideWhenCollapsed}`}>
-        <p className="text-[10px] text-gray-400 uppercase tracking-wider">Signed in as</p>
-        <p className="font-bold text-gray-900 truncate">{user.name}</p>
+      <div className={`px-4 pt-4 pb-3 border-b border-purple-100/60 ${hideWhenCollapsed}`}>
+        <p className="text-[10px] text-purple-400/80 uppercase tracking-wider">Signed in as</p>
+        <p className="font-semibold text-gray-800 truncate">{user.name}</p>
         {user.role === 'PRO' && (
-          <span className="mt-1 inline-block bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+          <span className="mt-1 inline-block bg-amber-50 text-amber-600 text-[10px] px-2 py-0.5 rounded-full font-semibold ring-1 ring-amber-200/60">
             PRO
           </span>
         )}
@@ -136,10 +136,10 @@ function SidebarNav({
             href={item.href}
             onClick={onNavigate}
             title={collapsible ? item.label : undefined}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 transition ${
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm mb-0.5 transition-colors duration-200 ${
               isActive(item)
-                ? 'bg-purple-50 text-purple-700 font-bold'
-                : 'text-gray-700 hover:bg-gray-50'
+                ? 'bg-purple-100/70 text-purple-700 font-semibold'
+                : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
             }`}
           >
             <span className="shrink-0 text-current">{item.icon}</span>
@@ -147,7 +147,7 @@ function SidebarNav({
               {item.label}
             </span>
             {item.badge != null && item.badge > 0 && (
-              <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold min-w-[18px] text-center">
+              <span className="bg-pink-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center shadow-sm shadow-pink-300/40">
                 {item.badge > 99 ? '99+' : item.badge}
               </span>
             )}
@@ -156,11 +156,11 @@ function SidebarNav({
       </nav>
 
       {user.role !== 'PRO' && (
-        <div className={`p-3 border-t ${hideWhenCollapsed}`}>
+        <div className={`p-3 border-t border-purple-100/60 ${hideWhenCollapsed}`}>
           <Link
             href="/pro/subscribe"
             onClick={onNavigate}
-            className="block text-center bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-3 py-2 rounded-lg transition"
+            className="block text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white text-sm font-semibold px-3 py-2.5 rounded-xl transition-colors shadow-sm shadow-amber-200/50"
           >
             PRO にアップグレード
           </Link>
@@ -205,12 +205,12 @@ export function SidebarShell({
 
   return (
     <div>
-      <div className="md:hidden sticky top-14 sm:top-16 z-30 bg-white border-b flex items-center h-11 px-4">
+      <div className="md:hidden sticky top-14 sm:top-16 z-30 bg-white/90 backdrop-blur border-b border-purple-100/60 flex items-center h-11 px-4">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
           aria-label="メニューを開く"
-          className="text-gray-600 hover:text-purple-600 flex items-center gap-2 text-sm"
+          className="text-gray-600 hover:text-purple-600 flex items-center gap-2 text-sm transition-colors"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M4 6h16M4 12h16M4 18h16" />
@@ -227,14 +227,14 @@ export function SidebarShell({
             onClick={close}
             className="md:hidden fixed inset-0 bg-black/40 z-40"
           />
-          <aside className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-white border-r z-50 flex flex-col overflow-y-auto">
-            <div className="px-4 py-3 border-b flex items-center justify-between">
-              <p className="font-bold text-purple-600">メニュー</p>
+          <aside className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-gradient-to-b from-white via-purple-50/30 to-white border-r border-purple-100/60 z-50 flex flex-col overflow-y-auto shadow-lg shadow-purple-200/30">
+            <div className="px-4 py-3 border-b border-purple-100/60 flex items-center justify-between">
+              <p className="font-semibold text-purple-600">メニュー</p>
               <button
                 type="button"
                 onClick={close}
                 aria-label="閉じる"
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-purple-500 transition-colors"
               >
                 ✕
               </button>
@@ -245,7 +245,7 @@ export function SidebarShell({
       )}
 
       <aside
-        className="group hidden md:flex md:flex-col md:fixed md:left-0 md:top-16 md:bottom-0 md:w-14 hover:md:w-60 focus-within:md:w-60 transition-[width] duration-200 md:overflow-y-auto md:overflow-x-hidden md:border-r bg-white z-30 hover:shadow-lg"
+        className="group hidden md:flex md:flex-col md:fixed md:left-0 md:top-16 md:bottom-0 md:w-14 hover:md:w-60 focus-within:md:w-60 transition-[width] duration-300 ease-out md:overflow-y-auto md:overflow-x-hidden md:border-r md:border-purple-100/60 bg-gradient-to-b from-white via-purple-50/30 to-white z-30 hover:shadow-md hover:shadow-purple-200/40"
       >
         <SidebarNav user={user} items={items} isActive={isActive} onNavigate={close} collapsible />
       </aside>
