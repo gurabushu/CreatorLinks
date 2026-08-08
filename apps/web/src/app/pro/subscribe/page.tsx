@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { ProCheckoutClient } from './pro-checkout-client'
+import { PromoCodeForm } from './promo-code-form'
 
 function ProSubscribeContent() {
   const { data: session } = useSession()
@@ -39,6 +40,9 @@ function ProSubscribeContent() {
         >
           ダッシュボードへ
         </button>
+        <div className="mt-8 text-left">
+          <PromoCodeForm compact />
+        </div>
       </div>
     )
   }
@@ -101,6 +105,12 @@ function ProSubscribeContent() {
         </button>
       ) : (
         <ProCheckoutClient userId={session.user.id} />
+      )}
+
+      {session && (
+        <div className="mt-6">
+          <PromoCodeForm />
+        </div>
       )}
     </div>
   )

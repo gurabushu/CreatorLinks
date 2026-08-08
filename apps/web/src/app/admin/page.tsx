@@ -3,6 +3,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { DashboardShell } from '@/components/dashboard-shell/dashboard-shell'
 
 export default async function AdminPage() {
   const session = await auth()
@@ -28,8 +29,9 @@ export default async function AdminPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-12 px-4">
-      <h1 className="text-2xl font-bold mb-8">管理画面</h1>
+    <DashboardShell>
+      <div className="max-w-6xl mx-auto py-12 px-4">
+        <h1 className="text-2xl font-bold mb-8">管理画面</h1>
 
       {/* 統計 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
@@ -87,5 +89,6 @@ export default async function AdminPage() {
         </div>
       </section>
     </div>
+    </DashboardShell>
   )
 }

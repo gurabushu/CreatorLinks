@@ -61,3 +61,15 @@ export function isEarlyBirdFreeActive(user: {
   if (user.earlyBirdExpiresAt === null) return true
   return user.earlyBirdExpiresAt.getTime() > Date.now()
 }
+
+// 月額料金を免除される PRO アクセス権があるか。
+// 創設メンバー無料期間中 or プロモコードで付与された「永年無料」ユーザー。
+// 案件成立時の手数料（PLATFORM_FEE_RATE）はこの判定に関係なく別途徴収される
+export function hasFreeProAccess(user: {
+  earlyBirdSlot: number | null
+  earlyBirdExpiresAt: Date | null
+  hasLifetimeFreePro: boolean
+}): boolean {
+  if (user.hasLifetimeFreePro) return true
+  return isEarlyBirdFreeActive(user)
+}

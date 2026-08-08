@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { assignEarlyBirdIfAvailable } from '@/lib/early-bird'
+import { sendWelcomeDm } from '@/lib/official-account'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail, SITE_NAME, APP_URL } from '@/lib/resend'
 import {
@@ -15,6 +16,7 @@ import {
   ResetPasswordSchema,
   RequestEmailChangeSchema,
   ConfirmEmailChangeSchema,
+  ChangePasswordSchema,
 } from '@creator-links/shared'
 
 export type SignUpResult =
@@ -118,6 +120,8 @@ export async function signUpAction(formData: FormData): Promise<SignUpResult> {
 
   // 創設メンバー枠（先着 100 名 PRO 6ヶ月無料 + 永久バッジ）の割当（失敗しても登録自体は成功扱い）
   await assignEarlyBirdIfAvailable(createdUserId).catch(() => null)
+  // 公式アカウントからのウェルカム DM 送信（失敗しても登録は成功扱い）
+  await sendWelcomeDm(createdUserId).catch(() => null)
   // トップページの残数バナーの ISR を無効化
   revalidatePath('/')
 
@@ -357,5 +361,75 @@ export async function confirmEmailChangeAction(
     return { success: true, newEmail: record.newEmail }
   } catch {
     return { success: false, error: 'メールアドレス更新に失敗しました' }
+  }
+}
+
+// ===========================================
+// パスワード変更（ログイン中）
+// ===========================================
+
+export type ChangePasswordResult =
+  | { success: true }
+  | {
+      success: false
+      error: string
+      field?: 'currentPassword' | 'newPassword' | 'confirmPassword' | 'general'
+    }
+
+export async function changePasswordAction(data: {
+  currentPassword?: string
+  newPassword: string
+  confirmPassword: string
+}): Promise<ChangePasswordResult> {
+  const session = await auth()
+  if (!session) return { success: false, error: '認証が必要です', field: 'general' }
+
+  const parsed = ChangePasswordSchema.safeParse(data)
+  if (!parsed.success) {
+    const first = parsed.error.errors[0]
+    const field = first?.path[0] as
+      | 'currentPassword'
+      | 'newPassword'
+      | 'confirmPassword'
+      | undefined
+    return { success: false, error: first?.message ?? '入力内容を確認してください', field }
+  }
+
+  const { currentPassword, newPassword } = parsed.data
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { passwordHash: true, isGuest: true },
+  })
+  if (!user) return { success: false, error: 'ユーザーが見つかりません', field: 'general' }
+  if (user.isGuest) {
+    return { success: false, error: 'ゲストアカウントではパスワードを変更できません', field: 'general' }
+  }
+
+  // 既存パスワードがある場合のみ、現在パスワードの照合が必要
+  if (user.passwordHash) {
+    if (!currentPassword) {
+      return { success: false, error: '現在のパスワードを入力してください', field: 'currentPassword' }
+    }
+    const ok = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!ok) {
+      return { success: false, error: '現在のパスワードが正しくありません', field: 'currentPassword' }
+    }
+    // 新旧が同一のケースを弾く（bcrypt.compare で同値検出）
+    const same = await bcrypt.compare(newPassword, user.passwordHash)
+    if (same) {
+      return { success: false, error: '新しいパスワードは現在と異なるものにしてください', field: 'newPassword' }
+    }
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(newPassword, 12)
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { passwordHash },
+    })
+    return { success: true }
+  } catch {
+    return { success: false, error: 'パスワードの更新に失敗しました', field: 'general' }
   }
 }

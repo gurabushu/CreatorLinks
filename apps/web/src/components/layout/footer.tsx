@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 
 // サイドバー（DashboardShell / projects/manage）の下敷きになるページでは
 // フッターの中身も同じぶんだけ右にオフセットしてロゴ・リンクが隠れないようにする
-const SIDEBAR_ROUTES = ['/dashboard', '/projects/manage']
+const SIDEBAR_ROUTES = ['/dashboard', '/projects/manage', '/artists', '/projects', '/admin', '/announcements']
 
 export function Footer() {
   const pathname = usePathname()

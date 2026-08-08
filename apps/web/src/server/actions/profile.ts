@@ -2,7 +2,12 @@
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { UpdateProfileSchema, type UpdateProfileInput } from '@creator-links/shared'
+import {
+  UpdateProfileSchema,
+  type UpdateProfileInput,
+  UpdateAccountSchema,
+  type UpdateAccountInput,
+} from '@creator-links/shared'
 import { revalidatePath } from 'next/cache'
 
 export async function updateProfileAction(data: UpdateProfileInput) {
@@ -20,9 +25,39 @@ export async function updateProfileAction(data: UpdateProfileInput) {
       data: parsed.data,
     })
     revalidatePath('/dashboard/profile')
+    revalidatePath('/artists')
+    revalidatePath(`/artists/${session.user.id}`)
     return { success: true as const }
   } catch {
     return { success: false as const, error: 'プロフィールの更新に失敗しました' }
+  }
+}
+
+export async function updateAccountAction(data: UpdateAccountInput) {
+  const session = await auth()
+  if (!session) return { success: false as const, error: '認証が必要です' }
+
+  const parsed = UpdateAccountSchema.safeParse(data)
+  if (!parsed.success) {
+    return {
+      success: false as const,
+      error: parsed.error.errors[0]?.message ?? '入力内容が正しくありません',
+    }
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { name: parsed.data.name },
+    })
+    revalidatePath('/dashboard/account')
+    revalidatePath('/dashboard')
+    // displayName 未設定ユーザーは name が公開名にも使われるので、公開系も再検証
+    revalidatePath('/artists')
+    revalidatePath(`/artists/${session.user.id}`)
+    return { success: true as const }
+  } catch {
+    return { success: false as const, error: 'アカウント情報の更新に失敗しました' }
   }
 }
 

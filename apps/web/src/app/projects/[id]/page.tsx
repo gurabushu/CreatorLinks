@@ -5,7 +5,15 @@ import { notFound } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ApplyButton } from './apply-button'
+import { getDisplayName } from '@/lib/user'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/shared'
+
+const LEVEL_BADGE_CLASS: Record<CommitmentLevel, string> = {
+  HOBBY: 'bg-emerald-100 text-emerald-700',
+  SEMI_PRO: 'bg-sky-100 text-sky-700',
+  PRO: 'bg-amber-100 text-amber-800',
+}
 
 interface Props {
   params: Promise<{ id: string }>
@@ -38,7 +46,7 @@ export default async function ProjectDetailPage({ params }: Props) {
     project = await prisma.project.findUnique({
       where: { id },
       include: {
-        client: { select: { id: true, name: true, avatarUrl: true, averageRating: true } },
+        client: { select: { id: true, name: true, displayName: true, avatarUrl: true, averageRating: true } },
         _count: { select: { matches: true } },
       },
     })
@@ -70,7 +78,19 @@ export default async function ProjectDetailPage({ params }: Props) {
         <div className="md:col-span-2 space-y-6">
           {/* ヘッダー */}
           <div>
-            <div className="flex gap-2 mb-3">
+            <div className="flex gap-2 mb-3 flex-wrap">
+              {(() => {
+                const level = (project.commitmentLevel ?? 'HOBBY') as CommitmentLevel
+                const meta = COMMITMENT_LEVEL_LABELS[level]
+                return (
+                  <span
+                    className={`text-xs px-3 py-1 rounded-full font-medium ${LEVEL_BADGE_CLASS[level]}`}
+                    title={meta.description}
+                  >
+                    {meta.label}
+                  </span>
+                )
+              })()}
               <span className="bg-purple-100 text-purple-700 text-xs px-3 py-1 rounded-full font-medium">
                 {project.contractType === 'SPOT' ? 'スポット' : 'サブスク'}
               </span>
@@ -85,7 +105,12 @@ export default async function ProjectDetailPage({ params }: Props) {
               </span>
             </div>
             <h1 className="text-2xl font-bold">{project.title}</h1>
-            <p className="text-gray-400 text-sm mt-2">{formatDate(project.createdAt)} に掲載</p>
+            <p className="text-gray-400 text-sm mt-2">
+              {formatDate(project.createdAt)} に掲載 ·{' '}
+              <span className="text-gray-500">
+                {COMMITMENT_LEVEL_LABELS[(project.commitmentLevel ?? 'HOBBY') as CommitmentLevel].description}
+              </span>
+            </p>
           </div>
 
           {/* ジャンル */}
@@ -139,11 +164,11 @@ export default async function ProjectDetailPage({ params }: Props) {
               <div className="w-10 h-10 rounded-full bg-purple-100 overflow-hidden shrink-0">
                 {project.client.avatarUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={project.client.avatarUrl} alt={project.client.name} className="w-full h-full object-cover" />
+                  <img src={project.client.avatarUrl} alt={getDisplayName(project.client)} className="w-full h-full object-cover" />
                 )}
               </div>
               <div>
-                <p className="font-medium text-sm">{project.client.name}</p>
+                <p className="font-medium text-sm">{getDisplayName(project.client)}</p>
                 <p className="text-xs text-gray-400">評価 {Number(project.client.averageRating).toFixed(1)}</p>
               </div>
             </div>

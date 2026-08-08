@@ -4,6 +4,9 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { PaymentBadge, type PaymentStatus } from '@/components/payments/payment-badge'
+import { OfficialBadge } from '@/components/official-badge'
+import { getDisplayName } from '@/lib/user'
 
 export default async function MatchesPage() {
   const session = await auth()
@@ -23,11 +26,12 @@ export default async function MatchesPage() {
       include: {
         project: {
           include: {
-            client: { select: { name: true, avatarUrl: true } },
+            client: { select: { name: true, displayName: true, avatarUrl: true } },
           },
         },
-        artist: { select: { id: true, name: true, avatarUrl: true } },
-        partner: { select: { id: true, name: true, avatarUrl: true } },
+        artist: { select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true } },
+        partner: { select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true } },
+        payment: { select: { status: true, artistPayoutYen: true } },
       },
     })
   } catch {
@@ -74,14 +78,21 @@ export default async function MatchesPage() {
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
                       {partner?.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={partner.avatarUrl} alt={partner.name} className="w-full h-full object-cover" />
+                        <img src={partner.avatarUrl} alt={partner ? getDisplayName(partner) : ''} className="w-full h-full object-cover" />
                       ) : (
-                        (partner?.name ?? '?').charAt(0)
+                        (partner ? getDisplayName(partner) : '?').charAt(0)
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-medium truncate">{partner?.name ?? '相手'}</p>
-                      <p className="text-xs text-gray-500">相互いいねでマッチ — 非公開案件を相互紹介できます</p>
+                      <p className="font-medium truncate flex items-center gap-1.5">
+                        <span className="truncate">{partner ? getDisplayName(partner) : '相手'}</span>
+                        {partner?.isOfficial && <OfficialBadge size="sm" />}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {partner?.isOfficial
+                          ? 'お知らせ・サポート'
+                          : '相互いいねでマッチ — 非公開案件を相互紹介できます'}
+                      </p>
                     </div>
                   </div>
                   <Link
@@ -115,8 +126,18 @@ export default async function MatchesPage() {
                       {match.project.title}
                     </Link>
                     <p className="text-sm text-gray-500 mt-1">
-                      依頼者: {match.project.client.name}
+                      依頼者: {getDisplayName(match.project.client)}
                     </p>
+                    {match.payment && (
+                      <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                        <PaymentBadge status={match.payment.status as PaymentStatus} size="sm" />
+                        {match.payment.status === 'RELEASED' && (
+                          <span className="text-xs text-gray-500">
+                            受取 ¥{match.payment.artistPayoutYen.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {match.message && (
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                         「{match.message}」

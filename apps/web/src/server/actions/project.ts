@@ -11,6 +11,7 @@ import {
   getUserChannel,
   MATCH_APPLIED_EVENT,
 } from '@/lib/pusher-server'
+import { getDisplayName } from '@/lib/user'
 
 export type ProjectActionResult =
   | { success: true; projectId: string }
@@ -30,6 +31,7 @@ export async function createProjectAction(
     genres: formData.getAll('genres') as string[],
     budget: formData.get('budget') ? Number(formData.get('budget')) : undefined,
     contractType: formData.get('contractType'),
+    commitmentLevel: formData.get('commitmentLevel') || 'HOBBY',
     isPrivate: formData.get('isPrivate') === 'on' || formData.get('isPrivate') === 'true',
   }
 
@@ -82,20 +84,25 @@ export async function applyToProjectAction(
       message: message ?? null,
     },
     include: {
-      project: { include: { client: { select: { email: true, name: true } } } },
+      project: { include: { client: { select: { email: true, name: true, displayName: true } } } },
     },
   })
 
   // メール通知: 発注者へ応募を通知（projectId 指定で作成しているので project は必ず存在）
   const projectInfo = match.project!
   const client = projectInfo.client
+  const artist = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, displayName: true },
+  })
+  const artistDisplayName = artist ? getDisplayName(artist) : 'アーティスト'
   await inngest.send({
     name: 'match/applied',
     data: {
       matchId: match.id,
       clientEmail: client.email,
-      clientName: client.name,
-      artistName: session.user.name ?? 'アーティスト',
+      clientName: getDisplayName(client),
+      artistName: artistDisplayName,
       projectTitle: projectInfo.title,
     },
   }).catch(() => {/* Inngest 未設定時は無視 */})
@@ -107,7 +114,7 @@ export async function applyToProjectAction(
       matchId: match.id,
       projectId,
       projectTitle: projectInfo.title,
-      counterpartName: session.user.name ?? 'アーティスト',
+      counterpartName: artistDisplayName,
       createdAt: match.createdAt.toISOString(),
     })
   }

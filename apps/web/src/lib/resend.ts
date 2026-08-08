@@ -21,7 +21,17 @@ export async function sendEmail({
   html: string
 }) {
   if (!resend) {
-    console.log('[Mail Dev]', { to, subject })
+    // 開発時：本文中の URL（http/https）を抽出してターミナルに表示。
+    // パスワードリセット等のリンクをローカルで拾えるようにする。
+    const links = Array.from(html.matchAll(/https?:\/\/[^"'\s<>]+/g)).map((m) => m[0])
+    console.log('\n[Mail Dev] ' + '='.repeat(60))
+    console.log('  to     :', to)
+    console.log('  subject:', subject)
+    if (links.length > 0) {
+      console.log('  links  :')
+      for (const link of links) console.log('    →', link)
+    }
+    console.log('=' + '='.repeat(66) + '\n')
     return
   }
 

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { inngest } from '@/lib/inngest'
 import { ToggleLikeSchema, type ToggleLikeInput } from '@creator-links/shared'
 import { revalidatePath } from 'next/cache'
+import { getDisplayName } from '@/lib/user'
 
 export type ToggleLikeResult =
   | { success: true; status: 'liked' }
@@ -71,8 +72,8 @@ export async function toggleLikeAction(data: ToggleLikeInput): Promise<ToggleLik
     if (matched) {
       // 双方にマッチ成立通知
       const [meUser, targetUser] = await Promise.all([
-        prisma.user.findUnique({ where: { id: me }, select: { name: true, email: true } }),
-        prisma.user.findUnique({ where: { id: target }, select: { name: true, email: true } }),
+        prisma.user.findUnique({ where: { id: me }, select: { name: true, displayName: true, email: true } }),
+        prisma.user.findUnique({ where: { id: target }, select: { name: true, displayName: true, email: true } }),
       ])
       if (meUser && targetUser) {
         void inngest
@@ -81,9 +82,9 @@ export async function toggleLikeAction(data: ToggleLikeInput): Promise<ToggleLik
             data: {
               matchId: matched.id,
               userAEmail: meUser.email,
-              userAName: meUser.name,
+              userAName: getDisplayName(meUser),
               userBEmail: targetUser.email,
-              userBName: targetUser.name,
+              userBName: getDisplayName(targetUser),
             },
           })
           .catch(() => {})

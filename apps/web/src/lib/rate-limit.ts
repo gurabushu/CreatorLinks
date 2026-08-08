@@ -1,12 +1,13 @@
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
-type Bucket = 'auth' | 'webhook' | 'message'
+type Bucket = 'auth' | 'webhook' | 'message' | 'promo'
 
 const BUCKETS: Record<Bucket, { limit: number; window: `${number} s` }> = {
   auth: { limit: 10, window: '60 s' },
   webhook: { limit: 60, window: '60 s' },
   message: { limit: 30, window: '60 s' },
+  promo: { limit: 5, window: '60 s' }, // プロモコードのブルートフォース抑止
 }
 
 let cachedRedis: Redis | null = null

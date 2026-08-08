@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { listArtistsAction } from '@/server/actions/artist'
 import { toggleLikeAction } from '@/server/actions/like'
+import { getDisplayName } from '@/lib/user'
 import {
   resolveMediaSource,
   pickLeadPortfolio,
@@ -13,17 +14,31 @@ import {
   buildVimeoEmbed,
 } from '@/lib/media-source'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
+import { ProfileFacts } from '@/components/artist/profile-facts'
+import {
+  COMMITMENT_LEVELS,
+  COMMITMENT_LEVEL_LABELS,
+  GENDERS,
+  GENDER_LABELS,
+  HEIGHT_BUCKETS,
+  HEIGHT_BUCKET_LABELS,
+  INSTRUMENT_PRESETS,
+  type CommitmentLevel,
+  type HeightBucket,
+} from '@creator-links/shared'
 
 const SOUND_PREF_KEY = 'creatorlinks.artist-list.hover-sound'
 
-const GENRES = ['音楽', 'イラスト', '動画', 'デザイン', '写真', '文章', '声優', 'その他']
+const GENRES = ['ボーカル', '作曲', '作詞', '編曲', '演奏', 'ミックス・マスタリング', 'DTM・トラックメイキング', 'その他']
 const LIMIT = 12
 
 type Portfolio = { id: string; mediaType: string; title: string; fileKey: string }
+type Gender = 'MALE' | 'FEMALE' | 'NOT_SPECIFIED'
 
 type ArtistItem = {
   id: string
   name: string
+  displayName: string | null
   role: string
   genres: string[]
   bio: string | null
@@ -32,7 +47,18 @@ type ArtistItem = {
   averageRating: number
   earlyBirdSlot: number | null
   featuredPortfolioId: string | null
+  gender: Gender | null
+  heightCm: number | null
+  activityYears: number | null
+  skillLevel: CommitmentLevel | null
+  instruments: string[]
   portfolios: Portfolio[]
+}
+
+const SKILL_BADGE_CLASS: Record<CommitmentLevel, string> = {
+  HOBBY: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  SEMI_PRO: 'bg-sky-50 text-sky-700 border-sky-200',
+  PRO: 'bg-amber-50 text-amber-800 border-amber-200',
 }
 
 // ---- メインメディア（ホバー時のみ再生：TikTok 風） ----
@@ -94,7 +120,7 @@ function MediaHero({
       <>
         <Image
           src={source.thumbnailUrl}
-          alt={lead?.title ?? `${artist.name}の動画`}
+          alt={lead?.title ?? `${getDisplayName(artist)}の動画`}
           fill
           className={`object-cover transition-opacity duration-200 ${isActive ? 'opacity-0' : 'opacity-100'}`}
           unoptimized
@@ -103,7 +129,7 @@ function MediaHero({
           <iframe
             key={withSound ? 'on' : 'off'}
             src={embedUrl}
-            title={lead?.title ?? `${artist.name}の動画`}
+            title={lead?.title ?? `${getDisplayName(artist)}の動画`}
             className="absolute inset-0 w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media; picture-in-picture"
             loading="lazy"
@@ -122,7 +148,7 @@ function MediaHero({
         {coverUrl && (
           <Image
             src={coverUrl}
-            alt={artist.name}
+            alt={getDisplayName(artist)}
             fill
             className={`object-cover transition-opacity duration-200 ${isActive ? 'opacity-0' : 'opacity-100'}`}
             unoptimized
@@ -132,7 +158,7 @@ function MediaHero({
           <iframe
             key={withSound ? 'on' : 'off'}
             src={embedUrl}
-            title={lead?.title ?? `${artist.name}の動画`}
+            title={lead?.title ?? `${getDisplayName(artist)}の動画`}
             className="absolute inset-0 w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media; picture-in-picture"
             loading="lazy"
@@ -148,7 +174,7 @@ function MediaHero({
     return (
       <>
         {coverUrl && (
-          <Image src={coverUrl} alt={artist.name} fill className="object-cover" unoptimized />
+          <Image src={coverUrl} alt={getDisplayName(artist)} fill className="object-cover" unoptimized />
         )}
         <HoverHint visible label={source.kind === 'twitter' ? 'X' : 'リンク'} />
       </>
@@ -176,7 +202,7 @@ function MediaHero({
     return (
       <Image
         src={coverUrl}
-        alt={`${artist.name}の作品`}
+        alt={`${getDisplayName(artist)}の作品`}
         fill
         className="object-cover"
         unoptimized
@@ -416,18 +442,26 @@ function ArtistCard({
             {artist.avatarUrl ? (
               <Image
                 src={artist.avatarUrl}
-                alt={artist.name}
+                alt={getDisplayName(artist)}
                 width={36}
                 height={36}
                 className="w-full h-full object-cover"
               />
             ) : (
-              artist.name.charAt(0)
+              getDisplayName(artist).charAt(0)
             )}
           </div>
           <p className="font-bold text-gray-900 group-hover:text-purple-700 transition truncate flex-1 min-w-0">
-            {artist.name}
+            {getDisplayName(artist)}
           </p>
+          {artist.skillLevel && (
+            <span
+              title={COMMITMENT_LEVEL_LABELS[artist.skillLevel].description}
+              className={`text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${SKILL_BADGE_CLASS[artist.skillLevel]}`}
+            >
+              {COMMITMENT_LEVEL_LABELS[artist.skillLevel].label}
+            </span>
+          )}
           {artist.role === 'PRO' && (
             <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-bold shrink-0">
               PRO
@@ -454,6 +488,33 @@ function ArtistCard({
           ))}
         </div>
 
+        {(artist.gender != null || artist.heightCm != null || artist.activityYears != null) && (
+          <div className="mb-2">
+            <ProfileFacts
+              gender={artist.gender}
+              heightCm={artist.heightCm}
+              activityYears={artist.activityYears}
+              size="sm"
+            />
+          </div>
+        )}
+
+        {artist.instruments.length > 0 && (
+          <div className="flex gap-1 flex-wrap mb-2">
+            {artist.instruments.slice(0, 4).map((inst) => (
+              <span
+                key={inst}
+                className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded"
+              >
+                {inst}
+              </span>
+            ))}
+            {artist.instruments.length > 4 && (
+              <span className="text-[10px] text-gray-400">+{artist.instruments.length - 4}</span>
+            )}
+          </div>
+        )}
+
         {artist.bio ? (
           <p className="text-sm text-gray-500 line-clamp-2 mb-2">{artist.bio}</p>
         ) : (
@@ -476,6 +537,35 @@ function ArtistCard({
       {/* サムネ列 */}
       <ThumbnailStrip works={others} />
     </Link>
+  )
+}
+
+// ---- 詳細絞り込みのチップボタン ----
+function FilterChip({
+  active,
+  onClick,
+  label,
+  title,
+}: {
+  active: boolean
+  onClick: () => void
+  label: string
+  title?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-pressed={active}
+      className={`px-3 py-1.5 rounded-full text-sm border transition ${
+        active
+          ? 'bg-gray-900 text-white border-gray-900'
+          : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+      }`}
+    >
+      {label}
+    </button>
   )
 }
 
@@ -505,13 +595,23 @@ export function ArtistListClient({
   initialNextCursor,
   initialLikedIds,
   currentUserId,
+  initialQuery = '',
 }: {
   initialArtists: ArtistItem[]
   initialNextCursor: string | null
   initialLikedIds: string[]
   currentUserId: string | null
+  initialQuery?: string
 }) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const query = (searchParams.get('q') ?? initialQuery).trim()
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
+  const [selectedGender, setSelectedGender] = useState<Gender | null>(null)
+  const [selectedSkillLevel, setSelectedSkillLevel] = useState<CommitmentLevel | null>(null)
+  const [selectedHeightBuckets, setSelectedHeightBuckets] = useState<HeightBucket[]>([])
+  const [selectedInstruments, setSelectedInstruments] = useState<string[]>([])
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [artists, setArtists] = useState<ArtistItem[]>(initialArtists)
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor)
   const [isFetchingMore, setIsFetchingMore] = useState(false)
@@ -521,6 +621,31 @@ export function ArtistListClient({
   const [likedSet, setLikedSet] = useState<Set<string>>(() => new Set(initialLikedIds))
   const [matchBanner, setMatchBanner] = useState<{ matchId: string; name: string } | null>(null)
   const loaderRef = useRef<HTMLDivElement>(null)
+
+  const activeFilterCount =
+    (selectedGender ? 1 : 0) +
+    (selectedSkillLevel ? 1 : 0) +
+    (selectedHeightBuckets.length > 0 ? 1 : 0) +
+    (selectedInstruments.length > 0 ? 1 : 0)
+
+  const toggleHeightBucket = (b: HeightBucket) => {
+    setSelectedHeightBuckets((prev) =>
+      prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]
+    )
+  }
+
+  const toggleInstrumentFilter = (name: string) => {
+    setSelectedInstruments((prev) =>
+      prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name]
+    )
+  }
+
+  const resetAdvanced = () => {
+    setSelectedGender(null)
+    setSelectedSkillLevel(null)
+    setSelectedHeightBuckets([])
+    setSelectedInstruments([])
+  }
 
   const setLiked = (artistId: string, next: boolean) => {
     setLikedSet((prev) => {
@@ -533,7 +658,7 @@ export function ArtistListClient({
 
   const handleMatched = (artist: ArtistItem, matchId: string) => {
     setLiked(artist.id, true)
-    setMatchBanner({ matchId, name: artist.name })
+    setMatchBanner({ matchId, name: getDisplayName(artist) })
   }
 
   // localStorage から音声設定を復元
@@ -564,6 +689,11 @@ export function ArtistListClient({
       try {
         const result = await listArtistsAction({
           genres: selectedGenres.length > 0 ? selectedGenres : undefined,
+          q: query || undefined,
+          gender: selectedGender ?? undefined,
+          skillLevel: selectedSkillLevel ?? undefined,
+          heightBuckets: selectedHeightBuckets.length > 0 ? selectedHeightBuckets : undefined,
+          instruments: selectedInstruments.length > 0 ? selectedInstruments : undefined,
           limit: LIMIT,
         })
         setArtists(result.items)
@@ -572,7 +702,14 @@ export function ArtistListClient({
         setIsError(true)
       }
     })
-  }, [selectedGenres])
+  }, [
+    selectedGenres,
+    query,
+    selectedGender,
+    selectedSkillLevel,
+    selectedHeightBuckets,
+    selectedInstruments,
+  ])
 
   const loadMore = async () => {
     if (!nextCursor || isFetchingMore) return
@@ -580,6 +717,11 @@ export function ArtistListClient({
     try {
       const result = await listArtistsAction({
         genres: selectedGenres.length > 0 ? selectedGenres : undefined,
+        q: query || undefined,
+        gender: selectedGender ?? undefined,
+        skillLevel: selectedSkillLevel ?? undefined,
+        heightBuckets: selectedHeightBuckets.length > 0 ? selectedHeightBuckets : undefined,
+        instruments: selectedInstruments.length > 0 ? selectedInstruments : undefined,
         cursor: nextCursor,
         limit: LIMIT,
       })
@@ -590,6 +732,13 @@ export function ArtistListClient({
     } finally {
       setIsFetchingMore(false)
     }
+  }
+
+  const clearQuery = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('q')
+    const qs = params.toString()
+    router.push(qs ? `/artists?${qs}` : '/artists')
   }
 
   useEffect(() => {
@@ -646,6 +795,24 @@ export function ArtistListClient({
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {/* 検索キーワード表示 */}
+      {query && (
+        <div className="mb-4 flex items-center gap-2 text-sm">
+          <span className="text-gray-500">検索:</span>
+          <span className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1 rounded-full font-medium">
+            {query}
+            <button
+              type="button"
+              onClick={clearQuery}
+              aria-label="検索を解除"
+              className="text-purple-400 hover:text-purple-700 -mr-1"
+            >
+              ✕
+            </button>
+          </span>
         </div>
       )}
 
@@ -716,6 +883,150 @@ export function ArtistListClient({
         </button>
       </div>
 
+      {/* 詳細絞り込み（開閉） */}
+      <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((v) => !v)}
+          aria-expanded={showAdvanced}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium bg-gray-50 hover:bg-gray-100 transition"
+        >
+          <span className="flex items-center gap-2">
+            <svg
+              viewBox="0 0 24 24"
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M3 6h18M6 12h12M10 18h4" />
+            </svg>
+            詳細絞り込み
+            {activeFilterCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-purple-600 text-white rounded-full text-[11px] font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+          </span>
+          <span className="flex items-center gap-3">
+            {activeFilterCount > 0 && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  resetAdvanced()
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    resetAdvanced()
+                  }
+                }}
+                className="text-xs text-gray-500 hover:text-gray-700 underline"
+              >
+                すべて解除
+              </span>
+            )}
+            <svg
+              viewBox="0 0 24 24"
+              className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </span>
+        </button>
+
+        {showAdvanced && (
+          <div className="p-3 sm:p-4 space-y-4 sm:space-y-5 bg-white">
+            {/* 熟練度 */}
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2">熟練度</p>
+              <div className="flex gap-1.5 flex-wrap">
+                <FilterChip
+                  active={selectedSkillLevel === null}
+                  onClick={() => setSelectedSkillLevel(null)}
+                  label="指定なし"
+                />
+                {COMMITMENT_LEVELS.map((lv) => (
+                  <FilterChip
+                    key={lv}
+                    active={selectedSkillLevel === lv}
+                    onClick={() => setSelectedSkillLevel(lv)}
+                    label={COMMITMENT_LEVEL_LABELS[lv].label}
+                    title={COMMITMENT_LEVEL_LABELS[lv].description}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* 性別 */}
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2">性別</p>
+              <div className="flex gap-1.5 flex-wrap">
+                <FilterChip
+                  active={selectedGender === null}
+                  onClick={() => setSelectedGender(null)}
+                  label="指定なし"
+                />
+                {GENDERS.map((g) => (
+                  <FilterChip
+                    key={g}
+                    active={selectedGender === g}
+                    onClick={() => setSelectedGender(g)}
+                    label={GENDER_LABELS[g]}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* 身長段階（複数選択可） */}
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2">
+                身長 <span className="text-[11px] font-normal text-gray-400">（複数選択可）</span>
+              </p>
+              <div className="flex gap-1.5 flex-wrap">
+                {HEIGHT_BUCKETS.map((b) => (
+                  <FilterChip
+                    key={b}
+                    active={selectedHeightBuckets.includes(b)}
+                    onClick={() => toggleHeightBucket(b)}
+                    label={HEIGHT_BUCKET_LABELS[b]}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* 楽器 */}
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2">
+                楽器 / 担当 <span className="text-[11px] font-normal text-gray-400">（音楽系のみ・複数選択可）</span>
+              </p>
+              <div className="flex gap-1.5 flex-wrap">
+                {INSTRUMENT_PRESETS.map((inst) => (
+                  <FilterChip
+                    key={inst}
+                    active={selectedInstruments.includes(inst)}
+                    onClick={() => toggleInstrumentFilter(inst)}
+                    label={inst}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {isError && (
         <div className="text-center py-12 text-red-500">
           読み込みに失敗しました。リロードしてください。
@@ -744,7 +1055,9 @@ export function ArtistListClient({
       {!isPending && !isError && artists.length === 0 && (
         <div className="text-center py-20 text-gray-400">
           <p className="font-medium">該当するアーティストが見つかりません</p>
-          <p className="text-sm mt-1">別のジャンルで検索してみましょう</p>
+          <p className="text-sm mt-1">
+            {query ? '別のキーワードやジャンルで検索してみましょう' : '別のジャンルで検索してみましょう'}
+          </p>
         </div>
       )}
 
