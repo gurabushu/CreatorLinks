@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ChangePasswordSchema, type ChangePasswordInput } from '@creator-links/shared'
 import { changePasswordAction } from '@/server/actions/auth'
+import PasswordInput from '@/components/ui/password-input'
 
 interface Props {
   passwordSet: boolean
@@ -77,9 +78,8 @@ export default function PasswordChangeSection({ passwordSet }: Props) {
               <label htmlFor="current-password" className="block text-xs font-medium text-gray-600 mb-1">
                 現在のパスワード
               </label>
-              <input
+              <PasswordInput
                 id="current-password"
-                type="password"
                 autoComplete="current-password"
                 {...register('currentPassword')}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -94,9 +94,8 @@ export default function PasswordChangeSection({ passwordSet }: Props) {
             <label htmlFor="new-password" className="block text-xs font-medium text-gray-600 mb-1">
               新しいパスワード（8〜72 文字）
             </label>
-            <input
+            <PasswordInput
               id="new-password"
-              type="password"
               autoComplete="new-password"
               {...register('newPassword')}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -110,9 +109,8 @@ export default function PasswordChangeSection({ passwordSet }: Props) {
             <label htmlFor="confirm-password" className="block text-xs font-medium text-gray-600 mb-1">
               新しいパスワード（確認）
             </label>
-            <input
+            <PasswordInput
               id="confirm-password"
-              type="password"
               autoComplete="new-password"
               {...register('confirmPassword')}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"

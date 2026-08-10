@@ -6,6 +6,7 @@ import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useActionState, useState, Suspense } from 'react'
 import { signUpAction, signUpAsGuestAction } from '@/server/actions/auth'
+import PasswordInput from '@/components/ui/password-input'
 
 // ---- ログインフォーム ----
 function LoginForm() {
@@ -53,10 +54,9 @@ function LoginForm() {
         <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">
           パスワード
         </label>
-        <input
+        <PasswordInput
           id="login-password"
           name="password"
-          type="password"
           required
           autoComplete="current-password"
           className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -103,8 +103,9 @@ function SignUpForm({ onSuccess: _onSuccess }: { onSuccess: () => void }) {
         if (signInResult?.error) {
           return { success: false as const, error: 'アカウントは作成されましたが、ログインに失敗しました。ログインページからサインインしてください。', field: 'general' as const }
         }
-        // フルリロードで新しい auth cookie をサーバーに確実に伝える
-        window.location.href = '/dashboard'
+        // フルリロードで新しい auth cookie をサーバーに確実に伝える。
+        // signup 直後は onboarding（仕事仲間招待ステップ）へ誘導。
+        window.location.href = '/onboarding'
         return null
       }
       return result
@@ -158,10 +159,9 @@ function SignUpForm({ onSuccess: _onSuccess }: { onSuccess: () => void }) {
         <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-1">
           パスワード <span className="text-red-500">*</span>
         </label>
-        <input
+        <PasswordInput
           id="signup-password"
           name="password"
-          type="password"
           required
           minLength={8}
           autoComplete="new-password"
