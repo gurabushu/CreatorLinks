@@ -259,27 +259,39 @@ model Match {
 // 依頼主 → アーティスト報酬決済（Stripe Connect Separate Charges & Transfers 方式）
 // Match と 1:1 対応。amount 系は円単位の整数（JPY はゼロデシマル通貨）
 model Payment {
-  id                    String        @id @default(cuid())
-  matchId               String        @unique
-  amountYen             Int // クライアント支払い総額
-  platformFeeYen        Int // Platform 手数料（PLATFORM_FEE_RATE で算出）
-  artistPayoutYen       Int // アーティスト受取額 = amountYen - platformFeeYen
-  currency              String        @default("jpy")
-  status                PaymentStatus @default(AWAITING)
-  stripePaymentIntentId String?       @unique
-  stripeChargeId        String?
-  stripeTransferId      String?       @unique
-  paidAt                DateTime? // payment_intent.succeeded webhook で記録
-  releasedAt            DateTime? // Transfer 作成時に記録
-  refundedAt            DateTime?
-  failedAt              DateTime?
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  id                       String        @id @default(cuid())
+  matchId                  String        @unique
+  amountYen                Int // クライアント支払い総額
+  platformFeeYen           Int // Platform 手数料（PLATFORM_FEE_RATE で算出）
+  artistPayoutYen          Int // アーティスト受取額 = amountYen - platformFeeYen
+  currency                 String        @default("jpy")
+  status                   PaymentStatus @default(AWAITING)
+  stripeCheckoutSessionId  String?       @unique // Checkout 戻り時 fallback で PI を直接引くために保存
+  stripePaymentIntentId    String?       @unique
+  stripeChargeId           String?
+  stripeTransferId         String?       @unique
+  paidAt                   DateTime? // payment_intent.succeeded webhook で記録
+  releasedAt               DateTime? // Transfer 作成時に記録
+  refundedAt               DateTime?
+  failedAt                 DateTime?
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
 
   match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@map("payments")
+}
+
+// Stripe webhook の冪等性ガード。event.id をユニーク制約で保持し、
+// リトライで再送された同一イベントを P2002 で弾く。
+model ProcessedStripeEvent {
+  id        String   @id // Stripe event.id (evt_...)
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("processed_stripe_events")
 }
 
 model Like {

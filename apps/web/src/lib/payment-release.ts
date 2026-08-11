@@ -54,14 +54,19 @@ export async function releasePayment(paymentId: string): Promise<ReleaseResult> 
 
   const stripe = getStripe()
   try {
-    const transfer = await stripe.transfers.create({
-      amount: payment.artistPayoutYen,
-      currency: payment.currency,
-      destination: artist.stripeConnectAccountId,
-      transfer_group: `match_${payment.matchId}`,
-      source_transaction: payment.stripeChargeId,
-      metadata: { paymentId: payment.id, matchId: payment.matchId },
-    })
+    // idempotencyKey により、transfer 成功後に DB update が失敗して cron 再実行された場合でも
+    // Stripe 側は既存の Transfer を返して二重送金しない。
+    const transfer = await stripe.transfers.create(
+      {
+        amount: payment.artistPayoutYen,
+        currency: payment.currency,
+        destination: artist.stripeConnectAccountId,
+        transfer_group: `match_${payment.matchId}`,
+        source_transaction: payment.stripeChargeId,
+        metadata: { paymentId: payment.id, matchId: payment.matchId },
+      },
+      { idempotencyKey: `release_${payment.id}` },
+    )
 
     await prisma.payment.update({
       where: { id: payment.id },

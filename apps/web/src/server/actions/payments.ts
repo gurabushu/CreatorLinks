@@ -121,6 +121,15 @@ export async function createCheckoutSessionAction(matchId: string): Promise<neve
   })
 
   if (!checkout.url) throw new Error('checkout url missing')
+
+  // Checkout Session id を Payment に保存しておき、Checkout 戻り時 fallback で
+  // sessions.list を撃たずに直接 retrieve できるようにする。
+  // Stripe 側で作成失敗しても DB は AWAITING のまま無害なので、redirect 前に await する。
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { stripeCheckoutSessionId: checkout.id },
+  })
+
   redirect(checkout.url)
 }
 
@@ -135,19 +144,20 @@ export async function checkPaymentStatusAction(matchId: string): Promise<void> {
     select: {
       project: { select: { clientId: true } },
       payment: {
-        select: { id: true, status: true },
+        select: { id: true, status: true, stripeCheckoutSessionId: true },
       },
     },
   })
   if (!match?.payment) return
   if (match.project?.clientId !== session.user.id) return
   if (match.payment.status !== 'AWAITING') return
+  if (!match.payment.stripeCheckoutSessionId) return
 
-  // Checkout Session を metadata.paymentId で探す（Stripe API は metadata 検索非対応のため直近 list から絞る）
+  // 保存済みの Checkout Session id を直接 retrieve する。以前は sessions.list({limit:20}) で
+  // 探していたが、繁忙な Stripe アカウントでは 20 件を超えると見つからず fallback が空振りしていた。
   const stripe = getStripe()
-  const sessions = await stripe.checkout.sessions.list({ limit: 20 })
-  const target = sessions.data.find((s) => s.metadata?.paymentId === match.payment!.id)
-  if (!target || !target.payment_intent) return
+  const target = await stripe.checkout.sessions.retrieve(match.payment.stripeCheckoutSessionId)
+  if (!target.payment_intent) return
 
   const piId =
     typeof target.payment_intent === 'string' ? target.payment_intent : target.payment_intent.id
@@ -156,15 +166,18 @@ export async function checkPaymentStatusAction(matchId: string): Promise<void> {
 
   const chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : null
 
-  // 冪等性: AWAITING のときのみ HELD へ
-  await prisma.payment.updateMany({
-    where: { id: match.payment.id, status: 'AWAITING' },
+  // charge id / PI id はステータス遷移とは独立に埋める。webhook がレースに勝って HELD 済でも
+  // charge id が欠落しているケースがあり、release で 'no_charge' になっていた。
+  await prisma.payment.update({
+    where: { id: match.payment.id },
     data: {
-      status: 'HELD',
-      paidAt: new Date(),
       stripePaymentIntentId: piId,
       ...(chargeId ? { stripeChargeId: chargeId } : {}),
     },
+  })
+  await prisma.payment.updateMany({
+    where: { id: match.payment.id, status: 'AWAITING' },
+    data: { status: 'HELD', paidAt: new Date() },
   })
   revalidatePath(`/dashboard/chat/${matchId}`)
 }

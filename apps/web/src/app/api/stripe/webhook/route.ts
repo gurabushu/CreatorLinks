@@ -21,19 +21,19 @@ import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
-  const ip = getClientIp(req.headers)
-  const rl = await checkRateLimit('webhook', ip)
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: 'rate limited' },
-      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
-    )
-  }
-
   const rawBody = await req.text()
   const signature = req.headers.get('stripe-signature')
   const secret = process.env.STRIPE_WEBHOOK_SECRET
   if (!signature) {
+    // 署名なしの POST は rate limit 対象。Stripe からの正規リトライは常に署名を持つ。
+    const ip = getClientIp(req.headers)
+    const rl = await checkRateLimit('webhook', ip)
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'rate limited' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+      )
+    }
     return NextResponse.json({ error: 'missing signature' }, { status: 401 })
   }
   if (!secret) {
@@ -45,10 +45,28 @@ export async function POST(req: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(rawBody, signature, secret)
   } catch (e) {
+    // 署名不正は攻撃/設定ミスの可能性が高い。IP でレート制限しつつ 401 を返す。
+    const ip = getClientIp(req.headers)
+    await checkRateLimit('webhook', ip)
     return NextResponse.json(
       { error: 'invalid signature', detail: (e as { message?: string })?.message },
       { status: 401 },
     )
+  }
+
+  // 冪等性: event.id をユニーク insert して重複イベントを弾く。
+  // Stripe は指数バックオフで最大 3 日リトライするため、同じ event.id が複数回届く前提。
+  try {
+    await prisma.processedStripeEvent.create({
+      data: { id: event.id, type: event.type },
+    })
+  } catch (e) {
+    const code = (e as { code?: string })?.code
+    if (code === 'P2002') {
+      // 既処理: 200 で ack して Stripe のリトライを止める
+      return NextResponse.json({ ok: true, duplicate: true, type: event.type })
+    }
+    throw e
   }
 
   try {
@@ -73,7 +91,14 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ ok: true, type: event.type })
   } catch (e) {
-    // 内部エラーで 500 を返すと Stripe が指数バックオフで再送してくれる
+    // ハンドラー失敗時は ProcessedStripeEvent の insert を巻き戻し、Stripe のリトライで
+    // 再処理できるようにする。
+    await prisma.processedStripeEvent.delete({ where: { id: event.id } }).catch(() => {})
+    console.error('[stripe-webhook] handler failed', {
+      eventId: event.id,
+      type: event.type,
+      err: (e as { message?: string })?.message ?? String(e),
+    })
     return NextResponse.json(
       { error: 'handler failed', detail: (e as { message?: string })?.message },
       { status: 500 },
@@ -87,14 +112,26 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
 
   const chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : null
 
-  // 冪等性: AWAITING のときだけ HELD に遷移。既に HELD/RELEASED/REFUNDED なら更新なし
+  // charge id / payment_intent id はレース側 (checkPaymentStatusAction) との勝ち負けに関わらず
+  // 常に埋める。releasePayment は stripeChargeId が無いと失敗する ('no_charge')。
+  await prisma.payment.updateMany({
+    where: {
+      id: paymentId,
+      OR: [
+        { stripeChargeId: null },
+        { stripePaymentIntentId: null },
+      ],
+    },
+    data: {
+      ...(chargeId ? { stripeChargeId: chargeId } : {}),
+      stripePaymentIntentId: pi.id,
+    },
+  })
+
+  // ステータス遷移は AWAITING のみ HELD に。既に HELD/RELEASED/REFUNDED なら no-op。
   await prisma.payment.updateMany({
     where: { id: paymentId, status: 'AWAITING' },
-    data: {
-      status: 'HELD',
-      paidAt: new Date(),
-      ...(chargeId ? { stripeChargeId: chargeId } : {}),
-    },
+    data: { status: 'HELD', paidAt: new Date() },
   })
 }
 
@@ -136,6 +173,15 @@ async function handleAccountUpdated(account: Stripe.Account) {
 async function handleChargeRefunded(charge: Stripe.Charge) {
   const piId = typeof charge.payment_intent === 'string' ? charge.payment_intent : null
   if (!piId) return
+
+  // 部分返金は Payment を REFUNDED に遷移させない（残額の release を潰さない）。
+  // Stripe は同一 charge に対して複数回 charge.refunded を送るため、amount 比較で全額返金のみ拾う。
+  const fullyRefunded =
+    charge.refunded === true ||
+    (typeof charge.amount === 'number' &&
+      typeof charge.amount_refunded === 'number' &&
+      charge.amount_refunded >= charge.amount)
+  if (!fullyRefunded) return
 
   // HELD の Payment のみ REFUNDED に。RELEASED 済のケースは別途 transfer reversal が必要なので今スコープ外
   await prisma.payment.updateMany({
