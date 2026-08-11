@@ -12,15 +12,21 @@ async function main() {
   const proHash = await bcrypt.hash('pro12345', 12)
   const generalHash = await bcrypt.hash('user1234', 12)
 
+  // 公式アカウント兼管理者: 全体お知らせ・ウェルカム DM・サポート窓口の送信元
+  // isOfficial=true を持つのは基盤上 1 人だけの想定（schema コメント参照）
   const admin = await prisma.user.upsert({
     where: { email: 'admin@creatorlinks.jp' },
-    update: {},
+    // 既存 DB でも isOfficial=true を確実に立てる（無いと Phase 1-4 機能が動かない）
+    update: { isOfficial: true, role: 'ADMIN' },
     create: {
       email: 'admin@creatorlinks.jp',
-      name: '管理者',
+      name: '運営',
+      displayName: '運営公式',
       passwordHash: adminHash,
       role: 'ADMIN',
+      isOfficial: true,
       genres: [],
+      bio: 'プラットフォーム運営公式アカウントです。お知らせ配信・サポート・キュレーションを担当します。',
     },
   })
 

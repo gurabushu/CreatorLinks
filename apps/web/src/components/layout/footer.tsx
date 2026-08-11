@@ -6,7 +6,12 @@ import { usePathname } from 'next/navigation'
 
 // サイドバー（DashboardShell / projects/manage）の下敷きになるページでは
 // フッターの中身も同じぶんだけ右にオフセットしてロゴ・リンクが隠れないようにする
-const SIDEBAR_ROUTES = ['/dashboard', '/projects/manage', '/artists', '/projects', '/admin', '/announcements']
+// サイドバー付きページのフッターは右側にオフセットしてロゴが隠れないようにする。
+// サイドバーが付かないのは / と /auth 系のみ。
+const SIDEBAR_ROUTES = [
+  '/dashboard', '/projects', '/artists', '/events', '/admin', '/announcements',
+  '/support', '/pro', '/onboarding',
+]
 
 export function Footer() {
   const pathname = usePathname()
@@ -16,8 +21,8 @@ export function Footer() {
   return (
     <footer className="border-t bg-gray-50 py-10 mt-auto">
       <div className={`max-w-6xl mx-auto px-4 ${offsetClass}`}>
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
-          <div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          <div className="col-span-2 md:col-span-1">
             <Image
               src="/logo.png"
               alt="CreatorLinks"
@@ -34,6 +39,7 @@ export function Footer() {
             <ul className="space-y-1 text-sm text-gray-500">
               <li><Link href="/artists" className="hover:text-purple-600">アーティストを探す</Link></li>
               <li><Link href="/projects" className="hover:text-purple-600">案件を探す</Link></li>
+              <li><Link href="/events" className="hover:text-purple-600">イベント掲示板</Link></li>
               <li><Link href="/pro/subscribe" className="hover:text-purple-600">PRO プラン</Link></li>
             </ul>
           </div>
@@ -42,6 +48,16 @@ export function Footer() {
             <ul className="space-y-1 text-sm text-gray-500">
               <li><Link href="/auth" className="hover:text-purple-600">ログイン / 登録</Link></li>
               <li><Link href="/dashboard" className="hover:text-purple-600">マイページ</Link></li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium mb-2">サポート・規約</p>
+            <ul className="space-y-1 text-sm text-gray-500">
+              <li><Link href="/support" className="hover:text-purple-600">よくある質問</Link></li>
+              <li><Link href="/support" className="hover:text-purple-600">お問い合わせ</Link></li>
+              <li><Link href="/terms" className="hover:text-purple-600">利用規約</Link></li>
+              <li><Link href="/privacy" className="hover:text-purple-600">プライバシーポリシー</Link></li>
+              <li><Link href="/tokutei" className="hover:text-purple-600">特定商取引法に基づく表記</Link></li>
             </ul>
           </div>
         </div>
