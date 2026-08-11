@@ -13,6 +13,7 @@ import {
   EVENT_VISIBILITY_ICONS,
 } from '@creator-links/shared'
 import type { EventType, EventVisibility, EventStatus } from '@creator-links/shared'
+import { jstDatetime } from '@/lib/jst-date'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,9 +22,8 @@ type Props = {
   searchParams: Promise<{ scope?: 'upcoming' | 'past'; as?: 'organizer' | 'performer' | 'all' }>
 }
 
-function fmt(d: Date) {
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
+// Vercel Node runtime は UTC 動作。JST 表示に統一。
+const fmt = jstDatetime
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params

@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma'
 import { getDisplayName } from '@/lib/user'
 import { EVENT_TYPE_LABELS, EVENT_VISIBILITY_ICONS } from '@creator-links/shared'
 import type { EventType, EventVisibility } from '@creator-links/shared'
+import { jstCurrentMonth, jstDateKey, jstParts, jstTime } from '@/lib/jst-date'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,26 +26,22 @@ function parseYm(ym: string | undefined): { year: number; month: number } {
     const [y, m] = ym.split('-').map(Number)
     if (m >= 1 && m <= 12) return { year: y, month: m }
   }
-  const now = new Date()
-  return { year: now.getFullYear(), month: now.getMonth() + 1 }
+  return jstCurrentMonth()
 }
 
 function ymString(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, '0')}`
 }
 
-function dateKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+// JST 基準の日付キー
+const dateKey = jstDateKey
 
 function shiftMonth(year: number, month: number, delta: number): { year: number; month: number } {
   const d = new Date(year, month - 1 + delta, 1)
   return { year: d.getFullYear(), month: d.getMonth() + 1 }
 }
 
-function fmtTime(d: Date) {
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
+const fmtTime = jstTime
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params
@@ -152,9 +149,10 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
   const prev = shiftMonth(year, month, -1)
   const next = shiftMonth(year, month, 1)
 
-  const monthEvents = events.filter(
-    (e) => e.startAt.getFullYear() === year && e.startAt.getMonth() + 1 === month,
-  )
+  const monthEvents = events.filter((e) => {
+    const p = jstParts(e.startAt)
+    return p.year === year && p.month === month
+  })
 
   return (
     <div className="max-w-6xl mx-auto py-6 sm:py-10 px-3 sm:px-6">
@@ -334,7 +332,10 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
                   className="block rounded-xl border border-gray-200 bg-white hover:shadow-sm transition p-3"
                 >
                   <div className="flex items-center gap-2 text-xs text-purple-700 mb-1 flex-wrap">
-                    <span>{String(e.startAt.getMonth() + 1).padStart(2, '0')}/{String(e.startAt.getDate()).padStart(2, '0')}</span>
+                    {(() => {
+                      const p = jstParts(e.startAt)
+                      return <span>{String(p.month).padStart(2, '0')}/{String(p.day).padStart(2, '0')}</span>
+                    })()}
                     <span>{fmtTime(e.startAt)}</span>
                     <span>·</span>
                     <span>{EVENT_TYPE_LABELS[e.type as EventType]}</span>

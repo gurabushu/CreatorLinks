@@ -20,12 +20,12 @@ import type {
   EventVisibility,
 } from '@creator-links/shared'
 import { EventInterestButton, ApplyToRoleButton } from './client-actions'
+import { jstDatetime } from '@/lib/jst-date'
 
 export const dynamic = 'force-dynamic'
 
-function fmt(d: Date) {
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
+// Vercel Node runtime は UTC 動作。JST で表示するため jst-date ヘルパー経由に統一。
+const fmt = jstDatetime
 
 // 既存レコードに javascript: 等が混ざっていても <a href> を発火させないための防衛層。
 // スキーマ側でも http/https のみを受け付けているが、旧データや直接 DB 経由を想定して二重で弾く。

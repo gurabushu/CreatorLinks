@@ -12,6 +12,12 @@ import { prisma } from '@/lib/prisma'
 import { getDisplayName } from '@/lib/user'
 import { EVENT_TYPE_LABELS } from '@creator-links/shared'
 import type { EventType } from '@creator-links/shared'
+import {
+  jstCurrentMonth,
+  jstDateKey,
+  jstParts,
+  jstTime,
+} from '@/lib/jst-date'
 
 type View = 'mine' | 'following'
 
@@ -82,29 +88,26 @@ function parseYm(ym: string | undefined): { year: number; month: number } {
     const [y, m] = ym.split('-').map(Number)
     if (m >= 1 && m <= 12) return { year: y, month: m }
   }
-  const now = new Date()
-  return { year: now.getFullYear(), month: now.getMonth() + 1 }
+  return jstCurrentMonth()
 }
 
 function ymString(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, '0')}`
 }
 
-function dateKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+// カレンダーの日付キー。JST 基準で "YYYY-MM-DD"。
+const dateKey = jstDateKey
 
 function shiftMonth(year: number, month: number, delta: number): { year: number; month: number } {
   const d = new Date(year, month - 1 + delta, 1)
   return { year: d.getFullYear(), month: d.getMonth() + 1 }
 }
 
-function fmtTime(d: Date) {
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
+const fmtTime = jstTime
 
 function fmtDate(d: Date) {
-  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} (${WEEKDAYS[d.getDay()]}) ${fmtTime(d)}`
+  const p = jstParts(d)
+  return `${String(p.month).padStart(2, '0')}/${String(p.day).padStart(2, '0')} (${WEEKDAYS[p.weekday]}) ${String(p.hour).padStart(2, '0')}:${String(p.minute).padStart(2, '0')}`
 }
 
 export default async function CalendarPage({
@@ -244,12 +247,11 @@ export default async function CalendarPage({
   const prev = shiftMonth(year, month, -1)
   const next = shiftMonth(year, month, 1)
 
-  // アジェンダ: 当月に startAt があるものだけを昇順で
-  const monthEntries = entries.filter(
-    (e) =>
-      e.event.startAt.getFullYear() === year &&
-      e.event.startAt.getMonth() + 1 === month,
-  )
+  // アジェンダ: 当月に startAt があるものだけを昇順で (JST 基準)
+  const monthEntries = entries.filter((e) => {
+    const p = jstParts(e.event.startAt)
+    return p.year === year && p.month === month
+  })
 
   return (
     <div className="max-w-6xl mx-auto py-6 sm:py-10 px-3 sm:px-6">

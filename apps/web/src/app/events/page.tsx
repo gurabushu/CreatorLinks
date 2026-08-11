@@ -7,18 +7,13 @@ import { auth } from '@/lib/auth'
 import { EVENT_TYPE_LABELS } from '@creator-links/shared'
 import type { EventType } from '@creator-links/shared'
 import { getDisplayName } from '@/lib/user'
+import { jstDatetime } from '@/lib/jst-date'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'イベント一覧' }
 
-function formatDate(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mm = String(d.getMinutes()).padStart(2, '0')
-  return `${y}/${m}/${day} ${hh}:${mm}`
-}
+// Vercel Node runtime は UTC 動作。JST 表示に統一。
+const formatDate = jstDatetime
 
 export default async function EventsPage() {
   const session = await auth()
