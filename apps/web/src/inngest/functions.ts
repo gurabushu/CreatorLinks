@@ -235,7 +235,7 @@ export const notifyEarlyBirdExpiring = inngest.createFunction(
                 <strong>あと ${daysLeft} 日</strong>（${u.earlyBirdExpiresAt!.toLocaleDateString('ja-JP')}）で終了します。
               </p>
               <p>
-                期間終了後は通常プランに自動で切り替わり、PRO 特典（優先表示・レコメンド優遇・手数料 7%）は利用できなくなります。
+                期間終了後は通常プランに自動で切り替わり、PRO 特典（アーティスト一覧の優先表示・PRO バッジ表示）は利用できなくなります。
                 継続をご希望の場合は、下記から有料 PRO プランへお切り替えください。
               </p>
               <p style="color: #6b7280; font-size: 13px;">
