@@ -9,7 +9,7 @@ import {
   deleteAnnouncementAction,
 } from '@/server/actions/announcement'
 
-type PublishMode = 'draft' | 'now' | 'scheduled'
+type PublishMode = 'draft' | 'now' | 'scheduled' | 'keep'
 
 export type AnnouncementInitial = {
   id?: string
@@ -30,7 +30,9 @@ function toLocalDatetime(d: Date | null | undefined): string {
 function inferMode(publishedAt: Date | null | undefined): PublishMode {
   if (!publishedAt) return 'draft'
   if (publishedAt.getTime() > Date.now()) return 'scheduled'
-  return 'now' // 既公開はフォーム上「即時公開」扱い（保存時に現在時刻で上書きされないよう配慮）
+  // 既公開なら 'keep' がデフォルト。'now' を選ぶと publishedAt を上書きして一覧が並び替わり、
+  // 全ユーザーの未読バッジが再点灯するため、明示的に選ばせる。
+  return 'keep'
 }
 
 export function AnnouncementForm({ initial }: { initial?: AnnouncementInitial }) {
@@ -150,9 +152,14 @@ export function AnnouncementForm({ initial }: { initial?: AnnouncementInitial })
       {/* 公開設定 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">公開設定</label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(
             [
+              // 編集モードで既に公開済みなら「公開日時を維持」を先頭に。
+              // 新規作成ではこのオプションを出さない。
+              ...(isEdit && initial?.publishedAt && initial.publishedAt.getTime() <= Date.now()
+                ? ([{ v: 'keep' as const, label: '公開日時を維持', hint: '既存の公開日時のまま更新' }] as const)
+                : []),
               { v: 'draft', label: '下書き', hint: 'まだ公開しない' },
               { v: 'now', label: '今すぐ公開', hint: '保存と同時に閲覧可能' },
               { v: 'scheduled', label: '予約公開', hint: '指定日時に公開' },
