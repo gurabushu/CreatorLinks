@@ -196,6 +196,10 @@ export function SidebarShell({
     { href: '/dashboard/account', label: 'アカウント設定', icon: <CogIcon /> },
     { href: '/announcements', label: 'お知らせ', icon: <MegaphoneIcon />, badge: announcementUnread },
     { href: '/support', label: 'サポート・お問い合わせ', icon: <LifeBuoyIcon /> },
+    // ADMIN 専用: お知らせ配信管理
+    ...(user.role === 'ADMIN'
+      ? [{ href: '/admin/announcements', label: 'お知らせ配信 (Admin)', icon: <MegaphoneIcon /> } as NavItem]
+      : []),
   ]
 
   const isActive = (item: NavItem) =>
