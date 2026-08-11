@@ -97,6 +97,19 @@ export async function Header() {
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
             {session ? (
               <>
+                <Link
+                  href="/onboarding"
+                  className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/70 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                  aria-label="仲間を招待"
+                >
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M19 8v6M22 11h-6" />
+                  </svg>
+                  <span className="hidden sm:inline">仲間を招待</span>
+                  <span className="sm:hidden">招待</span>
+                </Link>
                 <NotificationBell userId={session.user.id} />
                 <form
                   action={async () => {
