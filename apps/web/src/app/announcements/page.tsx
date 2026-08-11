@@ -82,7 +82,7 @@ export default async function AnnouncementsPage() {
                     {a.title}
                   </h2>
                   <time className="text-xs text-gray-400 shrink-0">
-                    {formatDate(a.publishedAt)}
+                    {a.publishedAt ? formatDate(a.publishedAt) : ''}
                   </time>
                 </div>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
