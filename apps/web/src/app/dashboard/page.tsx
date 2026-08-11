@@ -194,12 +194,13 @@ export default async function DashboardPage() {
           </p>
         </div>
         {session.user.role !== 'PRO' && (
-          <Link
-            href="/pro/subscribe"
-            className="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-600 transition"
+          // PRO 新規受付は一時停止中。CTA は残しつつ操作不可 (準備中)
+          <span
+            aria-disabled="true"
+            className="bg-gray-200 text-gray-500 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed select-none"
           >
-            PRO にアップグレード
-          </Link>
+            準備中
+          </span>
         )}
       </div>
 

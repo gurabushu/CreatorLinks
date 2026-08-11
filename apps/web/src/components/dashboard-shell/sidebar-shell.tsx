@@ -157,13 +157,13 @@ function SidebarNav({
 
       {user.role !== 'PRO' && (
         <div className={`p-3 border-t border-purple-100/60 ${hideWhenCollapsed}`}>
-          <Link
-            href="/pro/subscribe"
-            onClick={onNavigate}
-            className="block text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white text-sm font-semibold px-3 py-2.5 rounded-xl transition-colors shadow-sm shadow-amber-200/50"
+          {/* PRO 新規受付は一時停止中。CTA は残しつつ操作不可 (準備中) */}
+          <div
+            aria-disabled="true"
+            className="block text-center bg-gray-200 text-gray-500 text-sm font-semibold px-3 py-2.5 rounded-xl cursor-not-allowed select-none"
           >
-            PRO にアップグレード
-          </Link>
+            準備中
+          </div>
         </div>
       )}
     </>

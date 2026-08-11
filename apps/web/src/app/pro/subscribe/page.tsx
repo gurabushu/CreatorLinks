@@ -106,12 +106,19 @@ function ProSubscribeContent() {
       </div>
 
       {!session ? (
-        <button
-          onClick={() => router.push('/auth')}
-          className="w-full bg-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-purple-700 transition"
-        >
-          ログインして登録する
-        </button>
+        <>
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            className="w-full bg-gray-200 text-gray-500 py-4 rounded-xl font-bold text-lg cursor-not-allowed"
+          >
+            準備中
+          </button>
+          <p className="text-xs text-gray-400 text-center mt-4">
+            現在このプランは新規受付を一時停止しています
+          </p>
+        </>
       ) : (
         <ProCheckoutClient userId={session.user.id} />
       )}
