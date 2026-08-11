@@ -42,3 +42,5 @@ test-results/
 *.pdf
 .claude/
 setup-vercel-env.sh
+.vercel
+.env*.local

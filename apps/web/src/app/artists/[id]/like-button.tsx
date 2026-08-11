@@ -55,21 +55,21 @@ export function ArtistLikeButton({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="inline-flex flex-col items-start gap-2">
       <button
         onClick={toggle}
         disabled={isPending}
         aria-pressed={liked}
         aria-label={liked ? 'いいねを取り消す' : 'いいねする'}
-        className={`inline-flex items-center gap-2 text-base font-semibold px-5 py-3 rounded-2xl border-2 transition shadow-sm disabled:opacity-60 ${
+        className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl border transition-colors shadow-sm disabled:opacity-60 ${
           liked
-            ? 'bg-pink-50 border-pink-400 text-pink-600 hover:bg-pink-100 shadow-pink-200/60'
-            : 'bg-white border-gray-200 text-gray-500 hover:border-pink-400 hover:text-pink-500 hover:bg-pink-50/50 hover:shadow-pink-100'
+            ? 'bg-pink-50 border-pink-300 text-pink-600 hover:bg-pink-100 shadow-pink-200/50'
+            : 'bg-white border-gray-200 text-gray-500 hover:border-pink-300 hover:text-pink-500 hover:bg-pink-50/60'
         }`}
       >
         <svg
           viewBox="0 0 24 24"
-          className="w-6 h-6"
+          className="w-4 h-4"
           fill={liked ? 'currentColor' : 'none'}
           stroke="currentColor"
           strokeWidth="2"
@@ -80,8 +80,8 @@ export function ArtistLikeButton({
       </button>
 
       {matchId && (
-        <div className="rounded-xl bg-gradient-to-r from-pink-50 via-purple-50 to-pink-50 border border-pink-200 p-3 text-sm">
-          <div className="font-semibold text-pink-700 mb-1">🎉 マッチしました！</div>
+        <div className="rounded-xl bg-gradient-to-r from-pink-50 via-purple-50 to-pink-50 border border-pink-200 px-3 py-2 text-sm max-w-xs">
+          <div className="font-semibold text-pink-700 mb-0.5 text-xs">🎉 マッチしました！</div>
           <Link
             href={`/dashboard/chat/${matchId}`}
             className="text-purple-700 hover:underline text-xs"

@@ -130,7 +130,7 @@ export default async function ArtistDetailPage({ params }: Props) {
         { OR: eventVisibilityOr },
       ],
     },
-    take: 3,
+    take: 5,
     orderBy: { startAt: 'asc' },
     select: {
       id: true, title: true, startAt: true, type: true, visibility: true,
@@ -248,18 +248,35 @@ export default async function ArtistDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Phase A.6: 今後のイベント */}
-      {upcomingEvents.length > 0 && (
-        <section className="mb-8">
-          <div className="flex items-baseline justify-between mb-3">
-            <h2 className="text-xl font-bold">今後のイベント</h2>
+      {/* Phase A.6: 今後のイベント（掲示板役割・常時表示） */}
+      <section className="mb-8">
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="text-xl font-bold">今後のイベント</h2>
+          {upcomingEvents.length > 0 && (
             <Link
               href={`/artists/${id}/events`}
               className="text-sm text-purple-700 hover:underline"
             >
               全部見る →
             </Link>
+          )}
+        </div>
+        {upcomingEvents.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-purple-200 bg-purple-50/40 p-5 text-center text-sm text-gray-600">
+            {isSelf ? (
+              <>
+                告知中のイベントはまだありません。
+                <p className="mt-2">
+                  <Link href="/events/new" className="text-purple-700 hover:underline">
+                    + 新しいイベントを告知する
+                  </Link>
+                </p>
+              </>
+            ) : (
+              <>現在告知中のイベントはありません。</>
+            )}
           </div>
+        ) : (
           <ul className="space-y-2">
             {upcomingEvents.map((e) => (
               <li key={e.id}>
@@ -291,8 +308,8 @@ export default async function ArtistDetailPage({ params }: Props) {
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        )}
+      </section>
 
       {/* ポートフォリオ */}
       <section className="mb-8">

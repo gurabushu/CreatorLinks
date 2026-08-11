@@ -8,7 +8,6 @@ import {
   COMMITMENT_LEVELS,
   type CommitmentLevel,
 } from '@creator-links/shared'
-import { DashboardShell } from '@/components/dashboard-shell/dashboard-shell'
 
 export const metadata: Metadata = {
   title: '案件一覧',
@@ -51,7 +50,6 @@ export default async function ProjectsPage({ searchParams }: Props) {
   }
 
   return (
-    <DashboardShell requireAuth={false}>
     <div className="max-w-6xl mx-auto py-8 sm:py-12 px-4">
       <div className="flex justify-between items-center mb-6 sm:mb-8 gap-3">
         <h1 className="text-2xl sm:text-3xl font-bold">案件一覧</h1>
@@ -144,6 +142,5 @@ export default async function ProjectsPage({ searchParams }: Props) {
         })}
       </div>
     </div>
-    </DashboardShell>
   )
 }

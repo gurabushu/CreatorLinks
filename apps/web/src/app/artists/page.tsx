@@ -4,7 +4,6 @@ import { ArtistListClient } from './artist-list-client'
 import { listArtistsAction } from '@/server/actions/artist'
 import { listMyLikedIdsAction } from '@/server/actions/like'
 import { auth } from '@/lib/auth'
-import { DashboardShell } from '@/components/dashboard-shell/dashboard-shell'
 import { ArtistSearchForm } from '@/components/layout/artist-search-form'
 
 export const metadata: Metadata = {
@@ -44,8 +43,7 @@ export default async function ArtistsPage({ searchParams }: Props) {
   const currentUserId = session?.user?.id ?? null
 
   return (
-    <DashboardShell requireAuth={false}>
-      <div className="max-w-6xl mx-auto py-6 sm:py-12 px-4">
+    <div className="max-w-6xl mx-auto py-6 sm:py-12 px-4">
         <div className="mb-4 sm:mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold">アーティスト一覧</h1>
           <p className="text-gray-500 text-sm sm:text-base mt-1">音楽クリエイターと直接つながれます</p>
@@ -64,7 +62,6 @@ export default async function ArtistsPage({ searchParams }: Props) {
           currentUserId={currentUserId}
           initialQuery={initialQuery}
         />
-      </div>
-    </DashboardShell>
+    </div>
   )
 }

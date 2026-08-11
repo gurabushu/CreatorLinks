@@ -19,7 +19,9 @@ export function NewEventForm({ defaultDate }: { defaultDate?: string } = {}) {
   const [error, setError] = useState<string | null>(null)
 
   const [type, setType] = useState<EventType>('LIVE')
-  const [visibility, setVisibility] = useState<EventVisibility>('PRIVATE')
+  // 掲示板ファースト: デフォルト type=LIVE は公開告知が主用途のため PUBLIC を初期値に。
+  // type 変更で個人系 (REHEARSAL/MEETING/TODO) を選ぶと自動で PRIVATE に切替（changeType 内で処理）。
+  const [visibility, setVisibility] = useState<EventVisibility>('PUBLIC')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   // defaultDate（YYYY-MM-DD）が渡された場合は当日 19:00 で初期化

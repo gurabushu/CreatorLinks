@@ -80,6 +80,35 @@ export const calendarRouter = router({
     )
   }),
 
+  // Phase A.6: フォロー中アーティストの公開イベントを集約
+  // visibility=PUBLIC / FOLLOWERS のみ（PARTICIPANTS_ONLY はフォロワー閲覧不可）
+  following: protectedProcedure.input(CalendarRangeSchema).query(async ({ ctx, input }) => {
+    const { from, to } = input
+    const userId = ctx.user.id
+
+    const follows = await ctx.prisma.follow.findMany({
+      where: { followerId: userId },
+      select: { followingId: true },
+    })
+    const followingIds = follows.map((f) => f.followingId)
+    if (followingIds.length === 0) return []
+
+    return ctx.prisma.event.findMany({
+      where: {
+        creatorId: { in: followingIds },
+        status: 'PUBLISHED',
+        visibility: { in: ['PUBLIC', 'FOLLOWERS'] },
+        startAt: { gte: from, lte: to },
+      },
+      orderBy: { startAt: 'asc' },
+      select: {
+        id: true, title: true, startAt: true, endAt: true, type: true,
+        venueName: true, city: true, coverUrl: true,
+        creator: { select: { id: true, name: true, displayName: true, avatarUrl: true } },
+      },
+    })
+  }),
+
   public: publicProcedure.input(PublicCalendarFilterSchema).query(async ({ ctx, input }) => {
     const { from, to, genres, city, type } = input
     return ctx.prisma.event.findMany({
