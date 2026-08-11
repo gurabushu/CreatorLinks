@@ -13,9 +13,9 @@ import { HowItWorks } from '@/components/landing/how-it-works'
 import { Faq } from '@/components/landing/faq'
 
 export const metadata: Metadata = {
-  title: 'CreatorLinks — 音楽の仕事を、"また一緒に" 続くものへ',
+  title: 'CreatorLinks — 音楽の依頼、LINE から卒業。"また一緒に" が続く場所。',
   description:
-    '音楽業界特化のマッチング & ミニ DX。ミュージシャン・発注者・イベンターをつなぎ、実績・相性・イベントで「また一緒にやりたい」関係を仕組みで支えます。手数料 7%（業界最安クラス）。',
+    '音楽業界特化の依頼管理アプリ。LINE や DM でやっていた録音・ライブ・MIX 依頼をひとつに。Stripe エスクローで初対面の相手にも安心送金、スケジュール自動連携、「また一緒に」で継続。手数料 7%（業界最安クラス）。',
 }
 
 // SSG: ビルド時生成

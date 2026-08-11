@@ -2,22 +2,33 @@ const FEATURES = [
   {
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="7" />
-        <path d="M21 21l-4.35-4.35" />
-      </svg>
-    ),
-    title: '音楽ジャンルで探す',
-    body: 'ボーカル / ギター / DTM / MIX 等\n楽器 × ジャンル × 実績で絞込',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="17" rx="2" />
         <path d="M3 10h18M8 2v4M16 2v4" />
       </svg>
     ),
-    title: 'イベント × カレンダー',
-    body: 'ライブ / セッション告知と\n共演者との日程共有を 1 画面で',
+    title: 'イベント掲示板',
+    body: 'ライブ・セッション・リリースを公開告知。\nフォロー中アーティストの予定はカレンダーで一望。',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 11l3 3L22 4" />
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+      </svg>
+    ),
+    title: '仕事 DX（LINE 卒業）',
+    body: '依頼テンプレ・Stripe エスクロー・スケジュール\nを 1 画面で。DM の遡り検索とはお別れ。',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 18V5l12-2v13" />
+        <circle cx="6" cy="18" r="3" />
+        <circle cx="18" cy="16" r="3" />
+      </svg>
+    ),
+    title: '音楽業界マッチング',
+    body: 'ボーカル / ギター / DTM / MIX / エンジニア。\n楽器 × ジャンル × 実績で必要な人が見つかる。',
   },
   {
     icon: (
@@ -26,16 +37,7 @@ const FEATURES = [
       </svg>
     ),
     title: '「また一緒に」で継続',
-    body: '完了時の相互 encore で\n再依頼の相性を可視化',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-      </svg>
-    ),
-    title: '手数料 7%',
-    body: '契約成立時に発注額の 7%\n業界最安クラスで手取り重視',
+    body: '完了時の相互 encore で再依頼の相性を可視化。\n手数料 7%（業界最安クラス）。',
   },
 ]
 

@@ -8,7 +8,7 @@ export function HeroSection() {
         {/* 左: コピー & CTA */}
         <div className="text-center md:text-left">
           <span className="inline-block text-xs font-bold tracking-wider text-purple-600 bg-purple-50 border border-purple-200/70 px-3 py-1 rounded-full mb-4">
-            音楽業界特化のマッチング × ミニ DX
+            イベント掲示板 × 仕事 DX × マッチング
           </span>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.15] tracking-tight text-gray-900">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
@@ -19,9 +19,13 @@ export function HeroSection() {
             続く、音楽の場所。
           </h1>
           <p className="mt-6 text-base sm:text-lg text-gray-600 leading-relaxed">
-            ミュージシャン × 発注者 × イベンター。
+            ライブ・セッション告知の <b>掲示板</b>、LINE や DM でやってた依頼の <b>仕事 DX</b>、
+            音楽業界特化の <b>マッチング</b>。
             <br className="hidden sm:block" />
-            実績・相性・イベントで「また一緒にやりたい」を仕組みで残す。
+            3 つを 1 つのアプリに。
+          </p>
+          <p className="mt-3 text-sm text-gray-500">
+            「また一緒にやりたい」を仕組みで残す、音楽業界特化のミニ DX。
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start items-stretch sm:items-center max-w-sm mx-auto md:max-w-none md:mx-0">
@@ -32,10 +36,10 @@ export function HeroSection() {
               無料で始める <span aria-hidden>→</span>
             </Link>
             <Link
-              href="/artists"
+              href="#how-it-works"
               className="inline-flex items-center justify-center border border-gray-300 text-gray-700 font-bold px-7 py-3.5 rounded-xl hover:bg-gray-50 transition"
             >
-              ミュージシャンを探す
+              使い方を見る
             </Link>
           </div>
 
