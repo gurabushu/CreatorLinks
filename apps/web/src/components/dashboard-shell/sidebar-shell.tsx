@@ -195,7 +195,7 @@ export function SidebarShell({
     { href: '/dashboard/calendar', label: 'カレンダー', icon: <CalendarIcon /> },
     { href: '/dashboard/account', label: 'アカウント設定', icon: <CogIcon /> },
     { href: '/announcements', label: 'お知らせ', icon: <MegaphoneIcon />, badge: announcementUnread },
-    { href: '/dashboard/support', label: 'サポートに問い合わせ', icon: <LifeBuoyIcon /> },
+    { href: '/support', label: 'サポート・お問い合わせ', icon: <LifeBuoyIcon /> },
   ]
 
   const isActive = (item: NavItem) =>
@@ -245,12 +245,12 @@ export function SidebarShell({
       )}
 
       <aside
-        className="group hidden md:flex md:flex-col md:fixed md:left-0 md:top-16 md:bottom-0 md:w-14 hover:md:w-60 focus-within:md:w-60 transition-[width] duration-300 ease-out md:overflow-y-auto md:overflow-x-hidden md:border-r md:border-purple-100/60 bg-gradient-to-b from-white via-purple-50/30 to-white z-30 hover:shadow-md hover:shadow-purple-200/40"
+        className="peer group hidden md:flex md:flex-col md:fixed md:left-0 md:top-16 md:bottom-0 md:w-14 hover:md:w-60 focus-within:md:w-60 transition-[width] duration-300 ease-out md:overflow-y-auto md:overflow-x-hidden md:border-r md:border-purple-100/60 bg-gradient-to-b from-white via-purple-50/30 to-white z-30 hover:shadow-md hover:shadow-purple-200/40"
       >
         <SidebarNav user={user} items={items} isActive={isActive} onNavigate={close} collapsible />
       </aside>
 
-      <div className="md:ml-14 min-w-0">{children}</div>
+      <div className="md:ml-14 peer-hover:md:ml-60 peer-focus-within:md:ml-60 transition-[margin-left] duration-300 ease-out min-w-0">{children}</div>
     </div>
   )
 }
