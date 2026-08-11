@@ -27,6 +27,18 @@ function fmt(d: Date) {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+// 既存レコードに javascript: 等が混ざっていても <a href> を発火させないための防衛層。
+// スキーマ側でも http/https のみを受け付けているが、旧データや直接 DB 経由を想定して二重で弾く。
+function safeHttpUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    const u = new URL(url)
+    return u.protocol === 'http:' || u.protocol === 'https:' ? url : null
+  } catch {
+    return null
+  }
+}
+
 type Params = { params: Promise<{ id: string }> }
 
 export default async function EventDetailPage({ params }: Params) {
@@ -154,14 +166,18 @@ export default async function EventDetailPage({ params }: Params) {
             <span>{event.genres.join(' · ')}</span>
           </div>
         )}
-        {event.ticketUrl && (
-          <div>
-            <span className="text-gray-500 mr-2">チケット</span>
-            <a href={event.ticketUrl} target="_blank" rel="noopener" className="text-purple-700 hover:underline">
-              {event.isFree ? '無料' : event.ticketPriceYen ? `¥${event.ticketPriceYen.toLocaleString()}` : 'チケット情報'}
-            </a>
-          </div>
-        )}
+        {(() => {
+          const href = safeHttpUrl(event.ticketUrl)
+          if (!href) return null
+          return (
+            <div>
+              <span className="text-gray-500 mr-2">チケット</span>
+              <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:underline">
+                {event.isFree ? '無料' : event.ticketPriceYen ? `¥${event.ticketPriceYen.toLocaleString()}` : 'チケット情報'}
+              </a>
+            </div>
+          )
+        })()}
       </div>
 
       {/* 参加表明ボタン（ログインユーザーのみ、非主催者） */}

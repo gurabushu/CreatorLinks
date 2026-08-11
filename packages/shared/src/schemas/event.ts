@@ -23,7 +23,13 @@ export const EventOpenRoleStatusSchema = z.enum(['OPEN', 'FILLED', 'CLOSED'])
 
 // --- Event 本体 ---
 
-export const CreateEventSchema = z.object({
+// javascript: / data: 等のスキームで <a href> XSS を作られないよう、URL は http/https 限定にする。
+const httpUrl = z
+  .string()
+  .url('URL 形式で入力してください')
+  .refine((u) => /^https?:\/\//i.test(u), 'http/https の URL を指定してください')
+
+const EventShape = z.object({
   title: z.string().min(1, 'タイトルは1文字以上').max(200, 'タイトルは200文字以内'),
   description: z.string().max(5000, '説明は5000文字以内').optional(),
   type: EventTypeSchema.default('LIVE'),
@@ -34,18 +40,32 @@ export const CreateEventSchema = z.object({
   hasSpecificDate: z.boolean().default(true),
   venueName: z.string().max(100).optional(),
   venueAddress: z.string().max(200).optional(),
-  venueUrl: z.string().url('URL 形式で入力してください').optional().or(z.literal('')),
-  genres: z.array(z.string()).max(20, 'ジャンルは20個以内').default([]),
+  venueUrl: httpUrl.optional().or(z.literal('')),
+  genres: z.array(z.string().max(50)).max(20, 'ジャンルは20個以内').default([]),
   city: z.string().max(50).optional(),
   isOnline: z.boolean().default(false),
-  ticketUrl: z.string().url('URL 形式で入力してください').optional().or(z.literal('')),
-  ticketPriceYen: z.number().int().nonnegative().optional(),
+  ticketUrl: httpUrl.optional().or(z.literal('')),
+  ticketPriceYen: z.number().int().nonnegative().max(10_000_000).optional(),
   isFree: z.boolean().default(false),
-  coverUrl: z.string().optional(),
+  coverUrl: httpUrl.optional().or(z.literal('')),
+})
+
+// endAt が指定されているなら startAt より後であること。Update では両方揃った時のみ検証。
+const endAfterStart = (v: {
+  startAt?: Date | undefined
+  endAt?: Date | undefined
+}) => !v.endAt || !v.startAt || v.endAt > v.startAt
+
+export const CreateEventSchema = EventShape.refine(endAfterStart, {
+  message: '終了は開始より後の日時にしてください',
+  path: ['endAt'],
 })
 export type CreateEventInput = z.infer<typeof CreateEventSchema>
 
-export const UpdateEventSchema = CreateEventSchema.partial()
+export const UpdateEventSchema = EventShape.partial().refine(endAfterStart, {
+  message: '終了は開始より後の日時にしてください',
+  path: ['endAt'],
+})
 export type UpdateEventInput = z.infer<typeof UpdateEventSchema>
 
 export const EventFilterSchema = z.object({

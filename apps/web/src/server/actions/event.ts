@@ -7,29 +7,19 @@
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import type {
-  EventParticipantRole,
-  EventType,
-  EventVisibility,
-} from '@creator-links/shared'
+import type { z } from 'zod'
+import { CreateEventSchema } from '@creator-links/shared'
+import type { EventParticipantRole, EventVisibility } from '@creator-links/shared'
 
 // --- イベント作成 ---
-export type CreateEventFormData = {
-  title: string
-  description?: string
-  type: EventType
-  visibility?: EventVisibility // Phase A.5: 省略時は PRIVATE
-  startAt: string // ISO
-  endAt?: string // ISO
-  isAllDay?: boolean
-  hasSpecificDate?: boolean
-  venueName?: string
-  venueAddress?: string
-  city?: string
-  genres?: string[]
-  ticketUrl?: string
-  ticketPriceYen?: number
-  isFree?: boolean
+// 入力は CreateEventSchema でバリデーションする。form / API どちらも同じ検証を通す。
+// z.input を使うことで .default() が付与されたフィールドを optional 扱いにする。
+export type CreateEventFormData = Omit<
+  z.input<typeof CreateEventSchema>,
+  'startAt' | 'endAt'
+> & {
+  startAt: string // ISO (schema 側で coerce)
+  endAt?: string
   publishNow?: boolean
 }
 
@@ -43,38 +33,36 @@ export async function createEventAction(
   const session = await auth()
   if (!session) return { success: false, error: 'ログインが必要です' }
 
-  if (!data.title.trim()) return { success: false, error: 'タイトルを入力してください' }
-  if (!data.startAt) return { success: false, error: '開始日時を入力してください' }
-
-  const startAt = new Date(data.startAt)
-  if (Number.isNaN(startAt.getTime())) {
-    return { success: false, error: '開始日時の形式が不正です' }
+  const { publishNow, ...rest } = data
+  const parsed = CreateEventSchema.safeParse(rest)
+  if (!parsed.success) {
+    const first = parsed.error.issues[0]
+    return { success: false, error: first?.message ?? '入力内容を確認してください' }
   }
-  const endAt = data.endAt ? new Date(data.endAt) : null
-  if (endAt && Number.isNaN(endAt.getTime())) {
-    return { success: false, error: '終了日時の形式が不正です' }
-  }
-
-  const publish = data.publishNow ?? false
+  const input = parsed.data
+  const publish = publishNow ?? false
 
   const event = await prisma.event.create({
     data: {
       creatorId: session.user.id,
-      title: data.title.trim(),
-      description: data.description?.trim() || null,
-      type: data.type,
-      visibility: data.visibility ?? 'PRIVATE', // Phase A.5: 明示指定がなければ非公開
-      startAt,
-      endAt,
-      isAllDay: data.isAllDay ?? false,
-      hasSpecificDate: data.hasSpecificDate ?? true,
-      venueName: data.venueName?.trim() || null,
-      venueAddress: data.venueAddress?.trim() || null,
-      city: data.city?.trim() || null,
-      genres: data.genres ?? [],
-      ticketUrl: data.ticketUrl?.trim() || null,
-      ticketPriceYen: data.ticketPriceYen ?? null,
-      isFree: data.isFree ?? false,
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      type: input.type,
+      visibility: input.visibility,
+      startAt: input.startAt,
+      endAt: input.endAt ?? null,
+      isAllDay: input.isAllDay,
+      hasSpecificDate: input.hasSpecificDate,
+      venueName: input.venueName?.trim() || null,
+      venueAddress: input.venueAddress?.trim() || null,
+      venueUrl: input.venueUrl || null,
+      city: input.city?.trim() || null,
+      genres: input.genres,
+      isOnline: input.isOnline,
+      ticketUrl: input.ticketUrl || null,
+      ticketPriceYen: input.ticketPriceYen ?? null,
+      isFree: input.isFree,
+      coverUrl: input.coverUrl || null,
       status: publish ? 'PUBLISHED' : 'DRAFT',
       publishedAt: publish ? new Date() : null,
     },
