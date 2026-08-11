@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, APP_URL, SITE_NAME } from '@/lib/resend'
 import { getDisplayName } from '@/lib/user'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MAX_PER_CALL = 10
@@ -13,6 +14,23 @@ export async function sendInviteEmailAction(
 ): Promise<{ success: true; sent: number } | { success: false; error: string }> {
   const session = await auth()
   if (!session) return { success: false, error: 'ログインが必要です' }
+
+  // ゲスト (isGuest=true) は 24h で消える匿名アカウントなので、外部メール送信ゲートウェイ化を防ぐため一律拒否。
+  const inviter = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, displayName: true, isGuest: true },
+  })
+  if (!inviter) return { success: false, error: '招待者情報を取得できませんでした' }
+  if (inviter.isGuest) {
+    return { success: false, error: 'ゲストアカウントからは招待メールを送信できません。まずアカウント登録を完了してください。' }
+  }
+
+  // ユーザー単位でレート制限。1h に最大 5 回 (最大 50 件/ユーザー)。
+  const rl = await checkRateLimit('invite', `user:${session.user.id}`)
+  if (!rl.ok) {
+    const minutes = Math.ceil(rl.retryAfterSec / 60)
+    return { success: false, error: `招待メール送信が上限に達しました。約 ${minutes} 分後にもう一度お試しください。` }
+  }
 
   const emails = String(formData.get('emails') ?? '')
     .split(/[,;\s\n]+/)
@@ -29,12 +47,6 @@ export async function sendInviteEmailAction(
   if (invalid.length > 0) {
     return { success: false, error: `無効なメールアドレス: ${invalid.join(', ')}` }
   }
-
-  const inviter = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { name: true, displayName: true },
-  })
-  if (!inviter) return { success: false, error: '招待者情報を取得できませんでした' }
 
   const inviterName = getDisplayName(inviter)
   const inviteUrl = `${APP_URL}/auth?ref=${session.user.id}`

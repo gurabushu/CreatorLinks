@@ -1,23 +1,37 @@
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
-type Bucket = 'auth' | 'webhook' | 'message' | 'promo'
+type Bucket = 'auth' | 'webhook' | 'message' | 'promo' | 'invite'
 
 const BUCKETS: Record<Bucket, { limit: number; window: `${number} s` }> = {
   auth: { limit: 10, window: '60 s' },
   webhook: { limit: 60, window: '60 s' },
   message: { limit: 30, window: '60 s' },
   promo: { limit: 5, window: '60 s' }, // プロモコードのブルートフォース抑止
+  invite: { limit: 5, window: '3600 s' }, // 招待メール送信呼び出し (1 回最大 10 件 = 1h 最大 50 件/ユーザー)
 }
 
 let cachedRedis: Redis | null = null
 const cachedLimiters = new Map<Bucket, Ratelimit>()
 
+let warnedNoUpstash = false
+
 function getRedis(): Redis | null {
   if (cachedRedis) return cachedRedis
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  if (!url || !token) return null
+  if (!url || !token) {
+    // 本番で Upstash 未設定はレート制限完全無効化を意味するので、大声で警告する。
+    // dev / test は静かにスキップ。
+    if (!warnedNoUpstash && process.env.NODE_ENV === 'production') {
+      warnedNoUpstash = true
+      console.error(
+        '[rate-limit] UPSTASH_REDIS_REST_URL / TOKEN が未設定です。' +
+          'レート制限は全バケットで無効化されます。本番環境では必ず設定してください。',
+      )
+    }
+    return null
+  }
   cachedRedis = new Redis({ url, token })
   return cachedRedis
 }
