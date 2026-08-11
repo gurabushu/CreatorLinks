@@ -10,6 +10,15 @@ const MAX_BODY_SIZE = 4 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 export async function POST(request: NextRequest): Promise<Response> {
+  // env 未設定時のフェイルファスト: SDK の生エラーをユーザーに見せない
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error('[api/blob/server-upload] BLOB_READ_WRITE_TOKEN not configured')
+    return Response.json(
+      { error: '画像アップロード機能が設定されていません。管理者にお問い合わせください。' },
+      { status: 503 },
+    )
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
