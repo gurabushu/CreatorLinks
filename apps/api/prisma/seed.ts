@@ -198,12 +198,31 @@ async function main() {
     },
   })
 
+  // ---- ベータ体験ユーザー向けプロモコード（永年無料 PRO 発行）----
+  // ユーザーがサインアップ後、/pro/subscribe の「プロモコードを入力」に
+  // BETA-ENCORE-2026 を入れると hasLifetimeFreePro=true + role=PRO が付与される。
+  // 上限 20 名 / 有効期限 2027-02-28（半年間の redeem 期限）。
+  // 上限に達したら別コードを追加するか、maxRedemptions を増やして再 seed する。
+  await prisma.promoCode.upsert({
+    where: { code: 'BETA-ENCORE-2026' },
+    update: {}, // 既存レコードには手を加えない（redemptionCount を保護）
+    create: {
+      code: 'BETA-ENCORE-2026',
+      label: 'ベータ体験ユーザー向け永年無料枠 (2026-08 開始)',
+      maxRedemptions: 20,
+      expiresAt: new Date('2027-02-28'),
+      createdById: admin.id, // 公式アカウントが発行
+    },
+  })
+
   console.log('✅ Seed complete!')
   console.log('\n📋 テストアカウント:')
   console.log('  管理者    : admin@creatorlinks.jp / admin1234')
   console.log('  PRO artist: yamada@example.com   / pro12345')
   console.log('  artist    : sato@example.com     / user1234')
   console.log('  client    : client@example.com   / user1234')
+  console.log('\n🎟  ベータ用プロモコード:')
+  console.log('  BETA-ENCORE-2026  (永年無料 PRO / 20 名分 / 2027-02-28 まで)')
 }
 
 main()
