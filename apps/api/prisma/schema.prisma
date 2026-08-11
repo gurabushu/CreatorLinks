@@ -380,9 +380,14 @@ model Announcement {
   title       String
   body        String // 本文（プレーンテキスト。改行は保持して表示）
   isPinned    Boolean   @default(false) // 一覧の先頭に固定
-  publishedAt DateTime  @default(now()) // これが unread 判定の基準
+  // 公開状態は publishedAt の値で判定:
+  //   null      → DRAFT（下書き、閲覧不可）
+  //   now より未来 → SCHEDULED（予約公開、閲覧不可）
+  //   now 以下   → PUBLISHED（公開中、閲覧可）
+  publishedAt DateTime? // unread 判定の基準にもなる
   expiresAt   DateTime? // null なら永続表示。過ぎたら一覧から除外
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([publishedAt])
   @@index([expiresAt])
