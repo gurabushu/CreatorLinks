@@ -8,7 +8,7 @@ import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import type { z } from 'zod'
-import { CreateEventSchema } from '@creator-links/shared'
+import { CreateEventSchema, UpdateEventSchema } from '@creator-links/shared'
 import type { EventParticipantRole, EventVisibility } from '@creator-links/shared'
 
 // --- イベント作成 ---
@@ -72,6 +72,77 @@ export async function createEventAction(
   revalidatePath('/events')
   revalidatePath('/dashboard/calendar')
   return { success: true, data: event }
+}
+
+// --- イベント編集（主催者のみ） ---
+// フォームは常に全項目を送る想定だが、UpdateEventSchema は .partial() なので個別 undefined 許容
+export type UpdateEventFormData = Omit<
+  z.input<typeof UpdateEventSchema>,
+  'startAt' | 'endAt'
+> & {
+  startAt?: string
+  endAt?: string
+}
+
+export async function updateEventAction(
+  eventId: string,
+  data: UpdateEventFormData,
+): Promise<ActionResult> {
+  const session = await auth()
+  if (!session) return { success: false, error: 'ログインが必要です' }
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { creatorId: true },
+  })
+  if (!event) return { success: false, error: 'イベントが見つかりません' }
+  if (event.creatorId !== session.user.id) {
+    return { success: false, error: '主催者のみ編集できます' }
+  }
+
+  const parsed = UpdateEventSchema.safeParse(data)
+  if (!parsed.success) {
+    const first = parsed.error.issues[0]
+    return { success: false, error: first?.message ?? '入力内容を確認してください' }
+  }
+  const input = parsed.data
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: {
+      ...(input.title !== undefined && { title: input.title.trim() }),
+      ...(input.description !== undefined && {
+        description: input.description?.trim() || null,
+      }),
+      ...(input.type !== undefined && { type: input.type }),
+      ...(input.visibility !== undefined && { visibility: input.visibility }),
+      ...(input.startAt !== undefined && { startAt: input.startAt }),
+      ...(input.endAt !== undefined && { endAt: input.endAt ?? null }),
+      ...(input.isAllDay !== undefined && { isAllDay: input.isAllDay }),
+      ...(input.hasSpecificDate !== undefined && { hasSpecificDate: input.hasSpecificDate }),
+      ...(input.venueName !== undefined && {
+        venueName: input.venueName?.trim() || null,
+      }),
+      ...(input.venueAddress !== undefined && {
+        venueAddress: input.venueAddress?.trim() || null,
+      }),
+      ...(input.venueUrl !== undefined && { venueUrl: input.venueUrl || null }),
+      ...(input.city !== undefined && { city: input.city?.trim() || null }),
+      ...(input.genres !== undefined && { genres: input.genres }),
+      ...(input.isOnline !== undefined && { isOnline: input.isOnline }),
+      ...(input.ticketUrl !== undefined && { ticketUrl: input.ticketUrl || null }),
+      ...(input.ticketPriceYen !== undefined && {
+        ticketPriceYen: input.ticketPriceYen ?? null,
+      }),
+      ...(input.isFree !== undefined && { isFree: input.isFree }),
+      ...(input.coverUrl !== undefined && { coverUrl: input.coverUrl || null }),
+    },
+  })
+
+  revalidatePath('/events')
+  revalidatePath(`/events/${eventId}`)
+  revalidatePath('/dashboard/calendar')
+  return { success: true, data: undefined }
 }
 
 // --- 可視性の変更（主催者のみ） ---

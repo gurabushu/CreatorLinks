@@ -268,8 +268,19 @@ export default async function EventDetailPage({ params }: Params) {
 
       {/* 主催者操作 */}
       {isCreator && (
-        <div className="mt-8 pt-6 border-t border-gray-200 text-xs text-gray-500">
-          主催者操作は近日追加予定（公募枠追加・招待送信・公開/中止）
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <h2 className="text-sm font-semibold text-gray-500 mb-3">主催者操作</h2>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/events/${event.id}/edit`}
+              className="text-sm bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition"
+            >
+              編集
+            </Link>
+          </div>
+          <p className="mt-3 text-xs text-gray-400">
+            公募枠追加・招待送信・公開/中止 は近日追加予定
+          </p>
         </div>
       )}
     </div>

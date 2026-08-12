@@ -66,6 +66,12 @@ export function jstTime(d: Date): string {
   return `${pad(p.hour)}:${pad(p.minute)}`
 }
 
+// "YYYY-MM-DDTHH:mm" (JST) — <input type="datetime-local"> の value に使う
+export function jstDatetimeLocal(d: Date): string {
+  const p = jstParts(d)
+  return `${p.year}-${pad(p.month)}-${pad(p.day)}T${pad(p.hour)}:${pad(p.minute)}`
+}
+
 // カレンダー現在月の {year, month}（JST 基準）
 export function jstCurrentMonth(now: Date = new Date()): { year: number; month: number } {
   const p = jstParts(now)

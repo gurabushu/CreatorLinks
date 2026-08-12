@@ -4,7 +4,7 @@
 
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
-import { NewEventForm } from './new-event-form'
+import { EventForm } from '@/components/events/event-form'
 
 export const metadata = { title: 'イベント作成' }
 
@@ -29,7 +29,7 @@ export default async function NewEventPage({
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
       <h1 className="text-2xl font-bold mb-6">イベントを作成</h1>
-      <NewEventForm defaultDate={defaultDate} />
+      <EventForm mode="create" defaultDate={defaultDate} />
     </div>
   )
 }

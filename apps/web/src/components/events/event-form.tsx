@@ -1,8 +1,15 @@
 'use client'
 
+// 新規作成 / 編集の共通イベントフォーム。
+// - mode='create': 公開/下書きトグルあり。成功時は新規イベント詳細に遷移
+// - mode='edit':   公開/下書きトグルなし（公開状態は publishEventAction 側で管理）
+//                  成功時は元の詳細ページへ戻る
+// datetime-local input は端末ローカルタイムを扱うため、edit 初期値は JST → local 文字列に
+// 変換済みで受け取る前提（page.tsx 側で jstDatetimeLocal を通す）。
+
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { createEventAction } from '@/server/actions/event'
+import { createEventAction, updateEventAction } from '@/server/actions/event'
 import {
   EVENT_TYPES,
   EVENT_TYPE_LABELS,
@@ -13,34 +20,75 @@ import {
 } from '@creator-links/shared'
 import type { EventType, EventVisibility } from '@creator-links/shared'
 
-export function NewEventForm({ defaultDate }: { defaultDate?: string } = {}) {
+export type EventFormInitial = {
+  type: EventType
+  visibility: EventVisibility
+  title: string
+  description: string
+  startAt: string // "YYYY-MM-DDTHH:mm" (端末ローカル、edit の場合は JST 変換済み)
+  endAt: string // 同上、無指定は空文字
+  isAllDay: boolean
+  venueName: string
+  city: string
+  genresText: string // カンマ区切りの生テキスト
+  ticketUrl: string
+  ticketPriceYen: string // input value 用の string
+  isFree: boolean
+}
+
+type EventFormProps =
+  | { mode: 'create'; defaultDate?: string }
+  | { mode: 'edit'; eventId: string; initial: EventFormInitial }
+
+const CREATE_DEFAULT: EventFormInitial = {
+  type: 'LIVE',
+  // 掲示板ファースト: デフォルト type=LIVE は公開告知が主用途のため PUBLIC を初期値に
+  visibility: 'PUBLIC',
+  title: '',
+  description: '',
+  startAt: '',
+  endAt: '',
+  isAllDay: false,
+  venueName: '',
+  city: '',
+  genresText: '',
+  ticketUrl: '',
+  ticketPriceYen: '',
+  isFree: false,
+}
+
+export function EventForm(props: EventFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  const [type, setType] = useState<EventType>('LIVE')
-  // 掲示板ファースト: デフォルト type=LIVE は公開告知が主用途のため PUBLIC を初期値に。
-  // type 変更で個人系 (REHEARSAL/MEETING/TODO) を選ぶと自動で PRIVATE に切替（changeType 内で処理）。
-  const [visibility, setVisibility] = useState<EventVisibility>('PUBLIC')
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  // defaultDate（YYYY-MM-DD）が渡された場合は当日 19:00 で初期化
-  const [startAt, setStartAt] = useState(defaultDate ? `${defaultDate}T19:00` : '')
-  const [endAt, setEndAt] = useState('')
-  const [isAllDay, setIsAllDay] = useState(false)
-  const [venueName, setVenueName] = useState('')
-  const [city, setCity] = useState('')
-  const [genresText, setGenresText] = useState('')
-  const [ticketUrl, setTicketUrl] = useState('')
-  const [ticketPriceYen, setTicketPriceYen] = useState('')
-  const [isFree, setIsFree] = useState(false)
+  const isEdit = props.mode === 'edit'
+  const initial: EventFormInitial =
+    props.mode === 'edit'
+      ? props.initial
+      : {
+          ...CREATE_DEFAULT,
+          startAt: props.defaultDate ? `${props.defaultDate}T19:00` : '',
+        }
+
+  const [type, setType] = useState<EventType>(initial.type)
+  const [visibility, setVisibility] = useState<EventVisibility>(initial.visibility)
+  const [title, setTitle] = useState(initial.title)
+  const [description, setDescription] = useState(initial.description)
+  const [startAt, setStartAt] = useState(initial.startAt)
+  const [endAt, setEndAt] = useState(initial.endAt)
+  const [isAllDay, setIsAllDay] = useState(initial.isAllDay)
+  const [venueName, setVenueName] = useState(initial.venueName)
+  const [city, setCity] = useState(initial.city)
+  const [genresText, setGenresText] = useState(initial.genresText)
+  const [ticketUrl, setTicketUrl] = useState(initial.ticketUrl)
+  const [ticketPriceYen, setTicketPriceYen] = useState(initial.ticketPriceYen)
+  const [isFree, setIsFree] = useState(initial.isFree)
   const [publishNow, setPublishNow] = useState(true)
 
   // type 変更時にデフォルト visibility を賢く提案（強制はしない）
   const changeType = (newType: EventType) => {
     setType(newType)
-    // 個人系（REHEARSAL / MEETING / TODO）は PRIVATE がデフォルト適
-    // 公開系（LIVE / SESSION / WORKSHOP / MEETUP）は PUBLIC がデフォルト適
     if (visibility === 'PRIVATE' && ['LIVE', 'SESSION', 'WORKSHOP', 'MEETUP'].includes(newType)) {
       setVisibility('PUBLIC')
     } else if (
@@ -49,7 +97,6 @@ export function NewEventForm({ defaultDate }: { defaultDate?: string } = {}) {
     ) {
       setVisibility('PRIVATE')
     }
-    // TODO 選択時は終日をデフォルト on
     if (newType === 'TODO' && !isAllDay) setIsAllDay(true)
   }
 
@@ -59,7 +106,7 @@ export function NewEventForm({ defaultDate }: { defaultDate?: string } = {}) {
     if (!startAt) return setError('開始日時を入力してください')
 
     startTransition(async () => {
-      const result = await createEventAction({
+      const payload = {
         type,
         visibility,
         title,
@@ -75,12 +122,23 @@ export function NewEventForm({ defaultDate }: { defaultDate?: string } = {}) {
         ticketUrl: ticketUrl || undefined,
         ticketPriceYen: ticketPriceYen ? Number(ticketPriceYen) : undefined,
         isFree,
-        publishNow,
-      })
-      if (result.success) {
-        router.push(`/events/${result.data.id}`)
+      }
+
+      if (props.mode === 'edit') {
+        const result = await updateEventAction(props.eventId, payload)
+        if (result.success) {
+          router.push(`/events/${props.eventId}`)
+          router.refresh()
+        } else {
+          setError(result.error)
+        }
       } else {
-        setError(result.error)
+        const result = await createEventAction({ ...payload, publishNow })
+        if (result.success) {
+          router.push(`/events/${result.data.id}`)
+        } else {
+          setError(result.error)
+        }
       }
     })
   }
@@ -114,7 +172,7 @@ export function NewEventForm({ defaultDate }: { defaultDate?: string } = {}) {
         </div>
       </div>
 
-      {/* 可視性（Phase A.5） */}
+      {/* 可視性 */}
       <div>
         <label className="block text-sm font-medium mb-1.5">公開範囲</label>
         <div className="grid sm:grid-cols-2 gap-2">
@@ -265,17 +323,19 @@ export function NewEventForm({ defaultDate }: { defaultDate?: string } = {}) {
         入場無料
       </label>
 
-      {/* 公開制御 */}
-      <div className="pt-3 border-t border-gray-200">
-        <label className="flex items-center gap-2 text-sm mb-2">
-          <input
-            type="checkbox"
-            checked={publishNow}
-            onChange={(e) => setPublishNow(e.target.checked)}
-          />
-          作成後すぐに公開する（オフの場合は下書きとして保存）
-        </label>
-      </div>
+      {/* 公開制御 (create のみ) */}
+      {!isEdit && (
+        <div className="pt-3 border-t border-gray-200">
+          <label className="flex items-center gap-2 text-sm mb-2">
+            <input
+              type="checkbox"
+              checked={publishNow}
+              onChange={(e) => setPublishNow(e.target.checked)}
+            />
+            作成後すぐに公開する（オフの場合は下書きとして保存）
+          </label>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm p-3">
@@ -289,8 +349,25 @@ export function NewEventForm({ defaultDate }: { defaultDate?: string } = {}) {
           disabled={isPending}
           className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-6 py-2.5 rounded-lg transition disabled:opacity-50"
         >
-          {isPending ? '作成中...' : publishNow ? '公開して作成' : '下書き保存'}
+          {isPending
+            ? isEdit
+              ? '保存中...'
+              : '作成中...'
+            : isEdit
+              ? '変更を保存'
+              : publishNow
+                ? '公開して作成'
+                : '下書き保存'}
         </button>
+        {isEdit && (
+          <button
+            type="button"
+            onClick={() => router.push(`/events/${props.eventId}`)}
+            className="text-sm px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+          >
+            キャンセル
+          </button>
+        )}
       </div>
     </form>
   )
