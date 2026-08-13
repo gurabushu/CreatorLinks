@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { sendInviteEmailAction } from '@/server/actions/invite'
+import { SITE_NAME } from '@/lib/brand'
 
 export function InviteShare({
   inviteUrl,
@@ -17,7 +18,7 @@ export function InviteShare({
   const [emailOK, setEmailOK] = useState(false)
 
   const shareText =
-    `CreatorLinks で音楽の仕事を一緒に進めませんか？\n` +
+    `${SITE_NAME} で音楽の仕事を一緒に進めませんか？\n` +
     `LINE や DM の依頼を、記録と支払いまでひとつに。\n${inviteUrl}`
   const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`
 

@@ -5,14 +5,15 @@ import { TrpcProvider } from '@/components/providers/trpc-provider'
 import { SessionProvider } from 'next-auth/react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { SITE_NAME, SITE_TAGLINE } from '@/lib/brand'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
   title: {
-    default: 'CreatorLinks — 個人アーティストの営業プラットフォーム',
-    template: '%s | CreatorLinks',
+    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    template: `%s | ${SITE_NAME}`,
   },
   description:
     '才能あるアーティストと企業・個人をつなぐ、手数料業界最安7%のマッチングプラットフォーム。',
@@ -34,13 +35,13 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ja_JP',
     url: process.env.NEXT_PUBLIC_APP_URL,
-    siteName: 'CreatorLinks',
+    siteName: SITE_NAME,
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'CreatorLinks',
+        alt: SITE_NAME,
       },
     ],
   },

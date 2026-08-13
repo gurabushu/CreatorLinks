@@ -5,9 +5,10 @@ import { listArtistsAction } from '@/server/actions/artist'
 import { listMyLikedIdsAction } from '@/server/actions/like'
 import { auth } from '@/lib/auth'
 import { ArtistSearchForm } from '@/components/layout/artist-search-form'
+import { SITE_NAME } from '@/lib/brand'
 
 export const metadata: Metadata = {
-  title: 'アーティスト一覧 | CreatorLinks',
+  title: `アーティスト一覧 | ${SITE_NAME}`,
   description: '音楽クリエイターを探せます。手数料7%で直接マッチング。',
 }
 

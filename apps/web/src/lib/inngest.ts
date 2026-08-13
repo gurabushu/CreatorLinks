@@ -1,9 +1,11 @@
 // lib/inngest.ts — Inngest クライアント（バックグラウンドジョブ用）
 import { Inngest } from 'inngest'
+import { SITE_NAME } from './brand'
 
+// id は Inngest 側の識別子でリブランド後もそのまま。表示名のみ SITE_NAME 経由に。
 export const inngest = new Inngest({
   id: 'creator-links',
-  name: 'CreatorLinks',
+  name: SITE_NAME,
 })
 
 // ---- イベント型定義 ----

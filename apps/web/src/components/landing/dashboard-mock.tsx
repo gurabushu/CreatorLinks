@@ -1,6 +1,8 @@
 // Hero 右側のダッシュボード＋スマホのビジュアルモック。
 // 純粋なマークアップで、色は既存トークン (purple/gray) を維持する。
 
+import { SITE_NAME } from '@/lib/brand'
+
 export function DashboardMock() {
   return (
     <div className="relative w-full aspect-[4/3] max-w-2xl mx-auto">
@@ -39,7 +41,7 @@ export function DashboardMock() {
           <aside className="w-[28%] bg-gray-50 p-3 border-r">
             <div className="flex items-center gap-1.5 mb-4">
               <div className="w-4 h-4 rounded bg-gradient-to-br from-purple-500 to-indigo-600" />
-              <span className="text-[10px] font-bold text-gray-800">CreatorLinks</span>
+              <span className="text-[10px] font-bold text-gray-800">{SITE_NAME}</span>
             </div>
             <ul className="space-y-1.5 text-[9px]">
               <li className="flex items-center gap-1.5 px-2 py-1 rounded bg-white text-purple-700 font-semibold">
@@ -98,7 +100,7 @@ export function DashboardMock() {
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1">
             <div className="w-2.5 h-2.5 rounded bg-gradient-to-br from-purple-500 to-indigo-600" />
-            <span className="text-[8px] font-bold">CreatorLinks</span>
+            <span className="text-[8px] font-bold">{SITE_NAME}</span>
           </div>
           <div className="w-3 h-0.5 bg-gray-400 rounded" />
         </div>

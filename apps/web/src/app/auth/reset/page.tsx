@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { resetPasswordAction } from '@/server/actions/auth'
 import PasswordInput from '@/components/ui/password-input'
+import { SITE_NAME } from '@/lib/brand'
 
 function ResetPasswordInner() {
   const searchParams = useSearchParams()
@@ -50,7 +51,7 @@ function ResetPasswordInner() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <Link href="/" className="text-2xl font-bold text-purple-600">CreatorLinks</Link>
+          <Link href="/" className="text-2xl font-bold text-purple-600">{SITE_NAME}</Link>
           <p className="text-gray-500 text-sm mt-1">新しいパスワードを設定</p>
         </div>
 

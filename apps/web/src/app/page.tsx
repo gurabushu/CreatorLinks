@@ -11,9 +11,10 @@ import { HeroSection } from '@/components/landing/hero-section'
 import { FeatureBar } from '@/components/landing/feature-bar'
 import { HowItWorks } from '@/components/landing/how-it-works'
 import { Faq } from '@/components/landing/faq'
+import { SITE_NAME } from '@/lib/brand'
 
 export const metadata: Metadata = {
-  title: 'CreatorLinks — 音楽の依頼、LINE から卒業。"また一緒に" が続く場所。',
+  title: `${SITE_NAME} — 音楽の依頼、LINE から卒業。"また一緒に" が続く場所。`,
   description:
     '音楽業界特化の依頼管理アプリ。LINE や DM でやっていた録音・ライブ・MIX 依頼をひとつに。Stripe エスクローで初対面の相手にも安心送金、スケジュール自動連携、「また一緒に」で継続。手数料 7%（業界最安クラス）。',
 }
@@ -236,7 +237,7 @@ export default async function HomePage() {
             { name: 'ランサーズ', fee: '16.5%', highlight: false },
             { name: 'クラウドワークス', fee: '20%', highlight: false },
             { name: 'ココナラ', fee: '22%', highlight: false },
-            { name: 'CreatorLinks', fee: '7%', highlight: true },
+            { name: SITE_NAME, fee: '7%', highlight: true },
           ].map((item) => (
             <div
               key={item.name}

@@ -1,5 +1,6 @@
 // lib/resend.ts — Resend メール送信クライアント
 import { Resend } from 'resend'
+import { SITE_NAME } from './brand'
 
 // RESEND_API_KEY が未設定の場合は noop クライアント（開発時）
 export const resend = process.env.RESEND_API_KEY
@@ -7,7 +8,8 @@ export const resend = process.env.RESEND_API_KEY
   : null
 
 export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'noreply@creatorlinks.jp'
-export const SITE_NAME = 'CreatorLinks'
+// 過去 import 互換のため再エクスポート。新規コードは '@/lib/brand' から取ること。
+export { SITE_NAME }
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 // メール送信ヘルパー（Resend 未設定時はコンソールログ）

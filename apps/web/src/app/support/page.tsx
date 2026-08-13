@@ -7,11 +7,11 @@ import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ContactForm } from './contact-form'
+import { SITE_NAME } from '@/lib/brand'
 
 export const metadata: Metadata = {
   title: 'サポート / お問い合わせ',
-  description:
-    'CreatorLinks に関するよくある質問と、公式アカウントへのお問い合わせフォームです。',
+  description: `${SITE_NAME} に関するよくある質問と、公式アカウントへのお問い合わせフォームです。`,
 }
 export const dynamic = 'force-dynamic'
 

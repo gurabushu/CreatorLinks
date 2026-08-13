@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { SITE_NAME } from '@/lib/brand'
 
 // サイドバー（DashboardShell / projects/manage）の下敷きになるページでは
 // フッターの中身も同じぶんだけ右にオフセットしてロゴ・リンクが隠れないようにする
@@ -25,7 +26,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Image
               src="/logo.png"
-              alt="CreatorLinks"
+              alt={SITE_NAME}
               width={1032}
               height={193}
               className="h-7 w-auto mb-3"
@@ -62,7 +63,7 @@ export function Footer() {
           </div>
         </div>
         <p className="text-center text-xs text-gray-400">
-          © 2026 CreatorLinks. All rights reserved.
+          © 2026 {SITE_NAME}. All rights reserved.
         </p>
       </div>
     </footer>

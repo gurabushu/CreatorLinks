@@ -9,10 +9,11 @@ import { DashboardShell } from '@/components/dashboard-shell/dashboard-shell'
 import { OfficialBadge } from '@/components/official-badge'
 import { getOfficialUser } from '@/lib/official-account'
 import { getDisplayName } from '@/lib/user'
+import { SITE_NAME } from '@/lib/brand'
 
 export const metadata: Metadata = {
-  title: 'お知らせ | CreatorLinks',
-  description: 'CreatorLinks 公式運営からのお知らせ・アップデート情報',
+  title: `お知らせ | ${SITE_NAME}`,
+  description: `${SITE_NAME} 公式運営からのお知らせ・アップデート情報`,
 }
 
 export const dynamic = 'force-dynamic'

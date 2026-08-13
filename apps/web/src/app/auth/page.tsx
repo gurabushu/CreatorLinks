@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useActionState, useState, Suspense } from 'react'
 import { signUpAction, signUpAsGuestAction } from '@/server/actions/auth'
 import PasswordInput from '@/components/ui/password-input'
+import { SITE_NAME } from '@/lib/brand'
 
 // ---- ログインフォーム ----
 function LoginForm() {
@@ -258,7 +259,7 @@ function AuthPageInner() {
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         {/* ロゴ */}
         <div className="text-center mb-6">
-          <a href="/" className="text-2xl font-bold text-purple-600">CreatorLinks</a>
+          <a href="/" className="text-2xl font-bold text-purple-600">{SITE_NAME}</a>
           <p className="text-gray-500 text-sm mt-1">
             {mode === 'login' ? 'アカウントにログイン' : '無料アカウントを作成'}
           </p>

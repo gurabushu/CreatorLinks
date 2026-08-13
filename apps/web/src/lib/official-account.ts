@@ -4,6 +4,7 @@
 // - ウェルカム DM 送信の共通ロジック
 
 import { prisma } from './prisma'
+import { SITE_NAME } from './brand'
 
 const CACHE_TTL_MS = 5 * 60 * 1000
 
@@ -91,7 +92,7 @@ export async function sendWelcomeDm(newUserId: string): Promise<void> {
   }
 }
 
-const WELCOME_MESSAGE_BODY = `creatorLinks へご登録ありがとうございます 🎵
+const WELCOME_MESSAGE_BODY = `${SITE_NAME} へご登録ありがとうございます 🎵
 音楽クリエイターと依頼者をつなぐプラットフォームです。
 
 まずは以下から始めてみてください：

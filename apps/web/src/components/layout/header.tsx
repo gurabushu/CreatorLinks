@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import type { Session } from 'next-auth'
 import { auth, signOut } from '@/lib/auth'
 import { NotificationBell } from '@/components/notifications/notification-bell'
+import { SITE_NAME } from '@/lib/brand'
 
 export async function Header() {
   let session: Session | null = null
@@ -18,10 +19,10 @@ export async function Header() {
     <header className="border-b bg-white sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-4">
         <div className="h-14 sm:h-16 flex items-center gap-2 sm:gap-4">
-          <Link href="/" className="shrink-0" aria-label="CreatorLinks">
+          <Link href="/" className="shrink-0" aria-label={SITE_NAME}>
             <Image
               src="/logo.png"
-              alt="CreatorLinks"
+              alt={SITE_NAME}
               width={1032}
               height={193}
               priority
