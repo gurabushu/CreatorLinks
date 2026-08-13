@@ -14,6 +14,7 @@ import { SITE_NAME } from '@/lib/brand'
 export const metadata: Metadata = {
   title: `お知らせ | ${SITE_NAME}`,
   description: `${SITE_NAME} 公式運営からのお知らせ・アップデート情報`,
+  alternates: { canonical: '/announcements' },
 }
 
 export const dynamic = 'force-dynamic'

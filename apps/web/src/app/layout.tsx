@@ -33,6 +33,11 @@ export const metadata: Metadata = {
     icon: '/favicon-32.png',
     apple: '/apple-icon.png',
   },
+  // 各ページで override 可能。デフォルトはルートを canonical にする。
+  // Google に対して「www / non-www」「query 違い」「preview URL」で重複判定されないよう明示。
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'ja_JP',

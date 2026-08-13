@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   title: `${SITE_NAME} — 音楽の依頼、LINE から卒業。"また一緒に" が続く場所。`,
   description:
     '音楽業界特化の依頼管理アプリ。LINE や DM でやっていた録音・ライブ・MIX 依頼をひとつに。Stripe エスクローで初対面の相手にも安心送金、スケジュール自動連携、「また一緒に」で継続。手数料 7%（業界最安クラス）。',
+  alternates: { canonical: '/' },
 }
 
 // SSG: ビルド時生成

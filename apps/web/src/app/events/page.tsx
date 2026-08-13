@@ -10,7 +10,10 @@ import { getDisplayName } from '@/lib/user'
 import { jstDatetime } from '@/lib/jst-date'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'イベント一覧' }
+export const metadata = {
+  title: 'イベント一覧',
+  alternates: { canonical: '/events' },
+}
 
 // Vercel Node runtime は UTC 動作。JST 表示に統一。
 const formatDate = jstDatetime

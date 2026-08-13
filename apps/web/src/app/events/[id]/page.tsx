@@ -43,6 +43,31 @@ function safeHttpUrl(url: string | null | undefined): string | null {
 
 type Params = { params: Promise<{ id: string }> }
 
+export async function generateMetadata({ params }: Params) {
+  const { id } = await params
+  try {
+    const event = await prisma.event.findUnique({
+      where: { id },
+      select: {
+        title: true, description: true, coverUrl: true,
+        visibility: true, status: true,
+      },
+    })
+    if (!event) return { title: 'イベントが見つかりません' }
+    // 非公開・下書きは検索エンジンに晒さない
+    const noindex = event.visibility !== 'PUBLIC' || event.status !== 'PUBLISHED'
+    return {
+      title: event.title,
+      description: event.description?.slice(0, 200) ?? undefined,
+      alternates: { canonical: `/events/${id}` },
+      openGraph: event.coverUrl ? { images: [{ url: event.coverUrl }] } : undefined,
+      robots: noindex ? { index: false, follow: false } : undefined,
+    }
+  } catch {
+    return { title: 'イベント詳細' }
+  }
+}
+
 export default async function EventDetailPage({ params }: Params) {
   const { id } = await params
   const session = await auth()

@@ -12,6 +12,7 @@ import { SITE_NAME } from '@/lib/brand'
 export const metadata: Metadata = {
   title: 'サポート / お問い合わせ',
   description: `${SITE_NAME} に関するよくある質問と、公式アカウントへのお問い合わせフォームです。`,
+  alternates: { canonical: '/support' },
 }
 export const dynamic = 'force-dynamic'
 

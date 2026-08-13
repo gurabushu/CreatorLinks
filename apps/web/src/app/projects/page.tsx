@@ -12,6 +12,7 @@ import {
 export const metadata: Metadata = {
   title: '案件一覧',
   description: 'クリエイターへの案件依頼を探せます。',
+  alternates: { canonical: '/projects' },
 }
 
 const LEVEL_BADGE_CLASS: Record<CommitmentLevel, string> = {

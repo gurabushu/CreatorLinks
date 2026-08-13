@@ -10,6 +10,7 @@ import { SITE_NAME } from '@/lib/brand'
 export const metadata: Metadata = {
   title: `アーティスト一覧 | ${SITE_NAME}`,
   description: '音楽クリエイターを探せます。手数料7%で直接マッチング。',
+  alternates: { canonical: '/artists' },
 }
 
 export const dynamic = 'force-dynamic'

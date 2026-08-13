@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: `${displayName} | アーティストプロフィール`,
       description: user.bio ?? `${displayName} のポートフォリオ・実績をチェック`,
+      alternates: { canonical: `/artists/${id}` },
       openGraph: {
         images: user.avatarUrl ? [{ url: user.avatarUrl }] : [],
       },
