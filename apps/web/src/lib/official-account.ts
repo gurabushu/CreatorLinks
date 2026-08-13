@@ -56,32 +56,39 @@ export async function sendWelcomeDm(newUserId: string): Promise<void> {
     .catch(() => null)
   if (!newUser || newUser.isGuest) return
 
-  // 公式 → 新規ユーザーの P2P Match を作成（既存の @@unique([artistId, partnerUserId]) 制約により重複作成不可）
-  let matchId: string
+  // 公式 → 新規ユーザーの P2P Match を作成 + 初回メッセージを 1 トランザクションで発火。
+  // 別々に流すと、message.create 失敗時に空の match だけ残り、以降 ensureSupportMatchId が
+  // その空 match を再利用して welcome 本文が二度と入らなくなる。
   try {
-    const created = await prisma.match.create({
-      data: {
-        artistId: official.id,
-        partnerUserId: newUserId,
-        status: 'ACCEPTED',
-        message: null,
-      },
-      select: { id: true },
+    await prisma.$transaction(async (tx) => {
+      const match = await tx.match.create({
+        data: {
+          artistId: official.id,
+          partnerUserId: newUserId,
+          status: 'ACCEPTED',
+          message: null,
+        },
+        select: { id: true },
+      })
+      await tx.message.create({
+        data: {
+          matchId: match.id,
+          senderId: official.id,
+          body: WELCOME_MESSAGE_BODY,
+        },
+      })
     })
-    matchId = created.id
   } catch (e) {
-    // ユニーク制約違反 = 既に welcome DM 送信済み
-    if ((e as { code?: string }).code === 'P2002') return
+    const code = (e as { code?: string }).code
+    // P2002: 既に welcome DM 送信済み（@@unique 違反）
+    if (code === 'P2002') return
+    // P2003: FK 違反 = キャッシュされた官方 ID が既に削除されている。キャッシュを捨てて次回再取得。
+    if (code === 'P2003') {
+      invalidateOfficialUserCache()
+      return
+    }
     throw e
   }
-
-  await prisma.message.create({
-    data: {
-      matchId,
-      senderId: official.id,
-      body: WELCOME_MESSAGE_BODY,
-    },
-  })
 }
 
 const WELCOME_MESSAGE_BODY = `creatorLinks へご登録ありがとうございます 🎵

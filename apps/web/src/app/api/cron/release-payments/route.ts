@@ -46,14 +46,16 @@ export async function GET(req: Request) {
     for (let j = 0; j < results.length; j++) {
       const r = results[j]!
       const paymentId = chunk[j]!.id
-      if (r.status === 'fulfilled' && r.value.ok) {
-        released++
-      } else if (r.status === 'fulfilled') {
-        failures.push({
-          paymentId,
-          reason: r.value.reason,
-          detail: 'detail' in r.value ? r.value.detail : undefined,
-        })
+      if (r.status === 'fulfilled') {
+        if (r.value.ok) {
+          released++
+        } else {
+          failures.push({
+            paymentId,
+            reason: r.value.reason,
+            detail: r.value.detail,
+          })
+        }
       } else {
         failures.push({
           paymentId,
