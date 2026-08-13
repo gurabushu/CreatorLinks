@@ -36,16 +36,31 @@ export async function GET(req: Request) {
   let released = 0
   const failures: Array<{ paymentId: string; reason: string; detail?: string }> = []
 
-  for (const p of eligible) {
-    const result = await releasePayment(p.id)
-    if (result.ok) {
-      released++
-    } else {
-      failures.push({
-        paymentId: p.id,
-        reason: result.reason,
-        detail: 'detail' in result ? result.detail : undefined,
-      })
+  // 並列度 5 で処理。1 件ハングで全体が止まるのを防ぎつつ、Stripe API のレート上限も守る。
+  // 各 releasePayment は idempotencyKey で守られているので、途中失敗しても次回 cron で
+  // 安全に再試行できる。
+  const CONCURRENCY = 5
+  for (let i = 0; i < eligible.length; i += CONCURRENCY) {
+    const chunk = eligible.slice(i, i + CONCURRENCY)
+    const results = await Promise.allSettled(chunk.map((p) => releasePayment(p.id)))
+    for (let j = 0; j < results.length; j++) {
+      const r = results[j]!
+      const paymentId = chunk[j]!.id
+      if (r.status === 'fulfilled' && r.value.ok) {
+        released++
+      } else if (r.status === 'fulfilled') {
+        failures.push({
+          paymentId,
+          reason: r.value.reason,
+          detail: 'detail' in r.value ? r.value.detail : undefined,
+        })
+      } else {
+        failures.push({
+          paymentId,
+          reason: 'unexpected_throw',
+          detail: (r.reason as { message?: string })?.message ?? String(r.reason),
+        })
+      }
     }
   }
 
