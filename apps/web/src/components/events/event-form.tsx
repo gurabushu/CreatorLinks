@@ -100,6 +100,14 @@ export function EventForm(props: EventFormProps) {
     if (newType === 'TODO' && !isAllDay) setIsAllDay(true)
   }
 
+  // datetime-local は「日本時間で入力する」と見なして JST(+09:00) の ISO 文字列に変換する。
+  // 素の new Date(x).toISOString() だとブラウザのローカル TZ で解釈されるため、
+  // 海外からの入力で JST とズレる。
+  const toJstIso = (localDatetime: string): string => {
+    const [date, time = '00:00'] = localDatetime.split('T')
+    return new Date(`${date}T${time}:00+09:00`).toISOString()
+  }
+
   const submit = () => {
     setError(null)
     if (!title.trim()) return setError('タイトルを入力してください')
@@ -111,8 +119,8 @@ export function EventForm(props: EventFormProps) {
         visibility,
         title,
         description: description || undefined,
-        startAt: new Date(startAt).toISOString(),
-        endAt: endAt ? new Date(endAt).toISOString() : undefined,
+        startAt: toJstIso(startAt),
+        endAt: endAt ? toJstIso(endAt) : undefined,
         isAllDay,
         venueName: venueName || undefined,
         city: city || undefined,

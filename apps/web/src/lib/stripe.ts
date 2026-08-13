@@ -29,7 +29,9 @@ export function getStripe(): Stripe {
     throw new Error('STRIPE_SECRET_KEY is not configured')
   }
   cachedClient = new Stripe(secretKey, {
-    // apiVersion はアカウントの既定版を使用。将来固定したい場合はここで指定する
+    // SDK (stripe@22.4.0) が pin している版に合わせる。TypeScript 型と実 API レスポンスの
+    // ズレを防ぐため、アカウント既定版 fallback には頼らず明示指定する。
+    apiVersion: '2026-07-29.dahlia',
     typescript: true,
   })
   return cachedClient
