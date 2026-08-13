@@ -9,7 +9,7 @@ test.describe('認証フロー', () => {
 
   test('ログインページが表示される', async ({ page }) => {
     await page.goto('/auth')
-    await expect(page).toHaveTitle(/ログイン|CreatorLinks/)
+    await expect(page).toHaveTitle(/ログイン|EncoreCue/)
     await expect(page.getByLabel('メールアドレス')).toBeVisible()
     await expect(page.getByLabel('パスワード')).toBeVisible()
   })

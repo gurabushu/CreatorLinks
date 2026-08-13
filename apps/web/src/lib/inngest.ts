@@ -9,7 +9,7 @@ export const inngest = new Inngest({
 })
 
 // ---- イベント型定義 ----
-export type CreatorLinksEvents = {
+export type EncoreCueEvents = {
   // マッチング承認通知
   'match/accepted': {
     data: {
