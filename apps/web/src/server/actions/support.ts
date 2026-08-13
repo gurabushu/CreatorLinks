@@ -26,15 +26,35 @@ const VALID_CATEGORIES = new Set<SupportCategory>([
   'BUG', 'FEATURE', 'PAYMENT', 'ACCOUNT', 'USAGE', 'OTHER',
 ])
 
+// 制御文字（改行・タブは残す）を除去。DM 本文が意図しない文字列で汚染されるのを防ぐ。
+function stripControl(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+}
+
+function readString(formData: FormData, key: string): string | null {
+  const v = formData.get(key)
+  if (v === null) return ''
+  if (typeof v !== 'string') return null // File が飛んできたら reject
+  return v
+}
+
 export async function sendSupportInquiryAction(
   formData: FormData,
 ): Promise<{ success: true; matchId: string } | { success: false; error: string; needsLogin?: boolean }> {
   const session = await auth()
   if (!session) return { success: false, error: 'ログインが必要です', needsLogin: true }
 
-  const category = String(formData.get('category') ?? '') as SupportCategory
-  const subject = String(formData.get('subject') ?? '').trim()
-  const body = String(formData.get('body') ?? '').trim()
+  const rawCategory = readString(formData, 'category')
+  const rawSubject = readString(formData, 'subject')
+  const rawBody = readString(formData, 'body')
+  if (rawCategory === null || rawSubject === null || rawBody === null) {
+    return { success: false, error: '入力形式が不正です' }
+  }
+
+  const category = rawCategory as SupportCategory
+  const subject = stripControl(rawSubject).trim()
+  const body = stripControl(rawBody).trim()
 
   if (!VALID_CATEGORIES.has(category)) {
     return { success: false, error: 'カテゴリを選択してください' }
