@@ -83,7 +83,7 @@ describe('user.updateProfile', () => {
   it('プロフィールを更新できる', async () => {
     const updatedUser = {
       id: 'user-1',
-      name: '更新後の名前',
+      displayName: '更新後の表示名',
       bio: '更新後の自己紹介',
       genres: ['音楽'],
     }
@@ -91,16 +91,17 @@ describe('user.updateProfile', () => {
 
     const caller = createCaller(createAuthContext())
     const result = await caller.user.updateProfile({
-      name: '更新後の名前',
+      displayName: '更新後の表示名',
       bio: '更新後の自己紹介',
       genres: ['音楽'],
     })
 
-    expect(result.name).toBe('更新後の名前')
+    expect(result.displayName).toBe('更新後の表示名')
     expect(mockPrisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'user-1' },
-        data: expect.objectContaining({ name: '更新後の名前' }),
+        data: expect.objectContaining({ displayName: '更新後の表示名' }),
+        omit: { passwordHash: true },
       })
     )
   })
@@ -108,7 +109,7 @@ describe('user.updateProfile', () => {
   it('未認証の場合は UNAUTHORIZED エラーを返す', async () => {
     const caller = createCaller(createPublicContext())
     await expect(
-      caller.user.updateProfile({ name: 'テスト', genres: [] })
+      caller.user.updateProfile({ displayName: 'テスト', genres: [] })
     ).rejects.toThrow(expect.objectContaining({ code: 'UNAUTHORIZED' }))
   })
 })

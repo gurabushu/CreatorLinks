@@ -39,7 +39,7 @@ export async function GET(
     where: { matchId },
     orderBy: { createdAt: 'asc' },
     include: {
-      sender: { select: { id: true, name: true, avatarUrl: true } },
+      sender: { select: { id: true, name: true, displayName: true, avatarUrl: true } },
     },
   })
 

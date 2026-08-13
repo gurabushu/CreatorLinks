@@ -1,6 +1,5 @@
 import NextAuth from 'next-auth'
 import { PrismaAdapter } from '@auth/prisma-adapter'
-import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { revalidatePath } from 'next/cache'
@@ -17,15 +16,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: 'jwt' },
 
   providers: [
-    // Google OAuth (クレデンシャルが設定されている場合のみ有効)
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [Google({
-          clientId: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        })]
-      : []),
-
-    // メール / パスワード認証
+    // メール / パスワード認証（Credentials のみ）
     Credentials({
       async authorize(credentials) {
         const parsed = SignInSchema.safeParse(credentials)

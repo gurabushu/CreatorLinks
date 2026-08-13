@@ -29,7 +29,7 @@ export default async function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4">
-      <h1 className="text-2xl font-bold mb-8">管理画面</h1>
+        <h1 className="text-2xl font-bold mb-8">管理画面</h1>
 
       {/* 統計 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">

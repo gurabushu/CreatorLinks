@@ -92,6 +92,7 @@ describe('project.create', () => {
       title: '新規案件',
       genres: ['イラスト'],
       contractType: 'SPOT',
+      commitmentLevel: 'HOBBY',
     })
 
     expect(result.id).toBe(IDS.project)
@@ -108,7 +109,12 @@ describe('project.create', () => {
   it('未認証の場合は UNAUTHORIZED エラーを返す', async () => {
     const caller = createCaller(createPublicContext())
     await expect(
-      caller.project.create({ title: 'テスト', genres: [], contractType: 'SPOT' })
+      caller.project.create({
+        title: 'テスト',
+        genres: ['音楽'],
+        contractType: 'SPOT',
+        commitmentLevel: 'HOBBY',
+      })
     ).rejects.toThrow(expect.objectContaining({ code: 'UNAUTHORIZED' }))
   })
 })

@@ -11,6 +11,17 @@ const ALLOWED_TYPES = [
 ]
 
 export async function POST(request: NextRequest): Promise<Response> {
+  // env 未設定時のフェイルファスト: SDK の生エラー（"Vercel Blob: No token found"）を
+  // ユーザーに見せない。設定ミスは管理者が Vercel Dashboard で BLOB_READ_WRITE_TOKEN を
+  // 投入することで解決する。
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error('[api/blob] BLOB_READ_WRITE_TOKEN not configured')
+    return Response.json(
+      { error: '画像アップロード機能が設定されていません。管理者にお問い合わせください。' },
+      { status: 503 },
+    )
+  }
+
   const body = (await request.json()) as HandleUploadBody
 
   // blob.upload-completed はVercelサーバーから送られるのでauth不要

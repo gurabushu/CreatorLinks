@@ -86,6 +86,7 @@ describe('CreateProjectSchema', () => {
       title: 'BGM楽曲制作',
       genres: ['音楽'],
       contractType: 'SPOT',
+      commitmentLevel: 'HOBBY',
       budget: 30000,
     })
     expect(result.success).toBe(true)
@@ -96,6 +97,7 @@ describe('CreateProjectSchema', () => {
       title: 'SNSイラスト月次制作',
       genres: ['イラスト'],
       contractType: 'SUBSCRIPTION',
+      commitmentLevel: 'PRO',
     })
     expect(result.success).toBe(true)
   })
@@ -133,7 +135,7 @@ describe('CreateProjectSchema', () => {
 describe('ApplyMatchSchema', () => {
   it('プロジェクトIDとメッセージで応募できる', () => {
     const result = ApplyMatchSchema.safeParse({
-      projectId: 'project-abc',
+      projectId: 'cltest00000000000000000001',
       message: 'ぜひ担当させてください',
     })
     expect(result.success).toBe(true)
@@ -141,7 +143,7 @@ describe('ApplyMatchSchema', () => {
 
   it('メッセージなしでも応募できる', () => {
     const result = ApplyMatchSchema.safeParse({
-      projectId: 'project-abc',
+      projectId: 'cltest00000000000000000001',
     })
     expect(result.success).toBe(true)
   })
@@ -154,26 +156,28 @@ describe('ApplyMatchSchema', () => {
 
 // ---- CreateReviewSchema ----
 describe('CreateReviewSchema', () => {
+  const VALID_MATCH_ID = 'cltest00000000000000000001'
+
   it('1〜5の評価を受け入れる', () => {
     for (const score of [1, 2, 3, 4, 5]) {
-      const result = CreateReviewSchema.safeParse({ matchId: 'match-1', score })
+      const result = CreateReviewSchema.safeParse({ matchId: VALID_MATCH_ID, score })
       expect(result.success).toBe(true)
     }
   })
 
   it('0以下の評価は失敗する', () => {
-    const result = CreateReviewSchema.safeParse({ matchId: 'match-1', score: 0 })
+    const result = CreateReviewSchema.safeParse({ matchId: VALID_MATCH_ID, score: 0 })
     expect(result.success).toBe(false)
   })
 
   it('6以上の評価は失敗する', () => {
-    const result = CreateReviewSchema.safeParse({ matchId: 'match-1', score: 6 })
+    const result = CreateReviewSchema.safeParse({ matchId: VALID_MATCH_ID, score: 6 })
     expect(result.success).toBe(false)
   })
 
   it('コメント付きのレビューを受け入れる', () => {
     const result = CreateReviewSchema.safeParse({
-      matchId: 'match-1',
+      matchId: VALID_MATCH_ID,
       score: 5,
       comment: '素晴らしい仕事でした',
     })
@@ -183,9 +187,11 @@ describe('CreateReviewSchema', () => {
 
 // ---- SendMessageSchema ----
 describe('SendMessageSchema', () => {
+  const VALID_MATCH_ID = 'cltest00000000000000000001'
+
   it('通常のメッセージを受け入れる', () => {
     const result = SendMessageSchema.safeParse({
-      matchId: 'match-1',
+      matchId: VALID_MATCH_ID,
       body: 'こんにちは！',
     })
     expect(result.success).toBe(true)
@@ -193,7 +199,7 @@ describe('SendMessageSchema', () => {
 
   it('空のメッセージは失敗する', () => {
     const result = SendMessageSchema.safeParse({
-      matchId: 'match-1',
+      matchId: VALID_MATCH_ID,
       body: '',
     })
     expect(result.success).toBe(false)
@@ -201,7 +207,7 @@ describe('SendMessageSchema', () => {
 
   it('5000文字超のメッセージは失敗する', () => {
     const result = SendMessageSchema.safeParse({
-      matchId: 'match-1',
+      matchId: VALID_MATCH_ID,
       body: 'あ'.repeat(5001),
     })
     expect(result.success).toBe(false)

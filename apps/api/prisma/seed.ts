@@ -12,15 +12,21 @@ async function main() {
   const proHash = await bcrypt.hash('pro12345', 12)
   const generalHash = await bcrypt.hash('user1234', 12)
 
+  // 公式アカウント兼管理者: 全体お知らせ・ウェルカム DM・サポート窓口の送信元
+  // isOfficial=true を持つのは基盤上 1 人だけの想定（schema コメント参照）
   const admin = await prisma.user.upsert({
     where: { email: 'admin@creatorlinks.jp' },
-    update: {},
+    // 既存 DB でも isOfficial=true を確実に立てる（無いと Phase 1-4 機能が動かない）
+    update: { isOfficial: true, role: 'ADMIN' },
     create: {
       email: 'admin@creatorlinks.jp',
-      name: '管理者',
+      name: '運営',
+      displayName: '運営公式',
       passwordHash: adminHash,
       role: 'ADMIN',
+      isOfficial: true,
       genres: [],
+      bio: 'プラットフォーム運営公式アカウントです。お知らせ配信・サポート・キュレーションを担当します。',
     },
   })
 
@@ -192,12 +198,31 @@ async function main() {
     },
   })
 
+  // ---- ベータ体験ユーザー向けプロモコード（永年無料 PRO 発行）----
+  // ユーザーがサインアップ後、/pro/subscribe の「プロモコードを入力」に
+  // BETA-ENCORE-2026 を入れると hasLifetimeFreePro=true + role=PRO が付与される。
+  // 上限 20 名 / 有効期限 2027-02-28（半年間の redeem 期限）。
+  // 上限に達したら別コードを追加するか、maxRedemptions を増やして再 seed する。
+  await prisma.promoCode.upsert({
+    where: { code: 'BETA-ENCORE-2026' },
+    update: {}, // 既存レコードには手を加えない（redemptionCount を保護）
+    create: {
+      code: 'BETA-ENCORE-2026',
+      label: 'ベータ体験ユーザー向け永年無料枠 (2026-08 開始)',
+      maxRedemptions: 20,
+      expiresAt: new Date('2027-02-28'),
+      createdById: admin.id, // 公式アカウントが発行
+    },
+  })
+
   console.log('✅ Seed complete!')
   console.log('\n📋 テストアカウント:')
   console.log('  管理者    : admin@creatorlinks.jp / admin1234')
   console.log('  PRO artist: yamada@example.com   / pro12345')
   console.log('  artist    : sato@example.com     / user1234')
   console.log('  client    : client@example.com   / user1234')
+  console.log('\n🎟  ベータ用プロモコード:')
+  console.log('  BETA-ENCORE-2026  (永年無料 PRO / 20 名分 / 2027-02-28 まで)')
 }
 
 main()

@@ -24,7 +24,7 @@ export async function middleware(req: NextRequest) {
     secureCookie: process.env.NODE_ENV === 'production',
   })
 
-  const protectedPaths = ['/dashboard', '/projects/new', '/projects/manage']
+  const protectedPaths = ['/dashboard', '/projects/new', '/projects/manage', '/events/new']
   const adminPaths = ['/admin']
 
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
@@ -44,6 +44,7 @@ export const config = {
     '/dashboard/:path*',
     '/projects/new',
     '/projects/manage/:path*',
+    '/events/new',
     '/admin/:path*',
     '/api/auth/callback/credentials',
   ],

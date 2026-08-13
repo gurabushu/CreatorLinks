@@ -4,8 +4,12 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { sendMessageAction, completeMatchAction, createReviewAction } from '@/server/actions/match'
+import { createCheckoutSessionAction, releasePaymentAction } from '@/server/actions/payments'
+import { PaymentBadge, type PaymentStatus } from '@/components/payments/payment-badge'
+import { OfficialBadge } from '@/components/official-badge'
 import { useInterval } from '@/hooks/use-interval'
 import { getPusherClient } from '@/lib/pusher-client'
+import { getDisplayName } from '@/lib/user'
 
 interface Message {
   id: string
@@ -13,7 +17,7 @@ interface Message {
   body: string
   createdAt: string
   readAt: string | null
-  sender: { id: string; name: string; avatarUrl: string | null }
+  sender: { id: string; name: string; displayName: string | null; avatarUrl: string | null }
 }
 
 interface PrivateProject {
@@ -24,18 +28,30 @@ interface PrivateProject {
   contractType: 'SPOT' | 'SUBSCRIPTION'
 }
 
+interface PaymentInfo {
+  status: PaymentStatus
+  amountYen: number
+  artistPayoutYen: number
+  paidAt: string | null
+}
+
 interface Props {
   matchId: string
   currentUserId: string
   isArtist: boolean
+  isClient: boolean
   match: {
     status: string
     projectTitle: string | null
     projectId: string | null
+    projectBudget: number | null
     isP2P: boolean
     partnerName: string
     partnerAvatar: string | null
+    partnerIsOfficial: boolean
   }
+  feeBreakdown: { platformFeeYen: number; artistPayoutYen: number } | null
+  payment: PaymentInfo | null
   myPrivateProjects?: PrivateProject[]
   initialMessages: Message[]
 }
@@ -120,7 +136,6 @@ function ReviewModal({
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center">
-          <div className="text-4xl mb-3">⭐</div>
           <p className="font-bold text-lg mb-1">レビューを投稿しました</p>
           <p className="text-gray-500 text-sm mb-5">ありがとうございます</p>
           <button
@@ -147,11 +162,14 @@ function ReviewModal({
                   key={s}
                   type="button"
                   onClick={() => setScore(s)}
-                  className={`w-10 h-10 rounded-full text-lg transition ${
+                  aria-label={`${s}点`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
                     score >= s ? 'text-yellow-400' : 'text-gray-200'
                   }`}
                 >
-                  ★
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l2.9 6.9L22 9.7l-5.5 4.8L18 22l-6-3.6L6 22l1.5-7.5L2 9.7l7.1-.8L12 2z" />
+                  </svg>
                 </button>
               ))}
             </div>
@@ -194,7 +212,10 @@ export function ChatClient({
   matchId,
   currentUserId,
   isArtist,
+  isClient,
   match,
+  feeBreakdown,
+  payment,
   myPrivateProjects = [],
   initialMessages,
 }: Props) {
@@ -203,12 +224,41 @@ export function ChatClient({
   const [input, setInput] = useState('')
   const [isSending, startSendTransition] = useTransition()
   const [isCompleting, startCompleteTransition] = useTransition()
+  const [isPaying, startPayTransition] = useTransition()
+  const [isReleasing, startReleaseTransition] = useTransition()
+  const [releaseError, setReleaseError] = useState<string | null>(null)
   const [showReview, setShowReview] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
   const [showShareMenu, setShowShareMenu] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isCompleted = match.status === 'COMPLETED'
+  const canShowPayButton =
+    isClient &&
+    !match.isP2P &&
+    match.status === 'ACCEPTED' &&
+    !!match.projectBudget &&
+    match.projectBudget > 0 &&
+    (!payment || payment.status === 'AWAITING' || payment.status === 'FAILED')
+
+  const canShowReleaseButton =
+    isClient &&
+    !match.isP2P &&
+    isCompleted &&
+    payment?.status === 'HELD'
+
+  const handleRelease = () => {
+    if (!confirm('送金を確定します。取り消しはできません。よろしいですか？')) return
+    setReleaseError(null)
+    startReleaseTransition(async () => {
+      const result = await releasePaymentAction(matchId)
+      if (!result.success) {
+        setReleaseError(result.error)
+      } else {
+        router.refresh()
+      }
+    })
+  }
 
   // 自動スクロール
   useEffect(() => {
@@ -268,7 +318,7 @@ export function ChatClient({
       body,
       createdAt: new Date().toISOString(),
       readAt: null,
-      sender: { id: currentUserId, name: 'あなた', avatarUrl: null },
+      sender: { id: currentUserId, name: 'あなた', displayName: null, avatarUrl: null },
     }
     setMessages((prev) => [...prev, optimistic])
     setInput('')
@@ -301,7 +351,7 @@ export function ChatClient({
       body,
       createdAt: new Date().toISOString(),
       readAt: null,
-      sender: { id: currentUserId, name: 'あなた', avatarUrl: null },
+      sender: { id: currentUserId, name: 'あなた', displayName: null, avatarUrl: null },
     }
     setMessages((prev) => [...prev, optimistic])
     startSendTransition(async () => {
@@ -341,8 +391,13 @@ export function ChatClient({
             />
           )}
           <div className="min-w-0">
-            <p className="font-medium text-sm leading-none truncate">{match.partnerName}</p>
-            {match.isP2P ? (
+            <p className="font-medium text-sm leading-none truncate flex items-center gap-1.5">
+              <span className="truncate">{match.partnerName}</span>
+              {match.partnerIsOfficial && <OfficialBadge size="sm" />}
+            </p>
+            {match.partnerIsOfficial ? (
+              <p className="text-xs text-purple-600">公式サポート・お知らせ窓口</p>
+            ) : match.isP2P ? (
               <p className="text-xs text-pink-500">アーティスト同士のマッチ</p>
             ) : (
               <Link
@@ -355,6 +410,26 @@ export function ChatClient({
           </div>
         </div>
 
+        {/* 決済ステータス（支払い済み / 送金済み 等） */}
+        {payment && payment.status !== 'AWAITING' && payment.status !== 'FAILED' && (
+          <PaymentBadge status={payment.status} />
+        )}
+
+        {/* 支払うボタン（発注者 / ACCEPTED / 未払い のときだけ表示） */}
+        {canShowPayButton && (
+          <button
+            onClick={() =>
+              startPayTransition(() => createCheckoutSessionAction(matchId))
+            }
+            disabled={isPaying}
+            className="shrink-0 text-[11px] sm:text-xs bg-purple-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 whitespace-nowrap"
+          >
+            {isPaying
+              ? '準備中'
+              : `支払う ¥${match.projectBudget?.toLocaleString() ?? ''}`}
+          </button>
+        )}
+
         {/* 完了ボタン（Project Match のみ表示 / P2P では非表示） */}
         {isArtist && !isCompleted && !match.isP2P && (
           <button
@@ -362,7 +437,19 @@ export function ChatClient({
             disabled={isCompleting}
             className="shrink-0 text-[11px] sm:text-xs bg-blue-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 whitespace-nowrap"
           >
-            {isCompleting ? '処理中' : '✅ 納品完了'}
+            {isCompleting ? '処理中' : '納品完了'}
+          </button>
+        )}
+
+        {/* 発注者の手動送金確認（COMPLETED + Payment HELD） */}
+        {canShowReleaseButton && (
+          <button
+            onClick={handleRelease}
+            disabled={isReleasing}
+            className="shrink-0 text-[11px] sm:text-xs bg-emerald-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 whitespace-nowrap"
+            title={`アーティストに ¥${payment?.artistPayoutYen.toLocaleString() ?? ''} を送金します`}
+          >
+            {isReleasing ? '送金中' : '送金確認'}
           </button>
         )}
 
@@ -379,7 +466,31 @@ export function ChatClient({
             </button>
           </div>
         )}
+
+        {!match.partnerIsOfficial && (
+          <Link
+            href="/dashboard/support"
+            className="shrink-0 text-[11px] sm:text-xs text-purple-600 hover:text-purple-700 hover:underline whitespace-nowrap"
+            title="公式サポート窓口を開く"
+          >
+            公式に相談
+          </Link>
+        )}
       </div>
+      {releaseError && (
+        <div className="border-b bg-red-50 px-4 py-2 text-xs text-red-700">
+          {releaseError}
+        </div>
+      )}
+      {canShowPayButton && feeBreakdown && match.projectBudget && (
+        <div className="border-b bg-purple-50/60 px-4 py-2 text-[11px] sm:text-xs text-gray-700">
+          支払い <span className="font-bold">¥{match.projectBudget.toLocaleString()}</span>
+          {' = '}
+          手数料 ¥{feeBreakdown.platformFeeYen.toLocaleString()}
+          {' + '}
+          アーティスト受取 <span className="font-bold text-purple-700">¥{feeBreakdown.artistPayoutYen.toLocaleString()}</span>
+        </div>
+      )}
 
       {/* メッセージ一覧 */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
@@ -399,7 +510,7 @@ export function ChatClient({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={msg.sender.avatarUrl}
-                      alt={msg.sender.name}
+                      alt={getDisplayName(msg.sender)}
                       className="w-full h-full object-cover"
                     />
                   )}
@@ -452,7 +563,7 @@ export function ChatClient({
                 onClick={() => setShowShareMenu((v) => !v)}
                 className="text-xs px-3 py-1.5 rounded-full border border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 transition"
               >
-                📋 自分の非公開案件を共有
+                自分の非公開案件を共有
               </button>
               {showShareMenu && (
                 <div className="absolute bottom-full left-0 right-0 sm:right-auto sm:w-72 mb-2 bg-white border border-pink-200 rounded-xl shadow-lg p-2 z-10 max-h-72 overflow-y-auto">

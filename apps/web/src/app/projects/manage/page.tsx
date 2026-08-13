@@ -5,7 +5,16 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { ManageMatchButtons } from './manage-match-buttons'
+import { getDisplayName } from '@/lib/user'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/shared'
+import { PaymentBadge, type PaymentStatus } from '@/components/payments/payment-badge'
+
+const LEVEL_BADGE_CLASS: Record<CommitmentLevel, string> = {
+  HOBBY: 'bg-emerald-100 text-emerald-700',
+  SEMI_PRO: 'bg-sky-100 text-sky-700',
+  PRO: 'bg-amber-100 text-amber-800',
+}
 
 export default async function ProjectManagePage() {
   const session = await auth()
@@ -24,11 +33,13 @@ export default async function ProjectManagePage() {
               select: {
                 id: true,
                 name: true,
+                displayName: true,
                 avatarUrl: true,
                 averageRating: true,
                 genres: true,
               },
             },
+            payment: { select: { status: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -71,7 +82,7 @@ export default async function ProjectManagePage() {
               {/* 案件ヘッダー */}
               <div className="px-6 py-5 border-b bg-gray-50 flex justify-between items-start gap-4">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span
                       className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                         project.status === 'OPEN'
@@ -85,6 +96,17 @@ export default async function ProjectManagePage() {
                     >
                       {STATUS_LABEL[project.status]}
                     </span>
+                    {(() => {
+                      const level = (project.commitmentLevel ?? 'HOBBY') as CommitmentLevel
+                      return (
+                        <span
+                          className={`text-xs font-medium px-2.5 py-1 rounded-full ${LEVEL_BADGE_CLASS[level]}`}
+                          title={COMMITMENT_LEVEL_LABELS[level].description}
+                        >
+                          {COMMITMENT_LEVEL_LABELS[level].label}
+                        </span>
+                      )
+                    })()}
                     <span className="text-xs text-gray-400">
                       {project.contractType === 'SPOT' ? 'スポット' : 'サブスク'}
                     </span>
@@ -110,7 +132,8 @@ export default async function ProjectManagePage() {
                 <p className="px-6 py-5 text-sm text-gray-400">まだ応募者がいません</p>
               ) : (
                 <div className="divide-y">
-                  {project.matches.map((match) => (
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {project.matches.map((match: any) => (
                     <div key={match.id} className="px-6 py-4 flex items-start justify-between gap-4">
                       {/* アーティスト情報 */}
                       <div className="flex items-start gap-3 min-w-0">
@@ -120,7 +143,7 @@ export default async function ProjectManagePage() {
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={match.artist.avatarUrl}
-                                alt={match.artist.name}
+                                alt={getDisplayName(match.artist)}
                                 className="w-full h-full object-cover"
                               />
                             )}
@@ -131,13 +154,18 @@ export default async function ProjectManagePage() {
                             href={`/artists/${match.artist.id}`}
                             className="font-medium text-sm hover:text-purple-600"
                           >
-                            {match.artist.name}
+                            {getDisplayName(match.artist)}
                           </Link>
                           <p className="text-xs text-gray-400">
-                            ⭐ {Number(match.artist.averageRating).toFixed(1)}
+                            評価 {Number(match.artist.averageRating).toFixed(1)}
                             {match.artist.genres.length > 0 &&
                               ` · ${match.artist.genres.slice(0, 2).join(', ')}`}
                           </p>
+                          {match.payment && (
+                            <div className="mt-1">
+                              <PaymentBadge status={match.payment.status as PaymentStatus} size="sm" />
+                            </div>
+                          )}
                           {match.message && (
                             <p className="text-xs text-gray-600 mt-1 line-clamp-2 max-w-md">
                               「{match.message}」

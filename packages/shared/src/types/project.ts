@@ -1,4 +1,4 @@
-import type { ContractType, ProjectStatus } from './enums'
+import type { CommitmentLevel, ContractType, ProjectStatus } from './enums'
 import type { Match } from './match'
 
 // =============================================
@@ -13,6 +13,7 @@ export interface Project {
   genres: string[]
   budget: number | null
   contractType: ContractType
+  commitmentLevel: CommitmentLevel
   status: ProjectStatus
   createdAt: Date
 }

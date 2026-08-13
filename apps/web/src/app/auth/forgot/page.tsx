@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { requestPasswordResetAction } from '@/server/actions/auth'
+import { SITE_NAME } from '@/lib/brand'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -21,13 +22,12 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <Link href="/" className="text-2xl font-bold text-purple-600">CreatorLinks</Link>
+          <Link href="/" className="text-2xl font-bold text-purple-600">{SITE_NAME}</Link>
           <p className="text-gray-500 text-sm mt-1">パスワード再設定</p>
         </div>
 
         {submitted ? (
           <div className="text-center space-y-4">
-            <div className="text-4xl">📧</div>
             <p className="font-medium text-gray-800">
               入力されたメールアドレスにリセット用リンクを送信しました
             </p>

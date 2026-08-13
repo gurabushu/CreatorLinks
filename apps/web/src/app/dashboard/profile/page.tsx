@@ -12,7 +12,19 @@ export default async function ProfileEditPage() {
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: session.user.id },
-    select: { name: true, email: true, bio: true, genres: true, avatarUrl: true, coverUrl: true },
+    select: {
+      name: true,
+      displayName: true,
+      bio: true,
+      genres: true,
+      avatarUrl: true,
+      coverUrl: true,
+      gender: true,
+      heightCm: true,
+      activityYears: true,
+      skillLevel: true,
+      instruments: true,
+    },
   })
 
   return <ProfileEditForm user={user} />

@@ -24,3 +24,23 @@ export const ConfirmEmailChangeSchema = z.object({
   token: z.string().min(8, 'トークンが不正です'),
 })
 export type ConfirmEmailChangeInput = z.infer<typeof ConfirmEmailChangeSchema>
+
+// 設定画面からのパスワード変更（ログイン中）
+// currentPassword は passwordHash 未設定ユーザー（OAuth のみ経由等）向けに任意にしてある。
+// 「currentPassword 必須かどうか」の最終判定はサーバー側で行う。
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().max(72).optional(),
+    newPassword: z.string().min(8, 'パスワードは8文字以上で入力してください').max(72, 'パスワードは72文字以内'),
+    confirmPassword: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['confirmPassword'],
+        message: '確認用パスワードが一致しません',
+      })
+    }
+  })
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>

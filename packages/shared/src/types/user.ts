@@ -1,4 +1,4 @@
-import type { UserRole } from './enums'
+import type { CommitmentLevel, Gender, UserRole } from './enums'
 import type { Portfolio } from './portfolio'
 
 // =============================================
@@ -14,6 +14,11 @@ export interface User {
   bio: string | null
   avatarUrl: string | null
   averageRating: number
+  gender: Gender | null
+  heightCm: number | null
+  activityYears: number | null
+  skillLevel: CommitmentLevel | null
+  instruments: string[]
   createdAt: Date
   updatedAt: Date
 }

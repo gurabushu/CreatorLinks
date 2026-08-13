@@ -16,7 +16,6 @@ export default async function EmailConfirmPage({ searchParams }: Props) {
     return (
       <div className="max-w-md mx-auto py-16 px-4 text-center">
         <div className="bg-white border rounded-2xl p-8 shadow-sm">
-          <div className="text-4xl mb-3">⚠️</div>
           <p className="font-bold text-gray-800 mb-2">トークンが見つかりません</p>
           <p className="text-sm text-gray-500 mb-6">
             メール内のリンクから直接開いてください。
@@ -39,7 +38,6 @@ export default async function EmailConfirmPage({ searchParams }: Props) {
       <div className="bg-white border rounded-2xl p-8 shadow-sm">
         {result.success ? (
           <>
-            <div className="text-4xl mb-3">✅</div>
             <p className="font-bold text-gray-800 mb-2">メールアドレスを更新しました</p>
             <p className="text-sm text-gray-500 mb-6">
               新しいメールアドレス: <span className="font-medium text-gray-700">{result.newEmail}</span>
@@ -56,8 +54,7 @@ export default async function EmailConfirmPage({ searchParams }: Props) {
           </>
         ) : (
           <>
-            <div className="text-4xl mb-3">⚠️</div>
-            <p className="font-bold text-gray-800 mb-2">変更を完了できませんでした</p>
+              <p className="font-bold text-gray-800 mb-2">変更を完了できませんでした</p>
             <p className="text-sm text-gray-500 mb-6">{result.error}</p>
             <Link
               href="/dashboard/profile"

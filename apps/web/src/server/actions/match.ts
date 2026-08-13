@@ -14,6 +14,7 @@ import {
   MATCH_COMPLETED_EVENT,
 } from '@/lib/pusher-server'
 import { inngest } from '@/lib/inngest'
+import { getDisplayName } from '@/lib/user'
 
 export type MatchActionResult = { success: boolean; error?: string }
 
@@ -53,7 +54,11 @@ export async function updateMatchStatusAction(
     // アーティストへ承認通知
     const artist = await prisma.user.findUnique({
       where: { id: match.artistId },
-      select: { email: true, name: true },
+      select: { email: true, name: true, displayName: true },
+    })
+    const client = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, displayName: true },
     })
     if (artist) {
       await inngest.send({
@@ -61,8 +66,8 @@ export async function updateMatchStatusAction(
         data: {
           matchId,
           artistEmail: artist.email,
-          artistName: artist.name,
-          clientName: session.user.name ?? '発注者',
+          artistName: getDisplayName(artist),
+          clientName: client ? getDisplayName(client) : '発注者',
           projectTitle: match.project.title,
         },
       }).catch(() => {/* Inngest 未設定時は無視 */})
@@ -73,11 +78,15 @@ export async function updateMatchStatusAction(
   const pusher = await getPusherServer()
   if (pusher) {
     const event = status === 'ACCEPTED' ? MATCH_ACCEPTED_EVENT : MATCH_REJECTED_EVENT
+    const client = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, displayName: true },
+    })
     await pusher.trigger(getUserChannel(match.artistId), event, {
       matchId,
       projectId: match.projectId,
       projectTitle: match.project.title,
-      counterpartName: session.user.name ?? '発注者',
+      counterpartName: client ? getDisplayName(client) : '発注者',
       createdAt: new Date().toISOString(),
     })
   }
@@ -110,7 +119,10 @@ export async function completeMatchAction(matchId: string): Promise<MatchActionR
     return { success: false, error: '承認済みの案件のみ完了できます' }
   }
 
-  await prisma.match.update({ where: { id: matchId }, data: { status: 'COMPLETED' } })
+  await prisma.match.update({
+    where: { id: matchId },
+    data: { status: 'COMPLETED', completedAt: new Date() },
+  })
 
   // Project ステータスを CLOSED に
   await prisma.project.update({
@@ -122,11 +134,15 @@ export async function completeMatchAction(matchId: string): Promise<MatchActionR
   if (match.project) {
     const pusher = await getPusherServer()
     if (pusher) {
+      const artist = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { name: true, displayName: true },
+      })
       await pusher.trigger(getUserChannel(match.project.clientId), MATCH_COMPLETED_EVENT, {
         matchId,
         projectId: match.projectId,
         projectTitle: match.project.title,
-        counterpartName: session.user.name ?? 'アーティスト',
+        counterpartName: artist ? getDisplayName(artist) : 'アーティスト',
         createdAt: new Date().toISOString(),
       })
     }
@@ -225,7 +241,7 @@ export async function sendMessageAction(
 
   const message = await prisma.message.create({
     data: { matchId, senderId: session.user.id, body: body.trim() },
-    include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
+    include: { sender: { select: { id: true, name: true, displayName: true, avatarUrl: true } } },
   })
 
   // 相手の未読メッセージを既読に（自分が送った場合は不要）
@@ -258,7 +274,11 @@ export async function sendMessageAction(
   }
   const recipient = await prisma.user.findUnique({
     where: { id: recipientId },
-    select: { email: true, name: true },
+    select: { email: true, name: true, displayName: true },
+  })
+  const sender = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, displayName: true },
   })
   if (recipient) {
     await inngest.send({
@@ -266,8 +286,8 @@ export async function sendMessageAction(
       data: {
         matchId,
         recipientEmail: recipient.email,
-        recipientName: recipient.name,
-        senderName: session.user.name ?? 'ユーザー',
+        recipientName: getDisplayName(recipient),
+        senderName: sender ? getDisplayName(sender) : 'ユーザー',
         messagePreview: body.trim().slice(0, 100),
       },
     }).catch(() => {/* Inngest 未設定時は無視 */})

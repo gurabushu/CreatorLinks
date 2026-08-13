@@ -33,10 +33,10 @@ interface Props {
   initialFeaturedId: string | null
 }
 
-const MEDIA_ICON: Record<MediaType, string> = {
-  IMAGE: '🖼️',
-  AUDIO: '🎵',
-  VIDEO: '🎬',
+const MEDIA_LABEL: Record<MediaType, string> = {
+  IMAGE: '画像',
+  AUDIO: '音声',
+  VIDEO: '動画',
 }
 
 function detectMediaType(mimeType: string): MediaType {
@@ -294,11 +294,11 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
               </div>
             ) : (
               <div className="flex items-center gap-4 bg-white border rounded-lg p-4">
-                <div className="w-16 h-16 rounded-lg bg-purple-50 flex items-center justify-center text-3xl flex-shrink-0">
+                <div className="w-16 h-16 rounded-lg bg-purple-50 flex items-center justify-center text-xs text-purple-700 font-semibold flex-shrink-0">
                   {uploadedFile.type === 'IMAGE' ? (
                     <Image src={uploadedFile.url} alt={uploadedFile.name} width={64} height={64} className="w-16 h-16 object-cover rounded-lg" />
                   ) : (
-                    MEDIA_ICON[uploadedFile.type]
+                    MEDIA_LABEL[uploadedFile.type]
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -371,7 +371,6 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
 
       {portfolios.length === 0 && !showForm ? (
         <div className="text-center py-20 text-gray-400">
-          <p className="text-4xl mb-4">🎨</p>
           <p className="font-medium">まだ作品がありません</p>
           <p className="text-sm mt-1">「作品を追加」から最初の作品をアップロードしましょう</p>
         </div>
@@ -450,7 +449,7 @@ function PortfolioCard({
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
         ) : (
-          <span className="text-4xl">{MEDIA_ICON[mediaType as MediaType]}</span>
+          <span className="text-sm text-gray-500 font-semibold">{MEDIA_LABEL[mediaType as MediaType]}</span>
         )}
         {(mediaType === 'VIDEO' || source.kind === 'youtube' || source.kind === 'vimeo') && thumb && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/20">

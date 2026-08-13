@@ -4,6 +4,8 @@ import { Suspense, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { resetPasswordAction } from '@/server/actions/auth'
+import PasswordInput from '@/components/ui/password-input'
+import { SITE_NAME } from '@/lib/brand'
 
 function ResetPasswordInner() {
   const searchParams = useSearchParams()
@@ -49,13 +51,12 @@ function ResetPasswordInner() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <Link href="/" className="text-2xl font-bold text-purple-600">CreatorLinks</Link>
+          <Link href="/" className="text-2xl font-bold text-purple-600">{SITE_NAME}</Link>
           <p className="text-gray-500 text-sm mt-1">新しいパスワードを設定</p>
         </div>
 
         {done ? (
           <div className="text-center space-y-3">
-            <div className="text-4xl">✅</div>
             <p className="font-medium text-gray-800">パスワードを更新しました</p>
             <p className="text-xs text-gray-500">まもなくログイン画面に移動します</p>
           </div>
@@ -65,9 +66,8 @@ function ResetPasswordInner() {
               <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
                 新しいパスワード
               </label>
-              <input
+              <PasswordInput
                 id="new-password"
-                type="password"
                 required
                 minLength={8}
                 autoComplete="new-password"
@@ -81,9 +81,8 @@ function ResetPasswordInner() {
               <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
                 確認のためもう一度
               </label>
-              <input
+              <PasswordInput
                 id="confirm-password"
-                type="password"
                 required
                 minLength={8}
                 autoComplete="new-password"

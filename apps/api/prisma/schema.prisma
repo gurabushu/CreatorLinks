@@ -40,6 +40,13 @@ enum ProjectStatus {
   PRIVATE // マッチ済みユーザーにだけ相互紹介できる非公開案件
 }
 
+// 案件の「本気度」レベル。趣味〜プロを明示化し、モチベのミスマッチを防ぐ
+enum CommitmentLevel {
+  HOBBY // 趣味・遊び。楽しさ重視、報酬・納期は緩め
+  SEMI_PRO // 副業レベル。しっかりやるが本業ではない
+  PRO // プロ品質。納期・品質・報酬をきっちり
+}
+
 enum MatchStatus {
   APPLIED
   ACCEPTED
@@ -47,41 +54,144 @@ enum MatchStatus {
   REJECTED
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  NOT_SPECIFIED
+}
+
+// 依頼主 → アーティスト報酬決済（Stripe Connect エスクロー）の状態
+enum PaymentStatus {
+  AWAITING // Match ACCEPTED 済、クライアントの支払い待ち
+  HELD // Payment intent 成功、Platform でエスクロー保管中
+  RELEASED // Transfer 完了、アーティスト着金済
+  REFUNDED // クライアントへ返金完了
+  FAILED // Payment intent 失敗
+}
+
+// イベント種別（Phase A: イベント告知＋カレンダー機能）
+// Phase A.5: 個人予定・タスク（REHEARSAL/MEETING/TODO）も同じ Event モデルで扱う
+enum EventType {
+  LIVE // ライブ・ワンマン・対バン
+  SESSION // セッション・ジャム
+  RECORDING // レコーディング
+  WORKSHOP // ワークショップ・講習
+  MEETUP // 交流会・懇親会
+  REHEARSAL // リハーサル・個人練習（通常 PRIVATE or PARTICIPANTS_ONLY）
+  MEETING // 打ち合わせ・ミーティング
+  TODO // タスク・やること（時刻不定でも可）
+  OTHER
+}
+
+// イベントの可視性（Phase A.5）
+// status（ライフサイクル）とは直交する軸。誰が閲覧できるかを制御。
+// EventParticipant に含まれる人は visibility に関わらず常に閲覧可能。
+enum EventVisibility {
+  PRIVATE // 本人のみ
+  PARTICIPANTS_ONLY // 招待した共演者・スタッフ・出演者のみ
+  FOLLOWERS // フォロワー + 参加者
+  PUBLIC // 誰でも
+}
+
+// イベントの公開状態
+enum EventStatus {
+  DRAFT // 下書き（本人のみ閲覧）
+  PUBLISHED // 公開中
+  CANCELLED // 中止
+  COMPLETED // 終了済み（後日フラグ）
+}
+
+// イベント参加者のロール
+enum EventParticipantRole {
+  ORGANIZER // 主催者（Event.creatorId と重複するが、共同主催もあり得る）
+  PERFORMER // 出演者
+  STAFF // スタッフ（PA/照明/物販など）
+  GUEST // ゲスト・特別出演
+  AUDIENCE // オーディエンス
+}
+
+// 参加確定状態
+enum EventParticipantStatus {
+  INVITED // 招待中（未返信）
+  CONFIRMED // 確定
+  DECLINED // 辞退
+  CANCELLED // キャンセル
+}
+
+// 公募枠の埋まり状態
+enum EventOpenRoleStatus {
+  OPEN // 募集中
+  FILLED // 埋まった（承認済応募あり）
+  CLOSED // 主催者が締め切った
+}
+
 // =============================================
 // モデル定義
 // =============================================
 
 model User {
-  id               String   @id @default(cuid())
-  email            String   @unique
-  name             String
-  passwordHash     String?  // Credentials認証時のみ
-  role             UserRole @default(GENERAL)
-  genres           String[] // PostgreSQL 配列型
-  bio              String?
-  avatarUrl        String?  // Uploadthing ファイルキー
-  coverUrl         String?  // プロフィールカバー画像（ジャケット）
-  earlyBirdSlot    Int?     @unique // 先着 30 名の PRO 永久無料スロット。1..30。null なら通常ユーザー
-  averageRating    Decimal  @default(0) @db.Decimal(3, 2)
-  featuredPortfolioId String? // アーティスト本人が一覧カードのメインに見せる作品
-  isGuest          Boolean  @default(false) // テスト用ゲストアカウント（24h で自動削除）
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                          String           @id @default(cuid())
+  email                       String           @unique
+  name                        String // アカウント名（会員登録時に付ける識別名）
+  displayName                 String? // アーティストとしての公開表示名。null なら name をフォールバック表示
+  passwordHash                String? // Credentials認証時のみ
+  role                        UserRole         @default(GENERAL)
+  genres                      String[] // PostgreSQL 配列型
+  bio                         String?
+  avatarUrl                   String? // Uploadthing ファイルキー
+  coverUrl                    String? // プロフィールカバー画像（ジャケット）
+  gender                      Gender? // 性別（任意）
+  heightCm                    Int? // 身長 cm（100–250）。null は非公開
+  activityYears               Int? // 活動年数。null は非公開
+  skillLevel                  CommitmentLevel? // 熟練度（HOBBY/SEMI_PRO/PRO）。案件の CommitmentLevel と照合
+  instruments                 String[]         @default([]) // 楽器タグ（音楽系のみ利用）
+  earlyBirdSlot               Int?             @unique // 創設メンバー枠のスロット番号（1..EARLY_BIRD_TOTAL）。null なら通常ユーザー
+  earlyBirdExpiresAt          DateTime? // PRO 無料期間の終わり。null なら期限なし（旧・先着 30 名の永久 PRO 組）
+  earlyBirdReminderSentAt     DateTime? // 無料期間終了の切迫メール送信済みタイムスタンプ（重複送信防止）
+  hasPaidSubscription         Boolean          @default(false) // RevenueCat webhook が維持。true なら失効 cron の対象外
+  hasLifetimeFreePro          Boolean          @default(false) // プロモコード redeem で付与される「月額料金 永年無料」フラグ。失効 cron の対象外
+  // --- Stripe Connect (Express) ---
+  // アーティストが報酬を受け取るための Connect アカウント。null なら未オンボーディング
+  stripeConnectAccountId      String?          @unique
+  stripeChargesEnabled        Boolean          @default(false) // account.updated webhook で同期
+  stripePayoutsEnabled        Boolean          @default(false) // account.updated webhook で同期
+  stripeOnboardingCompletedAt DateTime? // 一度でも charges + payouts の両方が有効化された時刻
+  averageRating               Decimal          @default(0) @db.Decimal(3, 2)
+  featuredPortfolioId         String? // アーティスト本人が一覧カードのメインに見せる作品
+  isGuest                     Boolean          @default(false) // テスト用ゲストアカウント（24h で自動削除）
+  isOfficial                  Boolean          @default(false) // プラットフォーム公式アカウント。通常 1 人だけ true
+  announcementsReadAt         DateTime? // 最後にお知らせ一覧を開いたタイムスタンプ。未読件数の判定基準
+  createdAt                   DateTime         @default(now())
+  updatedAt                   DateTime         @updatedAt
 
   // Relations
-  portfolios        Portfolio[]
-  featuredPortfolio Portfolio?     @relation("FeaturedPortfolio", fields: [featuredPortfolioId], references: [id], onDelete: SetNull)
-  projectsAsClient  Project[]      @relation("ClientProjects")
-  matchesAsArtist   Match[]        @relation("ArtistMatches")
-  matchesAsPartner  Match[]        @relation("PartnerMatches")
-  sentMessages      Message[]
-  reviewsGiven      Review[]       @relation("ReviewerReviews")
-  likesGiven        Like[]         @relation("LikesGiven")
-  likesReceived     Like[]         @relation("LikesReceived")
+  portfolios          Portfolio[]
+  featuredPortfolio   Portfolio?           @relation("FeaturedPortfolio", fields: [featuredPortfolioId], references: [id], onDelete: SetNull)
+  projectsAsClient    Project[]            @relation("ClientProjects")
+  matchesAsArtist     Match[]              @relation("ArtistMatches")
+  matchesAsPartner    Match[]              @relation("PartnerMatches")
+  sentMessages        Message[]
+  reviewsGiven        Review[]             @relation("ReviewerReviews")
+  likesGiven          Like[]               @relation("LikesGiven")
+  likesReceived       Like[]               @relation("LikesReceived")
   passwordResetTokens PasswordResetToken[] @relation("PasswordResets")
   emailChangeRequests EmailChangeRequest[] @relation("EmailChanges")
-  accounts          Account[]
-  sessions          Session[]
+  promoRedemptions    PromoRedemption[]
+  promoCodesCreated   PromoCode[]          @relation("PromoCodesCreated")
+  featuredEntry       FeaturedArtist?
+  accounts            Account[]
+  sessions            Session[]
+
+  // Phase A: イベント関連
+  eventsCreated       Event[]            @relation("EventsCreated")
+  eventParticipations EventParticipant[] @relation("EventParticipations")
+  eventFollows        EventFollow[]      @relation("EventFollows")
+  eventFollowedBy     EventFollow[]      @relation("EventFollowed")
+  eventInterests      EventInterest[]    @relation("EventInterests")
+
+  // Phase A.6: ユーザー間フォロー（SNS 型・visibility=FOLLOWERS の判定基盤）
+  followsGiven    Follow[] @relation("FollowsGiven")
+  followsReceived Follow[] @relation("FollowsReceived")
 
   @@index([isGuest, createdAt])
   @@map("users")
@@ -93,7 +203,7 @@ model Portfolio {
   title       String
   description String?
   mediaType   MediaType
-  fileKey     String    // Uploadthing ファイルキー
+  fileKey     String // Uploadthing ファイルキー
   createdAt   DateTime  @default(now())
 
   user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -103,15 +213,16 @@ model Portfolio {
 }
 
 model Project {
-  id           String        @id @default(cuid())
-  clientId     String
-  title        String
-  description  String?
-  genres       String[]
-  budget       Int?          // 円単位
-  contractType ContractType
-  status       ProjectStatus @default(OPEN)
-  createdAt    DateTime      @default(now())
+  id              String          @id @default(cuid())
+  clientId        String
+  title           String
+  description     String?
+  genres          String[]
+  budget          Int? // 円単位
+  contractType    ContractType
+  commitmentLevel CommitmentLevel @default(HOBBY) // 案件の本気度（趣味/副業/プロ）
+  status          ProjectStatus   @default(OPEN)
+  createdAt       DateTime        @default(now())
 
   client  User    @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
   matches Match[]
@@ -120,29 +231,73 @@ model Project {
 }
 
 model Match {
-  id            String      @id @default(cuid())
-  projectId     String?     // P2P マッチでは null
-  artistId      String      // Project 応募の場合: 受注アーティスト / P2P の場合: いいねを先に出した側
-  partnerUserId String?     // P2P マッチでの相手。projectId が null のとき必須
-  status        MatchStatus @default(APPLIED)
-  message       String?     // 応募メッセージ
-  createdAt     DateTime    @default(now())
+  id              String      @id @default(cuid())
+  projectId       String? // P2P マッチでは null
+  artistId        String // Project 応募の場合: 受注アーティスト / P2P の場合: いいねを先に出した側
+  partnerUserId   String? // P2P マッチでの相手。projectId が null のとき必須
+  eventOpenRoleId String? // Phase A: イベント公募枠への応募の場合、その ID
+  status          MatchStatus @default(APPLIED)
+  message         String? // 応募メッセージ
+  completedAt     DateTime? // 完了報告した時刻。両者合意の完了マーカー
+  createdAt       DateTime    @default(now())
 
-  project  Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  artist   User      @relation("ArtistMatches", fields: [artistId], references: [id], onDelete: Cascade)
-  partner  User?     @relation("PartnerMatches", fields: [partnerUserId], references: [id], onDelete: Cascade)
-  messages Message[]
-  reviews  Review[]
+  project       Project?       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  artist        User           @relation("ArtistMatches", fields: [artistId], references: [id], onDelete: Cascade)
+  partner       User?          @relation("PartnerMatches", fields: [partnerUserId], references: [id], onDelete: Cascade)
+  eventOpenRole EventOpenRole? @relation(fields: [eventOpenRoleId], references: [id], onDelete: Cascade)
+  messages      Message[]
+  reviews       Review[]
+  payment       Payment?
 
-  @@unique([projectId, artistId])   // 同一プロジェクトへの重複応募防止（PostgreSQL の NULL は重複扱いされない）
+  @@unique([projectId, artistId]) // 同一プロジェクトへの重複応募防止（PostgreSQL の NULL は重複扱いされない）
   @@unique([artistId, partnerUserId]) // 同じ P2P ペアで重複マッチを作らない
+  @@unique([eventOpenRoleId, artistId]) // 同一公募枠への重複応募防止
+  @@index([status, completedAt])
   @@map("matches")
+}
+
+// 依頼主 → アーティスト報酬決済（Stripe Connect Separate Charges & Transfers 方式）
+// Match と 1:1 対応。amount 系は円単位の整数（JPY はゼロデシマル通貨）
+model Payment {
+  id                       String        @id @default(cuid())
+  matchId                  String        @unique
+  amountYen                Int // クライアント支払い総額
+  platformFeeYen           Int // Platform 手数料（PLATFORM_FEE_RATE で算出）
+  artistPayoutYen          Int // アーティスト受取額 = amountYen - platformFeeYen
+  currency                 String        @default("jpy")
+  status                   PaymentStatus @default(AWAITING)
+  stripeCheckoutSessionId  String?       @unique // Checkout 戻り時 fallback で PI を直接引くために保存
+  stripePaymentIntentId    String?       @unique
+  stripeChargeId           String?
+  stripeTransferId         String?       @unique
+  paidAt                   DateTime? // payment_intent.succeeded webhook で記録
+  releasedAt               DateTime? // Transfer 作成時に記録
+  refundedAt               DateTime?
+  failedAt                 DateTime?
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("payments")
+}
+
+// Stripe webhook の冪等性ガード。event.id をユニーク制約で保持し、
+// リトライで再送された同一イベントを P2002 で弾く。
+model ProcessedStripeEvent {
+  id        String   @id // Stripe event.id (evt_...)
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("processed_stripe_events")
 }
 
 model Like {
   id        String   @id @default(cuid())
-  likerId   String   // 「いいね」を付けた人
-  likedId   String   // 「いいね」された人
+  likerId   String // 「いいね」を付けた人
+  likedId   String // 「いいね」された人
   createdAt DateTime @default(now())
 
   liker User @relation("LikesGiven", fields: [likerId], references: [id], onDelete: Cascade)
@@ -211,6 +366,224 @@ model Review {
 
   @@unique([matchId, reviewerId]) // 1案件1レビュー
   @@map("reviews")
+}
+
+// 公式キュレーション: トップページ「公式おすすめアーティスト」に載せる
+// 1 ユーザーにつき最大 1 レコード。手動 (SQL / 将来的に Admin UI) で管理
+model FeaturedArtist {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  position   Int       @default(0) // 表示順（小さい方が上）
+  note       String? // 編集コメント（例: "編集部イチオシ"）
+  featuredAt DateTime  @default(now())
+  expiresAt  DateTime? // null なら永続。過ぎたら一覧から除外
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([position])
+  @@index([expiresAt])
+  @@map("featured_artists")
+}
+
+// 公式アカウントが発信する全体お知らせ。ヘッダー通知 / /announcements 一覧で表示
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  body        String // 本文（プレーンテキスト。改行は保持して表示）
+  isPinned    Boolean   @default(false) // 一覧の先頭に固定
+  // 公開状態は publishedAt の値で判定:
+  //   null      → DRAFT（下書き、閲覧不可）
+  //   now より未来 → SCHEDULED（予約公開、閲覧不可）
+  //   now 以下   → PUBLISHED（公開中、閲覧可）
+  publishedAt DateTime? // unread 判定の基準にもなる
+  expiresAt   DateTime? // null なら永続表示。過ぎたら一覧から除外
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([publishedAt])
+  @@index([expiresAt])
+  @@map("announcements")
+}
+
+// プロモコード（例: 招待キャンペーン、パートナー割当）。redeem すると User.hasLifetimeFreePro=true になる
+// grantType は将来「3ヶ月無料」等を増やすときに enum 化する想定。今は redeem = 常に永年無料
+model PromoCode {
+  id              String    @id @default(cuid())
+  code            String    @unique // 表示上は upper-case 想定。redeem 時に upper 化して照合
+  label           String? // 管理用メモ（例: "2027 春キャンペーン"）
+  maxRedemptions  Int? // null なら無制限
+  redemptionCount Int       @default(0)
+  expiresAt       DateTime? // コード自体の有効期限。null なら無期限
+  createdById     String? // 発行者（通常は公式アカウント）。null は SQL 直入れ等の匿名発行
+  createdAt       DateTime  @default(now())
+
+  createdBy   User?             @relation("PromoCodesCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  redemptions PromoRedemption[]
+
+  @@map("promo_codes")
+}
+
+model PromoRedemption {
+  id         String   @id @default(cuid())
+  codeId     String
+  userId     String
+  redeemedAt DateTime @default(now())
+
+  code PromoCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([codeId, userId]) // 同じユーザーが同じコードを重複 redeem できない
+  @@index([userId])
+  @@map("promo_redemptions")
+}
+
+// =============================================
+// Phase A: イベント告知・カレンダー機能
+// =============================================
+
+// イベント告知本体
+model Event {
+  id              String          @id @default(cuid())
+  creatorId       String // 主催者（共同主催は EventParticipant.ORGANIZER で表現）
+  title           String
+  description     String? // Markdown 想定
+  type            EventType       @default(LIVE)
+  status          EventStatus     @default(DRAFT)
+  visibility      EventVisibility @default(PRIVATE) // Phase A.5: 誰が閲覧できるか（status と直交）
+  // 日程・会場
+  startAt         DateTime
+  endAt           DateTime? // 単日なら省略可
+  isAllDay        Boolean         @default(false) // Phase A.5: 終日イベント（時刻は使わない）
+  hasSpecificDate Boolean         @default(true) // Phase A.5: false = 期限未定タスク（インボックス扱い、startAt は便宜的な値）
+  venueName       String? // 会場名（例: "下北沢SHELTER"）
+  venueAddress    String?
+  venueUrl        String? // ライブハウス公式など
+  // 分類・検索
+  genres          String[] // User.genres と同じ配列運用
+  city            String? // 検索用のエリア粒度
+  isOnline        Boolean         @default(false)
+  // チケット
+  ticketUrl       String? // 外部チケット販売リンク（TIGET/ライブポケット等）
+  ticketPriceYen  Int? // 参考価格（円）
+  isFree          Boolean         @default(false)
+  // メディア
+  coverUrl        String? // フライヤー画像
+  // 公開制御
+  publishedAt     DateTime? // status が PUBLISHED になった時刻
+  cancelledAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  creator      User               @relation("EventsCreated", fields: [creatorId], references: [id], onDelete: Cascade)
+  participants EventParticipant[]
+  openRoles    EventOpenRole[]
+  follows      EventFollow[]
+  interests    EventInterest[]
+
+  @@index([status, visibility, startAt]) // 公開中の閲覧可能イベント検索用
+  @@index([creatorId, startAt])
+  @@index([city, startAt])
+  @@map("events")
+}
+
+// イベント参加者（主催・出演・スタッフ・オーディエンス）
+model EventParticipant {
+  id          String                 @id @default(cuid())
+  eventId     String
+  userId      String
+  role        EventParticipantRole
+  status      EventParticipantStatus @default(INVITED)
+  note        String? // 「メインアクト」「1曲目〜3曲目参加」等の補足
+  invitedAt   DateTime               @default(now())
+  respondedAt DateTime?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation("EventParticipations", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId, role]) // 同一イベントで同ユーザーの同ロール重複防止
+  @@index([userId, status]) // 自分の参加中イベント一覧
+  @@map("event_participants")
+}
+
+// 出演枠・スタッフ枠の公募定義（Match システムと接続）
+// 応募は Match テーブルの eventOpenRoleId 経由で紐付ける
+model EventOpenRole {
+  id            String               @id @default(cuid())
+  eventId       String
+  roleType      EventParticipantRole // 公募するロール
+  title         String // 「ドラム募集」「PA担当募集」など
+  description   String?
+  requiredCount Int                  @default(1) // 何名まで採用するか
+  filledCount   Int                  @default(0) // 承認済み応募者数
+  compensation  Int? // 想定報酬（円）。null は要相談
+  isPaid        Boolean              @default(true)
+  status        EventOpenRoleStatus  @default(OPEN)
+  closedAt      DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  matches Match[] // Match.eventOpenRoleId 経由で応募が紐づく
+
+  @@index([status, eventId])
+  @@map("event_open_roles")
+}
+
+// イベントフォロー（ファン向け通知購読）
+// 特定イベントをフォロー、または特定ユーザーの全イベントをフォロー
+model EventFollow {
+  id             String   @id @default(cuid())
+  followerId     String // フォローする側（ファン）
+  eventId        String? // 特定イベントをフォロー（null なら followedUserId 必須）
+  followedUserId String? // ユーザー全体をフォロー（そのユーザーが関わる全イベントを通知）
+  createdAt      DateTime @default(now())
+
+  follower     User   @relation("EventFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  event        Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  followedUser User?  @relation("EventFollowed", fields: [followedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, eventId])
+  @@unique([followerId, followedUserId])
+  @@index([eventId])
+  @@index([followedUserId])
+  @@map("event_follows")
+}
+
+// ユーザー間フォロー（Phase A.6）
+// 「このアーティストの動きを追う」宣言。Event.visibility=FOLLOWERS の判定にも使う。
+// EventFollow (通知購読) とは別概念:
+//   - Follow    = ユーザー間の関係の宣言（visibility 判定・プロフィール表示）
+//   - EventFollow = 特定イベントの通知購読オプトイン
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String // フォローする側
+  followingId String // フォローされる側
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("FollowsGiven", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("FollowsReceived", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId]) // フォロワー一覧・数の取得用
+  @@map("follows")
+}
+
+// ユーザーの参加表明（オーディエンス向けの「行く/興味あり」）
+// EventParticipant の AUDIENCE ロールは主催者承認型、こちらは自主表明
+model EventInterest {
+  id          String   @id @default(cuid())
+  userId      String
+  eventId     String
+  isAttending Boolean  @default(false) // true=行く、false=興味あり
+  createdAt   DateTime @default(now())
+
+  user  User  @relation("EventInterests", fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([eventId, isAttending])
+  @@map("event_interests")
 }
 
 // =============================================

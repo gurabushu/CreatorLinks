@@ -5,17 +5,78 @@
 import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createProjectAction } from '@/server/actions/project'
+import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/shared'
 
 const GENRES = ['音楽', 'イラスト', '動画', 'デザイン', '写真', '文章', '声優', 'その他']
+
+const COMMITMENT_LEVEL_OPTIONS: readonly CommitmentLevel[] = ['HOBBY', 'SEMI_PRO', 'PRO'] as const
+
+// Phase A.6+: 音楽業界向け依頼テンプレ（LINE/DM の依頼をアプリに移す動線）
+type Template = {
+  id: string
+  emoji: string
+  label: string
+  hint: string
+  title: string
+  description: string
+  genres: string[]
+  commitmentLevel: CommitmentLevel
+}
+
+const TEMPLATES: readonly Template[] = [
+  {
+    id: 'recording',
+    emoji: '🎙️',
+    label: 'レコーディング参加',
+    hint: 'ギター / ベース / ドラム / コーラス 等',
+    title: 'レコーディング参加のご依頼',
+    description:
+      '【曲情報】\n・楽曲名 / アーティスト名:\n・ジャンル / テンポ:\n・参考音源リンク:\n\n【依頼内容】\n・担当楽器 / パート:\n・想定テイク数・時間:\n・スタジオ / 自宅録音:\n\n【日程・予算】\n・希望録音日 / 締切:\n・予算感（参考）:',
+    genres: ['音楽'],
+    commitmentLevel: 'PRO',
+  },
+  {
+    id: 'mix',
+    emoji: '🎛️',
+    label: 'MIX / マスタリング',
+    hint: '2Mix / TD / MA / マスタリング',
+    title: 'MIX / マスタリング依頼',
+    description:
+      '【曲情報】\n・楽曲名 / アーティスト名:\n・ジャンル / 参考音源:\n・尺 / トラック数:\n\n【依頼範囲】\n□ MIX（TD）\n□ マスタリング\n□ ステム納品\n\n【納期・予算】\n・希望納期:\n・予算感（参考）:\n・素材受け渡し方法（Dropbox 等）:',
+    genres: ['音楽'],
+    commitmentLevel: 'PRO',
+  },
+  {
+    id: 'live-support',
+    emoji: '🎸',
+    label: 'ライブサポート / セッション',
+    hint: '対バン・ワンマン・イベント出演',
+    title: 'ライブサポート出演のご依頼',
+    description:
+      '【公演情報】\n・公演名:\n・日時:\n・会場:\n\n【出演内容】\n・担当楽器 / パート:\n・演奏曲数 / 時間:\n・リハ日程（別途調整）:\n\n【条件】\n・ギャランティ:\n・交通費 / 機材:\n・音源 / スコア提供方法:',
+    genres: ['音楽'],
+    commitmentLevel: 'SEMI_PRO',
+  },
+]
 
 export default function NewProjectPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [contractType, setContractType] = useState<'SPOT' | 'SUBSCRIPTION'>('SPOT')
+  const [commitmentLevel, setCommitmentLevel] = useState<CommitmentLevel>('HOBBY')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
+  const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null)
+
+  const applyTemplate = (t: Template) => {
+    setTitle(t.title)
+    setDescription(t.description)
+    setSelectedGenres(t.genres)
+    setCommitmentLevel(t.commitmentLevel)
+    setAppliedTemplate(t.id)
+  }
 
   const [state, action, isPending] = useActionState(
     async (_prev: { success: boolean; error?: string; field?: string; projectId?: string } | null, formData: FormData) => {
@@ -24,6 +85,7 @@ export default function NewProjectPage() {
       formData.set('description', description)
       selectedGenres.forEach((g) => formData.append('genres', g))
       formData.set('contractType', contractType)
+      formData.set('commitmentLevel', commitmentLevel)
       formData.set('isPrivate', isPrivate ? 'true' : 'false')
 
       const result = await createProjectAction(null, formData)
@@ -44,14 +106,14 @@ export default function NewProjectPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-1">案件を作成する</h1>
-        <p className="text-gray-400 text-sm">ステップ {step} / 3</p>
+    <div className="max-w-2xl mx-auto py-6 sm:py-12 px-4">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold mb-1">案件を作成する</h1>
+        <p className="text-gray-400 text-xs sm:text-sm">ステップ {step} / 3</p>
       </div>
 
       {/* ステップインジケーター */}
-      <div className="flex gap-2 mb-8">
+      <div className="flex gap-2 mb-6 sm:mb-8">
         {[1, 2, 3].map((s) => (
           <div
             key={s}
@@ -64,6 +126,42 @@ export default function NewProjectPage() {
         {/* ステップ 1: 基本情報 */}
         {step === 1 && (
           <div className="space-y-5">
+            {/* テンプレピッカー: LINE/DM の依頼をアプリに移す動線 */}
+            <div>
+              <div className="flex items-baseline justify-between mb-2">
+                <label className="block font-medium">依頼テンプレから始める</label>
+                <span className="text-xs text-gray-400">タップで入力欄に反映</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {TEMPLATES.map((t) => {
+                  const active = appliedTemplate === t.id
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => applyTemplate(t)}
+                      className={`text-left p-3 rounded-xl border-2 transition ${
+                        active
+                          ? 'border-purple-600 bg-purple-50'
+                          : 'border-gray-200 bg-white hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="text-lg mb-1">{t.emoji}</div>
+                      <div className="text-sm font-medium text-gray-800 leading-tight">
+                        {t.label}
+                      </div>
+                      <div className="text-[11px] text-gray-500 mt-1 leading-snug">
+                        {t.hint}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-[11px] text-gray-400 mt-2">
+                ゼロから書きたい場合は下のフォームに直接入力してください。
+              </p>
+            </div>
+
             <div>
               <label className="block font-medium mb-1.5">
                 案件タイトル <span className="text-red-500">*</span>
@@ -155,7 +253,7 @@ export default function NewProjectPage() {
                     }`}
                   >
                     <p className="font-medium text-sm">
-                      {type === 'SPOT' ? '🎯 スポット' : '🔄 サブスク'}
+                      {type === 'SPOT' ? 'スポット' : 'サブスク'}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {type === 'SPOT' ? '単発の案件依頼' : '継続的な長期契約'}
@@ -163,6 +261,38 @@ export default function NewProjectPage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <label className="block font-medium mb-2">
+                案件の本気度 <span className="text-red-500">*</span>
+                <span className="text-gray-400 text-xs font-normal ml-2">
+                  （応募側のモチベ・期待値を揃えるためのラベル）
+                </span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {COMMITMENT_LEVEL_OPTIONS.map((level) => {
+                  const meta = COMMITMENT_LEVEL_LABELS[level]
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setCommitmentLevel(level)}
+                      className={`py-3 px-3 rounded-xl border-2 text-left transition ${
+                        commitmentLevel === level
+                          ? 'border-purple-600 bg-purple-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <p className="font-medium text-sm">{meta.label}</p>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-snug">{meta.description}</p>
+                    </button>
+                  )
+                })}
+              </div>
+              {errorState?.field === 'commitmentLevel' && (
+                <p className="text-xs text-red-600 mt-2">{errorState.error}</p>
+              )}
             </div>
 
             <div className="flex gap-3">
@@ -240,6 +370,10 @@ export default function NewProjectPage() {
               <p className="text-gray-500">
                 契約形態: {contractType === 'SPOT' ? 'スポット（単発）' : 'サブスク（継続）'}
               </p>
+              <p className="text-gray-500">
+                本気度: {COMMITMENT_LEVEL_LABELS[commitmentLevel].label}
+                <span className="text-gray-400 ml-1">（{COMMITMENT_LEVEL_LABELS[commitmentLevel].description}）</span>
+              </p>
               <p className="text-gray-500">公開範囲: {isPrivate ? '非公開（相互紹介）' : '公開（誰でも応募可）'}</p>
             </div>
 
@@ -262,7 +396,7 @@ export default function NewProjectPage() {
                 disabled={isPending}
                 className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition disabled:opacity-50"
               >
-                {isPending ? '公開中...' : '🚀 案件を公開する'}
+                {isPending ? '公開中...' : '案件を公開する'}
               </button>
             </div>
           </div>
