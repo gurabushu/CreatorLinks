@@ -9,6 +9,10 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit } from '@/lib/rate-limit'
 
+// コード文字種: 大文字英数字とハイフン・アンダースコアのみ、4〜32 文字。
+// 制御文字や空白入りの列挙攻撃を弾き、レート制限のバケット消費を実質意味あるものにする。
+const PROMO_CODE_RE = /^[A-Z0-9_-]{4,32}$/
+
 export type RedeemResult =
   | { success: true; label: string | null }
   | { success: false; error: string }
@@ -19,7 +23,9 @@ export async function redeemPromoCodeAction(rawCode: string): Promise<RedeemResu
 
   const code = rawCode.trim().toUpperCase()
   if (!code) return { success: false, error: 'コードを入力してください' }
-  if (code.length > 64) return { success: false, error: 'コードが長すぎます' }
+  if (!PROMO_CODE_RE.test(code)) {
+    return { success: false, error: 'コードの形式が不正です（英数字と - _ のみ、4〜32 文字）' }
+  }
 
   // ブルートフォース対策: ユーザー単位の低頻度制限
   const rl = await checkRateLimit('promo', `user:${session.user.id}`)
@@ -28,6 +34,23 @@ export async function redeemPromoCodeAction(rawCode: string): Promise<RedeemResu
       success: false,
       error: `試行が多すぎます。${rl.retryAfterSec} 秒後にもう一度お試しください`,
     }
+  }
+
+  // ゲスト (isGuest=true) は 24h で消える匿名アカウント。作り直せば同じコードを事実上何度でも
+  // 消費でき、maxRedemptions を食い潰されるため一律拒否。既に PRO 昇格済みならスキップ。
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isGuest: true, hasLifetimeFreePro: true },
+  })
+  if (!user) return { success: false, error: 'ユーザー情報を取得できませんでした' }
+  if (user.isGuest) {
+    return {
+      success: false,
+      error: 'ゲストアカウントではコードを使用できません。まずアカウント登録を完了してください。',
+    }
+  }
+  if (user.hasLifetimeFreePro) {
+    return { success: false, error: 'すでに PRO プランをご利用中です' }
   }
 
   const promo = await prisma.promoCode.findUnique({ where: { code } })
