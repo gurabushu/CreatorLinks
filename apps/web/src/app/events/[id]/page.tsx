@@ -21,6 +21,8 @@ import type {
 } from '@creator-links/shared'
 import { EventInterestButton, ApplyToRoleButton } from './client-actions'
 import { jstDatetime } from '@/lib/jst-date'
+import { JsonLd } from '@/components/seo/json-ld'
+import { eventJsonLd } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -101,8 +103,16 @@ export default async function EventDetailPage({ params }: Params) {
 
   const isPublished = event.status === 'PUBLISHED'
 
+  // Google Event リッチリザルト用 JSON-LD
+  // 公開 (PUBLIC + PUBLISHED) のイベントのみ検索対象。それ以外は emit しない。
+  const eventLd =
+    event.visibility === 'PUBLIC' && event.status === 'PUBLISHED'
+      ? eventJsonLd(event)
+      : null
+
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
+      {eventLd && <JsonLd data={eventLd} />}
       {/* ヘッダー */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-xs text-purple-700 mb-2 flex-wrap">

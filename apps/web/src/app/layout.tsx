@@ -6,6 +6,8 @@ import { SessionProvider } from 'next-auth/react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { SITE_NAME, SITE_TAGLINE } from '@/lib/brand'
+import { JsonLd } from '@/components/seo/json-ld'
+import { organizationJsonLd, websiteJsonLd } from '@/lib/seo'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -55,6 +57,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja">
       <body className={inter.className}>
+        {/* Site-wide 構造化データ。Organization は Knowledge Panel の基礎、
+            WebSite の SearchAction は Sitelinks Search Box 対象化のため。 */}
+        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
         <SessionProvider>
           <TrpcProvider>
             <div className="flex min-h-screen flex-col">

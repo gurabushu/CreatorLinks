@@ -17,6 +17,8 @@ import {
   EVENT_VISIBILITY_ICONS,
 } from '@creator-links/shared'
 import type { EventType, EventVisibility } from '@creator-links/shared'
+import { JsonLd } from '@/components/seo/json-ld'
+import { personJsonLd } from '@/lib/seo'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -142,8 +144,12 @@ export default async function ArtistDetailPage({ params }: Props) {
     !!user.featuredEntry &&
     (!user.featuredEntry.expiresAt || user.featuredEntry.expiresAt.getTime() > Date.now())
 
+  // ゲストアカウントは検索インデックス対象外
+  const artistLd = user.isGuest ? null : personJsonLd(user)
+
   return (
     <div className="max-w-4xl mx-auto py-8 sm:py-12 px-4">
+      {artistLd && <JsonLd data={artistLd} />}
       <Link
         href="/artists"
         className="inline-flex items-center gap-2 mb-6 text-base sm:text-lg font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 -mx-3 px-4 py-2.5 rounded-xl transition-colors"
@@ -328,4 +334,3 @@ export default async function ArtistDetailPage({ params }: Props) {
     </div>
   )
 }
-
