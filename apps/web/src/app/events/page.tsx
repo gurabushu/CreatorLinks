@@ -23,7 +23,8 @@ export default async function EventsPage() {
     where: {
       status: 'PUBLISHED',
       visibility: 'PUBLIC', // Phase A.5: 公開一覧は PUBLIC のみ
-      startAt: { gte: now },
+      // 開催中の複数日イベント（startAt 過去だが endAt 未来）も残す
+      OR: [{ startAt: { gte: now } }, { endAt: { gte: now } }],
     },
     take: 30,
     orderBy: { startAt: 'asc' },

@@ -17,7 +17,11 @@ export const calendarRouter = router({
       ctx.prisma.event.findMany({
         where: {
           creatorId: userId,
-          startAt: { gte: from, lte: to },
+          // 期間内に開始 or 開始前だが終了前 (開催中の複数日イベント) を含める
+        AND: [
+          { startAt: { lte: to } },
+          { OR: [{ endAt: { gte: from } }, { endAt: null, startAt: { gte: from } }] },
+        ],
           status: { in: ['PUBLISHED', 'DRAFT', 'COMPLETED'] },
         },
         select: {
@@ -98,7 +102,11 @@ export const calendarRouter = router({
         creatorId: { in: followingIds },
         status: 'PUBLISHED',
         visibility: { in: ['PUBLIC', 'FOLLOWERS'] },
-        startAt: { gte: from, lte: to },
+        // 期間内に開始 or 開始前だが終了前 (開催中の複数日イベント) を含める
+        AND: [
+          { startAt: { lte: to } },
+          { OR: [{ endAt: { gte: from } }, { endAt: null, startAt: { gte: from } }] },
+        ],
       },
       orderBy: { startAt: 'asc' },
       select: {
@@ -115,7 +123,11 @@ export const calendarRouter = router({
       where: {
         status: 'PUBLISHED',
         visibility: 'PUBLIC', // Phase A.5: 公開カレンダーは PUBLIC のみ
-        startAt: { gte: from, lte: to },
+        // 期間内に開始 or 開始前だが終了前 (開催中の複数日イベント) を含める
+        AND: [
+          { startAt: { lte: to } },
+          { OR: [{ endAt: { gte: from } }, { endAt: null, startAt: { gte: from } }] },
+        ],
         ...(genres && genres.length > 0 ? { genres: { hasSome: genres } } : {}),
         ...(city ? { city } : {}),
         ...(type ? { type } : {}),

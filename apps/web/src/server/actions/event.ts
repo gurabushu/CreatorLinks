@@ -208,10 +208,21 @@ export async function applyToOpenRoleAction(
   const session = await auth()
   if (!session) return { success: false, error: 'ログインが必要です' }
 
-  const role = await prisma.eventOpenRole.findUnique({ where: { id: openRoleId } })
+  // 親イベントの status / creatorId まで確認する。UI 側ボタン制御が抜けても
+  // CANCELLED / COMPLETED / DRAFT や自分主催のイベントには応募できないよう保証する。
+  const role = await prisma.eventOpenRole.findUnique({
+    where: { id: openRoleId },
+    include: { event: { select: { status: true, creatorId: true } } },
+  })
   if (!role) return { success: false, error: '募集枠が見つかりません' }
   if (role.status !== 'OPEN') {
     return { success: false, error: 'この募集は締め切られています' }
+  }
+  if (role.event.status !== 'PUBLISHED') {
+    return { success: false, error: 'このイベントは応募を受け付けていません' }
+  }
+  if (role.event.creatorId === session.user.id) {
+    return { success: false, error: '自分が主催するイベントには応募できません' }
   }
 
   try {
@@ -226,8 +237,13 @@ export async function applyToOpenRoleAction(
     })
     revalidatePath(`/events`)
     return { success: true, data: { matchId: match.id } }
-  } catch {
-    return { success: false, error: '既に応募済みか、応募できない状態です' }
+  } catch (e) {
+    // ユニーク制約違反 (二重応募) だけを「既に応募済み」に変換。
+    // 以前は catch-all で本物の DB エラーまで「既に応募済み」と誤表示していた。
+    if ((e as { code?: string }).code === 'P2002') {
+      return { success: false, error: '既に応募済みです' }
+    }
+    throw e
   }
 }
 

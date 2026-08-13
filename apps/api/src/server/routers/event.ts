@@ -291,10 +291,17 @@ export const eventRouter = router({
     .mutation(async ({ ctx, input }) => {
       const role = await ctx.prisma.eventOpenRole.findUnique({
         where: { id: input.openRoleId },
+        include: { event: { select: { status: true, creatorId: true } } },
       })
       if (!role) throw new TRPCError({ code: 'NOT_FOUND', message: '募集枠が見つかりません' })
       if (role.status !== 'OPEN') {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'この募集は締め切られています' })
+      }
+      if (role.event.status !== 'PUBLISHED') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'このイベントは応募を受け付けていません' })
+      }
+      if (role.event.creatorId === ctx.user.id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '自分が主催するイベントには応募できません' })
       }
       return ctx.prisma.match.create({
         data: {
