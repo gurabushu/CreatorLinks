@@ -18,15 +18,17 @@ export async function Header() {
   return (
     <header className="border-b bg-white sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-4">
-        <div className="h-20 sm:h-24 flex items-center gap-2 sm:gap-4">
-          <Link href="/" className="shrink-0" aria-label={SITE_NAME}>
+        <div className="h-14 sm:h-16 md:h-20 lg:h-24 flex items-center gap-2 sm:gap-4">
+          {/* ロゴは横長 (5.3:1)。モバイルで大きすぎるとナビ・認証ボタンを押し出すため段階的に拡大。
+              max-w も安全網として噛ませ、極端に狭いビューポートで overflow しないようにする。 */}
+          <Link href="/" className="shrink-0 min-w-0" aria-label={SITE_NAME}>
             <Image
               src="/logo.png"
               alt={SITE_NAME}
               width={1032}
               height={193}
               priority
-              className="h-14 sm:h-20 w-auto"
+              className="h-9 sm:h-11 md:h-14 lg:h-16 w-auto max-w-[45vw] sm:max-w-none"
             />
           </Link>
 
