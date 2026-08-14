@@ -182,6 +182,24 @@ function SignUpForm({ onSuccess: _onSuccess }: { onSuccess: () => void }) {
         </p>
       )}
 
+      {/* 明示同意チェック（APPI / GDPR オプトイン水準を満たすため required）。
+          越境移転は Vercel / Stripe / Resend / Sentry 等が米国のため個別明示。 */}
+      <label className="flex items-start gap-2.5 text-xs text-gray-600 leading-relaxed">
+        <input
+          type="checkbox"
+          name="consent"
+          required
+          className="mt-0.5 accent-purple-600"
+        />
+        <span>
+          <a href="/terms" target="_blank" rel="noopener" className="text-purple-700 underline hover:text-purple-800">利用規約</a>
+          ・
+          <a href="/privacy" target="_blank" rel="noopener" className="text-purple-700 underline hover:text-purple-800">プライバシーポリシー</a>
+          に同意し、個人情報が米国等外国にある第三者（Vercel / Stripe / Resend / Sentry 等）へ提供されることを了承します
+          <span className="text-red-500 ml-0.5">*</span>
+        </span>
+      </label>
+
       <button
         type="submit"
         disabled={isPending}
@@ -189,14 +207,6 @@ function SignUpForm({ onSuccess: _onSuccess }: { onSuccess: () => void }) {
       >
         {isPending ? '登録中...' : '無料で登録する'}
       </button>
-
-      <p className="text-xs text-gray-400 text-center">
-        登録することで
-        <a href="/terms" className="underline hover:text-gray-600">利用規約</a>
-        および
-        <a href="/privacy" className="underline hover:text-gray-600">プライバシーポリシー</a>
-        に同意したものとみなします。
-      </p>
     </form>
   )
 }
@@ -239,7 +249,14 @@ function GuestLoginButton() {
         {loading ? 'ゲストアカウントを作成中...' : '登録なしでお試し（24時間有効）'}
       </button>
       <p className="text-center text-xs text-gray-400 mt-2">
-        テスト用アカウントです。24 時間後に自動削除されます。
+        テスト用アカウントです。24 時間後に自動削除。招待メール送信・プロモコード利用・
+        Stripe 決済は使えません。
+        <br />
+        続行すると
+        <a href="/terms" target="_blank" rel="noopener" className="text-purple-600 underline">利用規約</a>
+        ・
+        <a href="/privacy" target="_blank" rel="noopener" className="text-purple-600 underline">プライバシーポリシー</a>
+        に同意したものとみなします。
       </p>
       {error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2 mt-2">
