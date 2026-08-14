@@ -1,22 +1,20 @@
 // 完了報告から AUTO_RELEASE_DAYS 日経過した HELD Payment を自動リリース
 // Vercel Cron から daily で叩かれる想定（vercel.json の crons 参照）
-// CRON_SECRET が設定されている場合は Bearer 認証必須（cleanup-guests と同じ流儀）
+// 本番は CRON_SECRET 必須（fail-closed）
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { AUTO_RELEASE_DAYS } from '@/lib/stripe'
 import { releasePayment } from '@/lib/payment-release'
+import { checkCronAuth } from '@/lib/cron-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET
-  if (secret) {
-    const authHeader = req.headers.get('authorization')
-    if (authHeader !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-    }
+  const auth = checkCronAuth(req)
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
 
   const cutoff = new Date(Date.now() - AUTO_RELEASE_DAYS * 24 * 60 * 60 * 1000)
