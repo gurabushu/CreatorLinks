@@ -29,9 +29,10 @@ function LoginForm() {
         redirect: false,
       })
 
-      // result.error に加え、ok/undefined も明示的に成功条件から除外する
-      // （signIn が undefined を返すケースが v5 で観測されている）
-      if (result?.error || !result?.ok) {
+      // v5 で `ok` が false / undefined でも正常にセッションが張られるケースがあるため、
+      // 判定は `error` の有無のみに寄せる（`!ok` 判定は 2026-08-15 に公式アカウント含む
+      // 実在ユーザーのログインを取りこぼす regression が起きたため削除）
+      if (result?.error) {
         setError('メールアドレスまたはパスワードが正しくありません')
         return
       }
@@ -241,7 +242,7 @@ function GuestLoginButton() {
         password: result.password,
         redirect: false,
       })
-      if (signInResult?.error || !signInResult?.ok) {
+      if (signInResult?.error) {
         setError('ゲストログインに失敗しました')
         return
       }
