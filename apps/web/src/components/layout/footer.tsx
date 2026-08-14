@@ -29,7 +29,7 @@ export function Footer() {
               alt={SITE_NAME}
               width={1032}
               height={193}
-              className="h-11 w-auto mb-3"
+              className="h-14 sm:h-16 w-auto mb-3"
             />
             <p className="text-sm text-gray-500">
               才能あるアーティストと<br />クライアントをつなぐプラットフォーム

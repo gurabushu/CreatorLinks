@@ -18,7 +18,7 @@ export async function Header() {
   return (
     <header className="border-b bg-white sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-4">
-        <div className="h-16 sm:h-20 flex items-center gap-2 sm:gap-4">
+        <div className="h-20 sm:h-24 flex items-center gap-2 sm:gap-4">
           <Link href="/" className="shrink-0" aria-label={SITE_NAME}>
             <Image
               src="/logo.png"
@@ -26,7 +26,7 @@ export async function Header() {
               width={1032}
               height={193}
               priority
-              className="h-11 sm:h-14 w-auto"
+              className="h-14 sm:h-20 w-auto"
             />
           </Link>
 

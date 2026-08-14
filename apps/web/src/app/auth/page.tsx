@@ -276,7 +276,7 @@ function AuthPageInner() {
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         {/* ロゴ */}
         <div className="text-center mb-6">
-          <a href="/" className="text-2xl font-bold text-purple-600">{SITE_NAME}</a>
+          <a href="/" className="text-3xl sm:text-4xl font-bold text-purple-600">{SITE_NAME}</a>
           <p className="text-gray-500 text-sm mt-1">
             {mode === 'login' ? 'アカウントにログイン' : '無料アカウントを作成'}
           </p>

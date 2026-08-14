@@ -51,7 +51,7 @@ function ResetPasswordInner() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <Link href="/" className="text-2xl font-bold text-purple-600">{SITE_NAME}</Link>
+          <Link href="/" className="text-3xl sm:text-4xl font-bold text-purple-600">{SITE_NAME}</Link>
           <p className="text-gray-500 text-sm mt-1">新しいパスワードを設定</p>
         </div>
 
