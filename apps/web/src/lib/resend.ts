@@ -12,7 +12,9 @@ export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'noreply@creatorlinks
 export { SITE_NAME }
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
-// メール送信ヘルパー（Resend 未設定時はコンソールログ）
+// メール送信ヘルパー。
+// - dev / preview で RESEND_API_KEY 未設定: ターミナルに links を出力（reset リンク拾い用）
+// - production で未設定: throw（reset token を Vercel ログに漏らさない fail-closed）
 export async function sendEmail({
   to,
   subject,
@@ -23,8 +25,12 @@ export async function sendEmail({
   html: string
 }) {
   if (!resend) {
-    // 開発時：本文中の URL（http/https）を抽出してターミナルに表示。
-    // パスワードリセット等のリンクをローカルで拾えるようにする。
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        '[resend] RESEND_API_KEY が未設定です。本番では必ず設定してください（fail-closed）。',
+      )
+    }
+    // dev / test のみ: 本文中の URL を抽出してターミナル表示（reset / email-change リンク拾い用）
     const links = Array.from(html.matchAll(/https?:\/\/[^"'\s<>]+/g)).map((m) => m[0])
     console.log('\n[Mail Dev] ' + '='.repeat(60))
     console.log('  to     :', to)
