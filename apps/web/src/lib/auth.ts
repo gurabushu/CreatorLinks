@@ -27,6 +27,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         })
 
         if (!user || !user.passwordHash) return null
+        // 退会済みユーザーはログイン不可
+        if (user.deletedAt) return null
 
         const isValid = await bcrypt.compare(parsed.data.password, user.passwordHash)
         if (!isValid) return null
@@ -51,9 +53,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token
     },
 
-    // Session にロール・ユーザーIDを追加
+    // Session にロール・ユーザーIDを追加。退会後 30 日以内のトークン持ち回りを弾く
     async session({ session, token }) {
       if (session.user) {
+        // 退会検知: DB を確認して deletedAt を持つユーザーの JWT を無効化。
+        // JWT strategy のため mass invalidate 手段がなく、次アクセスで捕捉する方針。
+        const id = token.id as string | undefined
+        if (id) {
+          const dbUser = await prisma.user
+            .findUnique({ where: { id }, select: { deletedAt: true } })
+            .catch(() => null)
+          if (!dbUser || dbUser.deletedAt) {
+            // Auth.js は callback から null を返すとログアウト扱い
+            return null as unknown as typeof session
+          }
+        }
         session.user.id = token.id as string
         session.user.role = token.role as UserRole
       }
