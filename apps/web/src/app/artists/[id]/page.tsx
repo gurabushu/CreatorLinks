@@ -24,6 +24,35 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+// 公開プロフィール専用の loader。email / stripeConnectAccountId / passwordHash /
+// hasPaidSubscription / announcementsReadAt など内部フィールドを絶対に返さない。
+// prisma の select 型が絶対に守られるので RSC ペイロードにも漏れない。
+async function loadArtist(id: string) {
+  return prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      displayName: true,
+      avatarUrl: true,
+      bio: true,
+      role: true,
+      genres: true,
+      gender: true,
+      heightCm: true,
+      activityYears: true,
+      averageRating: true,
+      earlyBirdSlot: true,
+      isGuest: true,
+      isOfficial: true,
+      portfolios: { orderBy: { createdAt: 'desc' as const } },
+      featuredEntry: {
+        select: { note: true, expiresAt: true },
+      },
+    },
+  })
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   try {
@@ -50,20 +79,11 @@ export default async function ArtistDetailPage({ params }: Props) {
   const { id } = await params
   const session = await auth()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let user: any = null
+  // 明示 select で email / stripeConnectAccountId / hasPaidSubscription / passwordHash 等の
+  // 内部フィールドを RSC ペイロードから完全に除外する（公開プロフィールなので厳格に）
+  let user = null as Awaited<ReturnType<typeof loadArtist>>
   try {
-    user = await prisma.user.findUnique({
-      where: { id },
-      include: {
-        portfolios: { orderBy: { createdAt: 'desc' } },
-        reviewsGiven: false,
-        featuredEntry: {
-          select: { note: true, expiresAt: true },
-        },
-      },
-      omit: { passwordHash: true },
-    })
+    user = await loadArtist(id)
   } catch {
     notFound()
   }
