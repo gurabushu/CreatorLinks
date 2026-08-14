@@ -18,14 +18,16 @@ const isProd = process.env.NODE_ENV === 'production'
 
 function getRedis(): Redis | null {
   if (cachedRedis) return cachedRedis
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  // Vercel Marketplace の Upstash Redis 統合が投入する env は KV_REST_API_URL / KV_REST_API_TOKEN。
+  // 素の Upstash Console 経由で設定する場合は UPSTASH_REDIS_REST_URL / TOKEN を使うので両対応。
+  const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN
   if (!url || !token) {
     // 本番で Upstash 未設定はレート制限完全無効化を意味するので fail-closed にする。
     // これがないと signin / password reset / promo / invite / message が丸腰。
     if (isProd) {
       throw new Error(
-        '[rate-limit] UPSTASH_REDIS_REST_URL / TOKEN が未設定です。' +
+        '[rate-limit] KV_REST_API_URL / TOKEN (or UPSTASH_REDIS_REST_URL / TOKEN) が未設定です。' +
           '本番では必ず設定してください（fail-closed）。',
       )
     }
