@@ -27,6 +27,10 @@ export async function getPusherServer() {
 export const getChatChannel = (matchId: string) => `private-chat-${matchId}`
 export const MESSAGE_EVENT = 'new-message'
 
+// Event グループチャット: private-event-chat-{eventId}
+// 権限は Pusher Auth endpoint 側で「Event.creator または EventParticipant.CONFIRMED」を確認する
+export const getEventChatChannel = (eventId: string) => `private-event-chat-${eventId}`
+
 // ユーザーごとの通知チャンネル: private-user-{userId}
 // マッチのライフサイクル通知（応募着信・承認・却下・完了）を配信する
 export const getUserChannel = (userId: string) => `private-user-${userId}`
