@@ -161,6 +161,7 @@ model User {
   isGuest                     Boolean          @default(false) // テスト用ゲストアカウント（24h で自動削除）
   isOfficial                  Boolean          @default(false) // プラットフォーム公式アカウント。通常 1 人だけ true
   announcementsReadAt         DateTime? // 最後にお知らせ一覧を開いたタイムスタンプ。未読件数の判定基準
+  deletedAt                   DateTime? // 退会（アカウント削除）実行時刻。PII は匿名化済み。FK 整合のため row は残す
   createdAt                   DateTime         @default(now())
   updatedAt                   DateTime         @updatedAt
 
@@ -339,17 +340,23 @@ model EmailChangeRequest {
   @@map("email_change_requests")
 }
 
+// 1:1 チャット (matchId 必須) と Event グループチャット (eventId 必須) を 1 テーブルで扱う。
+// XOR 制約 (matchId ^ eventId) は Prisma schema で表現できないので server action で担保する。
+// baseline 化時に CHECK ((match_id IS NULL) <> (event_id IS NULL)) を SQL 側に追加予定。
 model Message {
   id        String    @id @default(cuid())
-  matchId   String
+  matchId   String?
+  eventId   String?
   senderId  String
   body      String
-  readAt    DateTime?
+  readAt    DateTime? // 1:1 用の既読タイムスタンプ。group では使わない（per-user 既読は後日別テーブルで対応）
   createdAt DateTime  @default(now())
 
-  match  Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  match  Match? @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  event  Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sender User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
+  @@index([eventId, createdAt])
   @@map("messages")
 }
 
@@ -480,6 +487,7 @@ model Event {
   openRoles    EventOpenRole[]
   follows      EventFollow[]
   interests    EventInterest[]
+  messages     Message[] // Event グループチャット (主催 + CONFIRMED のみ投稿可)
 
   @@index([status, visibility, startAt]) // 公開中の閲覧可能イベント検索用
   @@index([creatorId, startAt])

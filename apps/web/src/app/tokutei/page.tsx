@@ -1,46 +1,32 @@
 // 特定商取引法に基づく表記
 // 有料 PRO サブスクリプション + 案件代金決済（プラットフォーム決済）を扱うため、
 // 日本の特定商取引法 第 11 条（通信販売の広告）に基づき表示義務がある項目を明記する。
-//
-// 【要記入】プレースホルダーは事業者確定時に埋めること。
-// 電話番号は「消費者からの請求があれば遅滞なく開示」の運用にする場合、その旨を明記すれば
-// 記載省略可（特商法施行規則）。
+// 事業者・所在地・電話番号は個人事業主 TobojoLabs のもの。変更時はここを更新する。
 
 export const metadata = {
   title: '特定商取引法に基づく表記',
+  alternates: { canonical: '/tokutei' },
 }
 
 type Row = { label: string; value: React.ReactNode }
 
 const rows: Row[] = [
-  { label: '販売事業者', value: '【要記入：法人名または屋号／個人事業主氏名】' },
-  { label: '運営統括責任者', value: '【要記入：代表者氏名】' },
-  {
-    label: '所在地',
-    value: (
-      <>
-        【要記入：郵便番号・住所】
-        <br />
-        <span className="text-xs text-gray-500">
-          ※ 個人事業主の場合、消費者からの請求により遅滞なく開示する運用にすれば、上記の記載は
-          「請求があった場合、遅滞なく開示いたします」に置き換え可。
-        </span>
-      </>
-    ),
-  },
+  { label: '販売事業者', value: 'TobojoLabs（個人事業主）' },
+  { label: '運営統括責任者', value: '沖山敦樹' },
+  { label: '所在地', value: '〒181-0002 東京都三鷹市牟礼3-1-7' },
   {
     label: '電話番号',
     value: (
       <>
-        【要記入：連絡可能な電話番号】
+        090-5822-8434
         <br />
         <span className="text-xs text-gray-500">
-          ※ 記載省略の場合は「請求があった場合、遅滞なく開示いたします」と明記。
+          ※ 平日 10:00-18:00 の対応を原則とし、時間外はメールでのご連絡をお願いします。
         </span>
       </>
     ),
   },
-  { label: 'メールアドレス', value: '【要記入：support@example.com など】' },
+  { label: 'メールアドレス', value: 'tonokyama@gmail.com' },
   {
     label: '販売価格',
     value: (
@@ -134,7 +120,7 @@ export default function TokuteiPage() {
   return (
     <div className="max-w-3xl mx-auto py-12 px-4">
       <h1 className="text-2xl font-bold mb-2">特定商取引法に基づく表記</h1>
-      <p className="text-sm text-gray-500 mb-8">最終更新日：2026-08-11</p>
+      <p className="text-sm text-gray-500 mb-8">最終更新日：2026-08-14</p>
 
       <dl className="border rounded-lg divide-y">
         {rows.map((row) => (

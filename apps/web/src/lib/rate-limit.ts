@@ -14,20 +14,19 @@ const BUCKETS: Record<Bucket, { limit: number; window: `${number} s` }> = {
 let cachedRedis: Redis | null = null
 const cachedLimiters = new Map<Bucket, Ratelimit>()
 
-let warnedNoUpstash = false
+const isProd = process.env.NODE_ENV === 'production'
 
 function getRedis(): Redis | null {
   if (cachedRedis) return cachedRedis
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
   if (!url || !token) {
-    // 本番で Upstash 未設定はレート制限完全無効化を意味するので、大声で警告する。
-    // dev / test は静かにスキップ。
-    if (!warnedNoUpstash && process.env.NODE_ENV === 'production') {
-      warnedNoUpstash = true
-      console.error(
+    // 本番で Upstash 未設定はレート制限完全無効化を意味するので fail-closed にする。
+    // これがないと signin / password reset / promo / invite / message が丸腰。
+    if (isProd) {
+      throw new Error(
         '[rate-limit] UPSTASH_REDIS_REST_URL / TOKEN が未設定です。' +
-          'レート制限は全バケットで無効化されます。本番環境では必ず設定してください。',
+          '本番では必ず設定してください（fail-closed）。',
       )
     }
     return null
@@ -59,7 +58,8 @@ export async function checkRateLimit(
   identifier: string,
 ): Promise<RateLimitResult> {
   const limiter = getLimiter(bucket)
-  if (!limiter) return { ok: true } // Upstash 未設定時はスキップ（dev 用）
+  // dev / test で Upstash 未設定はスキップ（getRedis が prod なら throw 済み）
+  if (!limiter) return { ok: true }
   const { success, reset } = await limiter.limit(identifier)
   if (success) return { ok: true }
   return { ok: false, retryAfterSec: Math.max(1, Math.ceil((reset - Date.now()) / 1000)) }

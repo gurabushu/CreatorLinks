@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import AccountNameForm from './AccountNameForm'
 import EmailChangeSection from './EmailChangeSection'
 import PasswordChangeSection from './PasswordChangeSection'
+import DeleteAccountSection from './DeleteAccountSection'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'アカウント設定' }
@@ -18,6 +19,7 @@ export default async function AccountSettingsPage() {
       name: true,
       email: true,
       passwordHash: true,
+      isGuest: true,
     },
   })
 
@@ -32,6 +34,10 @@ export default async function AccountSettingsPage() {
         <AccountNameForm initialName={user.name} />
         <EmailChangeSection currentEmail={user.email} />
         <PasswordChangeSection passwordSet={Boolean(user.passwordHash)} />
+        <DeleteAccountSection
+          passwordSet={Boolean(user.passwordHash)}
+          isGuest={user.isGuest}
+        />
       </div>
     </div>
   )
