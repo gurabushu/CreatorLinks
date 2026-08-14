@@ -19,19 +19,30 @@ function LoginForm() {
     setError(null)
     setLoading(true)
 
-    const fd = new FormData(e.currentTarget)
-    const result = await signIn('credentials', {
-      email: fd.get('email'),
-      password: fd.get('password'),
-      redirect: false,
-    })
+    // NextAuth v5 の signIn は CSRF 取得失敗・ネットワーク断・内部例外で throw することがある。
+    // try/catch/finally が無いと button の loading が永久に解除されず「ログイン中」で固まる。
+    try {
+      const fd = new FormData(e.currentTarget)
+      const result = await signIn('credentials', {
+        email: fd.get('email'),
+        password: fd.get('password'),
+        redirect: false,
+      })
 
-    if (result?.error) {
-      setLoading(false)
-      setError('メールアドレスまたはパスワードが正しくありません')
-    } else {
+      // result.error に加え、ok/undefined も明示的に成功条件から除外する
+      // （signIn が undefined を返すケースが v5 で観測されている）
+      if (result?.error || !result?.ok) {
+        setError('メールアドレスまたはパスワードが正しくありません')
+        return
+      }
       // フルリロードで新しい auth cookie をサーバーに確実に伝える
       window.location.href = '/dashboard'
+    } catch (err) {
+      console.error('[login] signIn failed', err)
+      setError('ログインに失敗しました。時間をおいて再度お試しください')
+    } finally {
+      // 成功時は上で window.location.href が走るので finally の影響なし
+      setLoading(false)
     }
   }
 
@@ -219,23 +230,28 @@ function GuestLoginButton() {
   const handleGuestLogin = async () => {
     setError(null)
     setLoading(true)
-    const result = await signUpAsGuestAction()
-    if (!result.success) {
+    try {
+      const result = await signUpAsGuestAction()
+      if (!result.success) {
+        setError(result.error)
+        return
+      }
+      const signInResult = await signIn('credentials', {
+        email: result.email,
+        password: result.password,
+        redirect: false,
+      })
+      if (signInResult?.error || !signInResult?.ok) {
+        setError('ゲストログインに失敗しました')
+        return
+      }
+      window.location.href = '/dashboard'
+    } catch (err) {
+      console.error('[guest-login] failed', err)
+      setError('ゲストログインに失敗しました。時間をおいて再度お試しください')
+    } finally {
       setLoading(false)
-      setError(result.error)
-      return
     }
-    const signInResult = await signIn('credentials', {
-      email: result.email,
-      password: result.password,
-      redirect: false,
-    })
-    if (signInResult?.error) {
-      setLoading(false)
-      setError('ゲストログインに失敗しました')
-      return
-    }
-    window.location.href = '/dashboard'
   }
 
   return (
