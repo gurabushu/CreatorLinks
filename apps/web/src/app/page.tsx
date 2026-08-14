@@ -9,6 +9,7 @@ import { EarlyBirdBanner } from '@/components/early-bird/early-bird-banner'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
 import { HeroSection } from '@/components/landing/hero-section'
 import { FeatureBar } from '@/components/landing/feature-bar'
+import { WhyNotLine } from '@/components/landing/why-not-line'
 import { HowItWorks } from '@/components/landing/how-it-works'
 import { Faq } from '@/components/landing/faq'
 import { SITE_NAME } from '@/lib/brand'
@@ -76,6 +77,9 @@ export default async function HomePage() {
       <EarlyBirdBanner />
       <HeroSection />
       <FeatureBar />
+
+      {/* 「なぜ LINE で足りないのか」訴求 */}
+      <WhyNotLine />
 
       {/* 新着案件 */}
       <section className="py-10 sm:py-16 px-4 max-w-6xl mx-auto">

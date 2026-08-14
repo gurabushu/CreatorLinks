@@ -24,9 +24,22 @@ export function HeroSection() {
             <br className="hidden sm:block" />
             3 つを 1 つのアプリに。
           </p>
-          <p className="mt-3 text-sm text-gray-500">
-            「また一緒にやりたい」を仕組みで残す、音楽業界特化のミニ DX。
-          </p>
+
+          {/* LINE との差別化を Hero で明示。「まだ LINE で消耗してるの？」フック */}
+          <ul className="mt-5 space-y-1.5 text-sm text-gray-700 max-w-md mx-auto md:mx-0">
+            <li className="flex items-start gap-2">
+              <span aria-hidden className="text-purple-600 shrink-0 mt-0.5">✓</span>
+              <span><b>逃げられない仕事に</b>できる（Stripe エスクローで先払い→検収後送金）</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span aria-hidden className="text-purple-600 shrink-0 mt-0.5">✓</span>
+              <span><b>確定申告で LINE を掘り返さない</b>（金額・納期・領収書が全部残る）</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span aria-hidden className="text-purple-600 shrink-0 mt-0.5">✓</span>
+              <span><b>知り合いの外から仕事が来る</b>（業界内検索・レビュー・イベント告知）</span>
+            </li>
+          </ul>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start items-stretch sm:items-center max-w-sm mx-auto md:max-w-none md:mx-0">
             <Link
