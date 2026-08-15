@@ -38,7 +38,7 @@ export function PromoCodeForm({ compact = false }: { compact?: boolean }) {
       </p>
       <p className={`text-gray-500 ${compact ? 'text-xs mb-3' : 'text-sm mb-4'}`}>
         コードを入力すると、月額料金が永年無料の PRO プランに切り替わります。
-        （案件成立時の手数料 7% は通常どおり発生します）
+        受注案件の手数料は自動で 5%（通常 7%）に減額されます。
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
         <input

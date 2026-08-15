@@ -51,13 +51,17 @@ function ProSubscribeContent() {
     <div className="max-w-2xl mx-auto py-12 px-4">
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold mb-2">PRO プランに登録する</h1>
-        <p className="text-gray-500">月額 ¥980 でアーティスト一覧の優先表示と PRO バッジが使えます</p>
+        <p className="text-gray-500">月額 ¥980 で手数料が 7%→5% に減額、優先表示・PRO バッジ付き</p>
       </div>
 
       <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-8 mb-8">
         <h2 className="font-bold text-lg mb-5">PRO プランの特典</h2>
         <div className="space-y-4">
           {[
+            {
+              title: 'プラットフォーム手数料 7% → 5%',
+              desc: 'PRO 会員として受注した案件は、通常 7% の手数料が 5% に減額されます（差 2% がそのままアーティスト受取に上乗せ）',
+            },
             {
               title: 'アーティスト一覧での優先表示',
               desc: 'アーティスト検索結果の上位に PRO マーク付きで掲載されます',
@@ -77,8 +81,8 @@ function ProSubscribeContent() {
           ))}
         </div>
         <p className="text-xs text-gray-500 mt-6 leading-relaxed">
-          ※ プラットフォーム手数料 7% は PRO / 一般会員に関わらず一律です。
-          プラン内容は現在見直しを進めており、今後アップデートされる可能性があります。
+          ※ 手数料減額は「受注アーティストが PRO の場合」に自動適用されます。依頼主 (発注側) の支払総額は変わりません。
+          プラン内容は現在見直しを進めており、スカウト・分析機能等を順次追加予定です。
         </p>
       </div>
 
