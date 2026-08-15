@@ -38,12 +38,14 @@ type EventItem = {
 
 const STATUS_LABEL: Record<string, string> = {
   APPLIED: '応募中',
+  SCOUTED: 'オファー',
   ACCEPTED: '進行中',
   COMPLETED: '完了',
   REJECTED: '却下',
 }
 const STATUS_CLASS: Record<string, string> = {
   APPLIED: 'bg-gray-100 text-gray-700',
+  SCOUTED: 'bg-amber-100 text-amber-700',
   ACCEPTED: 'bg-emerald-100 text-emerald-700',
   COMPLETED: 'bg-blue-100 text-blue-700',
   REJECTED: 'bg-red-100 text-red-700',
@@ -72,6 +74,7 @@ export default async function DashboardPage() {
   let isGuest = false
   let guestExpiresAt: Date | null = null
   let appliedMatches: Match[] = []
+  let scoutedMatches: Match[] = []
   let activeMatches: Match[] = []
   let myProjects: MyProject[] = []
   let upcomingEvents: EventItem[] = []
@@ -92,9 +95,15 @@ export default async function DashboardPage() {
     // 今月の帳票発行対象件数: Payment 支払い (paidAt) が今月に入った受注案件
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-    const [applied, active, projects, unread, myEvents, followRows, monthDocCount] = await Promise.all([
+    const [applied, scouted, active, projects, unread, myEvents, followRows, monthDocCount] = await Promise.all([
       prisma.match.findMany({
         where: { artistId: userId, status: 'APPLIED' },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: { project: { select: { id: true, title: true, budget: true, clientId: true } } },
+      }),
+      prisma.match.findMany({
+        where: { artistId: userId, status: 'SCOUTED' },
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: { project: { select: { id: true, title: true, budget: true, clientId: true } } },
@@ -147,6 +156,7 @@ export default async function DashboardPage() {
     ])
 
     appliedMatches = applied
+    scoutedMatches = scouted
     activeMatches = active
     myProjects = projects
     unreadCount = unread
@@ -224,6 +234,46 @@ export default async function DashboardPage() {
         <StatusCard href="/dashboard/chat" label="未読メッセージ" value={unreadCount} tone={unreadCount > 0 ? 'red' : 'gray'} />
         <StatusCard href="/dashboard/matches" label="応募中" value={appliedMatches.length} tone="gray" />
       </div>
+
+      {/* オファー受信 (SCOUTED) — 発注者からのスカウトは承諾/辞退が必要なので目立たせる */}
+      {scoutedMatches.length > 0 && (
+        <section className="mb-8">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg" aria-hidden>📩</span>
+              <h2 className="font-bold text-amber-900 text-sm sm:text-base">
+                オファー受信 <span className="text-amber-700">({scoutedMatches.length}件)</span>
+              </h2>
+              <span className="text-xs text-amber-700 ml-auto">承諾/辞退の返信をお願いします</span>
+            </div>
+            <ul className="space-y-2">
+              {scoutedMatches.map((m) => {
+                if (!m.project) return null
+                return (
+                  <li key={m.id}>
+                    <Link
+                      href="/dashboard/matches"
+                      className="block bg-white border border-amber-200 rounded-lg p-3 hover:shadow-sm transition"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 text-sm truncate">{m.project.title}</p>
+                          {m.project.budget && (
+                            <p className="text-xs text-gray-500 mt-0.5">¥{m.project.budget.toLocaleString()}</p>
+                          )}
+                        </div>
+                        <span className="shrink-0 text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium">
+                          応答する →
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* 進行中の依頼 (仕事DX) */}

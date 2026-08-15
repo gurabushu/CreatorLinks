@@ -19,6 +19,7 @@ import {
 import type { EventType, EventVisibility } from '@creator-links/shared'
 import { JsonLd } from '@/components/seo/json-ld'
 import { personJsonLd } from '@/lib/seo'
+import { ScoutButton, type ScoutableProject } from './scout-button'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -179,6 +180,21 @@ export default async function ArtistDetailPage({ params }: Props) {
   // ゲストアカウントは検索インデックス対象外
   const artistLd = user.isGuest ? null : personJsonLd(user)
 
+  // スカウトボタン用: 対象アーティストが PRO で、閲覧者がログイン済み・非本人 の場合のみ、
+  // 閲覧者自身の OPEN/PRIVATE Project を取得してモーダルの選択肢に渡す
+  const canShowScout = user.role === 'PRO' && viewerId && !isSelf
+  const myScoutableProjects: ScoutableProject[] = canShowScout
+    ? await prisma.project.findMany({
+        where: {
+          clientId: viewerId,
+          status: { in: ['OPEN', 'PRIVATE'] },
+        },
+        select: { id: true, title: true, budget: true },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      })
+    : []
+
   return (
     <div className="max-w-4xl mx-auto py-8 sm:py-12 px-4">
       {artistLd && <JsonLd data={artistLd} />}
@@ -270,6 +286,15 @@ export default async function ArtistDetailPage({ params }: Props) {
               />
             ) : (
               <FollowerCountBadge count={followerCount} />
+            )}
+
+            {/* PRO アーティストへのスカウト (依頼主 → 受注者) */}
+            {canShowScout && (
+              <ScoutButton
+                artistId={id}
+                artistName={getDisplayName(user)}
+                myProjects={myScoutableProjects}
+              />
             )}
 
             <Link

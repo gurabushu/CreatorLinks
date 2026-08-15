@@ -39,6 +39,7 @@ export const MATCH_APPLIED_EVENT = 'match:applied'
 export const MATCH_ACCEPTED_EVENT = 'match:accepted'
 export const MATCH_REJECTED_EVENT = 'match:rejected'
 export const MATCH_COMPLETED_EVENT = 'match:completed'
+export const MATCH_SCOUTED_EVENT = 'match:scouted' // 依頼主 → PRO アーティスト の逆方向オファー受信通知
 
 export type MatchNotificationPayload = {
   matchId: string

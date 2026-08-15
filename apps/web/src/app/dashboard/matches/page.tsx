@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { PaymentBadge, type PaymentStatus } from '@/components/payments/payment-badge'
 import { OfficialBadge } from '@/components/official-badge'
 import { getDisplayName } from '@/lib/user'
+import { ScoutResponseButtons } from './scout-response-buttons'
 
 export default async function MatchesPage() {
   const session = await auth()
@@ -42,6 +43,7 @@ export default async function MatchesPage() {
   const projectMatches = matches.filter((m) => m.projectId !== null)
 
   const statusGroups = {
+    SCOUTED: projectMatches.filter((m) => m.status === 'SCOUTED'), // オファー受信 (承諾/辞退待ち) を先頭に
     APPLIED: projectMatches.filter((m) => m.status === 'APPLIED'),
     ACCEPTED: projectMatches.filter((m) => m.status === 'ACCEPTED'),
     COMPLETED: projectMatches.filter((m) => m.status === 'COMPLETED'),
@@ -49,6 +51,7 @@ export default async function MatchesPage() {
   }
 
   const STATUS_LABELS = {
+    SCOUTED: 'オファー受信',
     APPLIED: '応募中',
     ACCEPTED: '承認済み',
     COMPLETED: '完了',
@@ -151,6 +154,9 @@ export default async function MatchesPage() {
                     >
                       チャットへ
                     </Link>
+                  )}
+                  {status === 'SCOUTED' && (
+                    <ScoutResponseButtons matchId={match.id} />
                   )}
                 </div>
               ))}

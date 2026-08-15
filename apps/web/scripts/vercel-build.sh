@@ -17,6 +17,9 @@ if [ "$VERCEL_ENV" = "production" ]; then
   npx prisma db push --accept-data-loss
   echo 'ALTER TYPE "ProjectStatus" ADD VALUE IF NOT EXISTS '\''PRIVATE'\'';' \
     | npx prisma db execute --stdin --schema=prisma/schema.prisma || true
+  # MatchStatus に SCOUTED を追加 (依頼主 → PRO アーティスト の逆方向オファー)
+  echo 'ALTER TYPE "MatchStatus" ADD VALUE IF NOT EXISTS '\''SCOUTED'\'';' \
+    | npx prisma db execute --stdin --schema=prisma/schema.prisma || true
 fi
 
 cd ../web

@@ -52,6 +52,7 @@ enum MatchStatus {
   ACCEPTED
   COMPLETED
   REJECTED
+  SCOUTED // 依頼主 → PRO アーティスト の逆方向オファー。artist が承諾で ACCEPTED、辞退で REJECTED
 }
 
 enum Gender {
