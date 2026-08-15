@@ -45,7 +45,9 @@ export async function createCheckoutSessionAction(matchId: string): Promise<neve
         },
       },
       artist: {
-        select: { stripePayoutsEnabled: true, stripeConnectAccountId: true },
+        // role は PRO 手数料減額 (5%) 判定用。hasLifetimeFreePro / Early Bird / 課金 PRO
+        // すべて role='PRO' に集約されるため role のみで判定できる。
+        select: { role: true, stripePayoutsEnabled: true, stripeConnectAccountId: true },
       },
       payment: {
         select: { id: true, status: true },
@@ -74,8 +76,9 @@ export async function createCheckoutSessionAction(matchId: string): Promise<neve
     throw new Error('この案件は既に支払い済みです')
   }
 
-  const platformFeeYen = calcPlatformFee(budget)
-  const artistPayoutYen = calcArtistPayout(budget)
+  const isProArtist = match.artist.role === 'PRO'
+  const platformFeeYen = calcPlatformFee(budget, { isProArtist })
+  const artistPayoutYen = calcArtistPayout(budget, { isProArtist })
 
   // Payment upsert: 同 matchId で複数回叩かれても 1 レコード。FAILED からの再挑戦にも対応
   const payment = await prisma.payment.upsert({

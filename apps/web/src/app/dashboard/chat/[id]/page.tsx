@@ -37,7 +37,8 @@ export default async function ChatPage({ params, searchParams }: Props) {
         select: { id: true, title: true, clientId: true, budget: true },
       },
       artist: {
-        select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true },
+        // role は Checkout 前 fee 表示 (5%/7%) を actions/payments 側の記録と一致させるため
+        select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true, role: true },
       },
       partner: {
         select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true },
@@ -119,9 +120,13 @@ export default async function ChatPage({ params, searchParams }: Props) {
   const myPrivateProjects = isP2P ? await listMyPrivateProjectsAction() : []
 
   const budget = isP2P ? null : match.project!.budget
+  const isProArtist = match.artist.role === 'PRO'
   const feeBreakdown =
     budget && budget > 0
-      ? { platformFeeYen: calcPlatformFee(budget), artistPayoutYen: calcArtistPayout(budget) }
+      ? {
+          platformFeeYen: calcPlatformFee(budget, { isProArtist }),
+          artistPayoutYen: calcArtistPayout(budget, { isProArtist }),
+        }
       : null
 
   return (
