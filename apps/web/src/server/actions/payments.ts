@@ -36,7 +36,13 @@ export async function createCheckoutSessionAction(matchId: string): Promise<neve
       id: true,
       status: true,
       project: {
-        select: { id: true, clientId: true, title: true, budget: true },
+        select: {
+          id: true,
+          clientId: true,
+          title: true,
+          budget: true,
+          client: { select: { email: true } },
+        },
       },
       artist: {
         select: { stripePayoutsEnabled: true, stripeConnectAccountId: true },
@@ -93,6 +99,7 @@ export async function createCheckoutSessionAction(matchId: string): Promise<neve
   })
 
   const stripe = getStripe()
+  const clientEmail = match.project.client.email
   const checkout = await stripe.checkout.sessions.create({
     mode: 'payment',
     payment_method_types: ['card'],
@@ -109,11 +116,16 @@ export async function createCheckoutSessionAction(matchId: string): Promise<neve
         },
       },
     ],
+    // 支払人のメール事前入力（UX 向上）+ 領収書自動送信のトリガーとして receipt_email も設定
+    customer_email: clientEmail,
     // Separate Charges & Transfers: 支払いは Platform に入り、後で Transfer で artist へ送る
     // transfer_group で PaymentIntent と Transfer を紐付ける
     payment_intent_data: {
       transfer_group: `match_${match.id}`,
       metadata: { paymentId: payment.id, matchId: match.id },
+      // Stripe が payment 完了時にこのアドレスへ領収書メールを自動送信する
+      // （Dashboard 側の Automatic receipts 設定に依存させず明示指定で確実に配送）
+      receipt_email: clientEmail,
     },
     metadata: { paymentId: payment.id, matchId: match.id },
     success_url: `${appUrl()}/dashboard/chat/${match.id}?paid=1`,

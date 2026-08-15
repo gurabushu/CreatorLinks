@@ -4,6 +4,7 @@ const {
   mockAuth,
   mockMatchFindUnique,
   mockPaymentUpsert,
+  mockPaymentUpdate,
   mockPaymentUpdateMany,
   mockCreateCheckout,
   mockListCheckouts,
@@ -15,6 +16,7 @@ const {
   mockAuth: vi.fn(),
   mockMatchFindUnique: vi.fn(),
   mockPaymentUpsert: vi.fn(),
+  mockPaymentUpdate: vi.fn(),
   mockPaymentUpdateMany: vi.fn(),
   mockCreateCheckout: vi.fn(),
   mockListCheckouts: vi.fn(),
@@ -32,7 +34,11 @@ vi.mock('@/lib/auth', () => ({ auth: mockAuth }))
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     match: { findUnique: mockMatchFindUnique },
-    payment: { upsert: mockPaymentUpsert, updateMany: mockPaymentUpdateMany },
+    payment: {
+      upsert: mockPaymentUpsert,
+      update: mockPaymentUpdate,
+      updateMany: mockPaymentUpdateMany,
+    },
   },
 }))
 
@@ -64,7 +70,13 @@ const authedSession = { user: { id: 'client_1' } }
 const acceptedMatch = {
   id: 'match_1',
   status: 'ACCEPTED',
-  project: { id: 'proj_1', clientId: 'client_1', title: 'ライブ演奏依頼', budget: 10000 },
+  project: {
+    id: 'proj_1',
+    clientId: 'client_1',
+    title: 'ライブ演奏依頼',
+    budget: 10000,
+    client: { email: 'client@example.com' },
+  },
   artist: { stripePayoutsEnabled: true, stripeConnectAccountId: 'acct_1' },
   payment: null,
 }
@@ -160,9 +172,11 @@ describe('createCheckoutSessionAction', () => {
     const checkoutCall = mockCreateCheckout.mock.calls[0][0]
     expect(checkoutCall.mode).toBe('payment')
     expect(checkoutCall.line_items[0].price_data.unit_amount).toBe(10000)
+    expect(checkoutCall.customer_email).toBe('client@example.com')
     expect(checkoutCall.payment_intent_data).toEqual({
       transfer_group: 'match_match_1',
       metadata: { paymentId: 'pay_1', matchId: 'match_1' },
+      receipt_email: 'client@example.com',
     })
     expect(checkoutCall.success_url).toBe(
       'http://localhost:3000/dashboard/chat/match_1?paid=1',
