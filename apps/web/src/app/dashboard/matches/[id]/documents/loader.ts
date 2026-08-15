@@ -40,6 +40,7 @@ export async function loadDocumentMatch(matchId: string) {
           artistPayoutYen: true,
           paidAt: true,
           releasedAt: true,
+          stripeChargeId: true, // 領収書ページで Stripe receipt_url を取得するため
         },
       },
     },

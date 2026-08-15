@@ -525,6 +525,18 @@ export function ChatClient({
           >
             請求書
           </Link>
+          {payment && (['HELD', 'RELEASED', 'REFUNDED'] as const).includes(
+            payment.status as 'HELD' | 'RELEASED' | 'REFUNDED',
+          ) && (
+            <Link
+              href={`/dashboard/matches/${matchId}/receipt`}
+              target="_blank"
+              className="px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 text-gray-700"
+              title="Stripe 発行の公式領収書"
+            >
+              領収書
+            </Link>
+          )}
         </div>
       )}
       {releaseError && (

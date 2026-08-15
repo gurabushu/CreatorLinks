@@ -97,6 +97,19 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
                     >
                       請求
                     </Link>
+                    {/* 領収書は Stripe 側の Hosted Receipt に redirect。決済発生前は非表示 */}
+                    {(['HELD', 'RELEASED', 'REFUNDED'] as const).includes(
+                      row.status as 'HELD' | 'RELEASED' | 'REFUNDED',
+                    ) && (
+                      <Link
+                        href={`/dashboard/matches/${row.matchId}/receipt`}
+                        target="_blank"
+                        title="領収書 (Stripe 発行)"
+                        className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200"
+                      >
+                        領収
+                      </Link>
+                    )}
                   </div>
                 ) : (
                   <span className="text-[11px] text-gray-300">—</span>
