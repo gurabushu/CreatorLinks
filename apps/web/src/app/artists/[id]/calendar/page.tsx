@@ -257,6 +257,11 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
       </div>
 
       {/* カレンダーグリッド */}
+      {!isSelf && viewerId && (
+        <p className="mb-2 text-[11px] text-gray-500">
+          空きの日をクリックすると、その日でこのアーティスト宛の案件を作成できます。
+        </p>
+      )}
       <div className="grid grid-cols-7 grid-rows-6 border-l border-r border-b border-purple-100/60 rounded-b-xl overflow-hidden">
         {cells.map((d, idx) => {
           const inMonth = d.getMonth() + 1 === month
@@ -266,15 +271,12 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
           const dayEvents = byDate.get(k) ?? []
           const visible = dayEvents.slice(0, 3)
           const overflow = dayEvents.length - visible.length
-          return (
-            <div
-              key={k}
-              className={`min-h-[92px] sm:min-h-[112px] border-t border-purple-100/60 ${
-                idx % 7 !== 0 ? 'border-l' : ''
-              } p-1 sm:p-1.5 flex flex-col gap-1 ${
-                inMonth ? 'bg-white' : 'bg-gray-50/70'
-              }`}
-            >
+          // 空き日オファー導線: 予定 0 件 + inMonth + 未来 + 閲覧者はログイン済みかつ本人でない
+          const isPastDay = d.getTime() + 24 * 60 * 60 * 1000 < today.getTime()
+          const isFreeSlot =
+            !isSelf && viewerId && inMonth && dayEvents.length === 0 && !isPastDay
+          const cellInner = (
+            <>
               <div className="flex items-center justify-between">
                 <span
                   className={`text-xs sm:text-sm w-6 h-6 flex items-center justify-center rounded-full ${
@@ -291,6 +293,14 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
                 >
                   {d.getDate()}
                 </span>
+                {isFreeSlot && (
+                  <span
+                    aria-hidden
+                    className="text-[9px] text-emerald-600 font-medium leading-none px-1 py-0.5 rounded bg-emerald-50 border border-emerald-100"
+                  >
+                    ＋案件
+                  </span>
+                )}
               </div>
               <div className="flex-1 flex flex-col gap-0.5 overflow-hidden">
                 {visible.map((e) => (
@@ -311,6 +321,28 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
                   <div className="text-[10px] text-gray-500 px-1">+{overflow} 件</div>
                 )}
               </div>
+            </>
+          )
+          const baseClassName = `min-h-[92px] sm:min-h-[112px] border-t border-purple-100/60 ${
+            idx % 7 !== 0 ? 'border-l' : ''
+          } p-1 sm:p-1.5 flex flex-col gap-1 ${
+            inMonth ? 'bg-white' : 'bg-gray-50/70'
+          }`
+          if (isFreeSlot) {
+            return (
+              <Link
+                key={k}
+                href={`/projects/new?assignArtist=${id}&date=${k}`}
+                aria-label={`${d.getMonth() + 1}月${d.getDate()}日にこのアーティスト宛の案件を作成`}
+                className={`${baseClassName} hover:bg-emerald-50 transition-colors cursor-pointer`}
+              >
+                {cellInner}
+              </Link>
+            )
+          }
+          return (
+            <div key={k} className={baseClassName}>
+              {cellInner}
             </div>
           )
         })}

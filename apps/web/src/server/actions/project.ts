@@ -126,6 +126,18 @@ export async function applyToProjectAction(
 }
 
 // 自分の非公開案件一覧（チャットで共有する選択肢を出すため）
+// アーティスト名を取得（空き日オファーの banner 表示用）
+export async function getArtistNameAction(
+  artistId: string
+): Promise<{ ok: true; name: string } | { ok: false }> {
+  const user = await prisma.user.findUnique({
+    where: { id: artistId },
+    select: { name: true, displayName: true },
+  })
+  if (!user) return { ok: false }
+  return { ok: true, name: getDisplayName(user) }
+}
+
 // 過去 Match から案件内容を引き継ぐ prefill（1 タップ再依頼）
 // 認可: 発注者本人 (client) or 受注者本人 (artist) の Match だけ prefill 可能
 export async function getProjectPrefillFromMatchAction(matchId: string): Promise<

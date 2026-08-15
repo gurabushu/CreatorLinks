@@ -6,6 +6,7 @@ import { useActionState, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   createProjectAction,
+  getArtistNameAction,
   getProjectPrefillFromMatchAction,
 } from '@/server/actions/project'
 import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/shared'
@@ -66,6 +67,8 @@ export default function NewProjectPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const fromMatch = searchParams.get('fromMatch')
+  const assignArtist = searchParams.get('assignArtist')
+  const assignDate = searchParams.get('date')
   const [step, setStep] = useState(1)
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [contractType, setContractType] = useState<'SPOT' | 'SUBSCRIPTION'>('SPOT')
@@ -75,6 +78,12 @@ export default function NewProjectPage() {
   const [isPrivate, setIsPrivate] = useState(false)
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null)
   const [prefillLoaded, setPrefillLoaded] = useState(false)
+  const [assignArtistName, setAssignArtistName] = useState<string | null>(null)
+  // 空き日オファーで自動プリフィルする日付 (datetime-local 形式)。デフォルト 10:00〜14:00
+  const prefillStart =
+    assignDate && /^\d{4}-\d{2}-\d{2}$/.test(assignDate) ? `${assignDate}T10:00` : ''
+  const prefillEnd =
+    assignDate && /^\d{4}-\d{2}-\d{2}$/.test(assignDate) ? `${assignDate}T14:00` : ''
 
   // ?fromMatch=<matchId> で過去の Match から案件内容を引き継ぐ（1 タップ再依頼）
   useEffect(() => {
@@ -96,6 +105,20 @@ export default function NewProjectPage() {
       cancelled = true
     }
   }, [fromMatch, prefillLoaded])
+
+  // ?assignArtist=<id> でアーティスト名 fetch（banner 表示用）
+  useEffect(() => {
+    if (!assignArtist) return
+    let cancelled = false
+    ;(async () => {
+      const result = await getArtistNameAction(assignArtist)
+      if (cancelled) return
+      if (result.ok) setAssignArtistName(result.name)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [assignArtist])
 
   const applyTemplate = (t: Template) => {
     setTitle(t.title)
@@ -144,6 +167,18 @@ export default function NewProjectPage() {
           <span className="font-bold">前回の案件から引き継ぎました</span>
           <span className="block text-[11px] text-purple-600 mt-0.5">
             金額・日程は変更できます。そのまま作成すれば同じ内容で再依頼できます。
+          </span>
+        </div>
+      )}
+
+      {assignArtist && (
+        <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs sm:text-sm text-emerald-800">
+          <span className="font-bold">
+            {assignArtistName ? `${assignArtistName} の空き日から作成中` : 'アーティストの空き日から作成中'}
+          </span>
+          <span className="block text-[11px] text-emerald-700 mt-0.5">
+            {assignDate && `日程: ${assignDate} `}
+            作成後、案件ページから「応募・スカウトを送る」でアーティストに直接お渡しできます。
           </span>
         </div>
       )}
@@ -381,6 +416,7 @@ export default function NewProjectPage() {
                 <input
                   name="scheduledStartAt"
                   type="datetime-local"
+                  defaultValue={prefillStart}
                   className="w-full border border-gray-300 rounded-lg px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
@@ -389,6 +425,7 @@ export default function NewProjectPage() {
                 <input
                   name="scheduledEndAt"
                   type="datetime-local"
+                  defaultValue={prefillEnd}
                   className="w-full border border-gray-300 rounded-lg px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
