@@ -12,6 +12,23 @@ import {
   UpdateEventSchema,
   UpdateOpenRoleSchema,
 } from '@creator-links/shared'
+import type { EventMediaInput } from '@creator-links/shared'
+
+// 添付メディア配列を Prisma の nested create 形式に変換しつつ、position の同値時の
+// tiebreaker として配列 index を反映する。actions/event.ts と同ロジック。
+function toMediaCreate(media: EventMediaInput[]) {
+  return media.map((m, idx) => ({
+    type: m.type,
+    url: m.url,
+    caption: m.caption?.trim() || null,
+    position: m.position * 1000 + idx,
+  }))
+}
+
+function deriveCoverUrl(media: EventMediaInput[]): string | null {
+  const firstImage = [...media].sort((a, b) => a.position - b.position).find((m) => m.type === 'IMAGE')
+  return firstImage?.url ?? null
+}
 
 // =============================================
 // イベント（Phase A: 告知・カレンダー）
@@ -24,16 +41,18 @@ export const eventRouter = router({
   // ---- CRUD ----
 
   create: protectedProcedure.input(CreateEventSchema).mutation(async ({ ctx, input }) => {
-    // 空文字の URL は null 化（Zod は url() を通しつつ空文字も許容している）
-    const clean = {
-      ...input,
-      venueUrl: input.venueUrl || null,
-      ticketUrl: input.ticketUrl || null,
-    }
+    // media は Prisma に直渡しできないので分離、coverUrl は先頭 IMAGE で自動同期
+    const { media, ...rest } = input
+    const resolvedCoverUrl = media.length > 0 ? deriveCoverUrl(media) : rest.coverUrl || null
     return ctx.prisma.event.create({
       data: {
-        ...clean,
+        ...rest,
+        // 空文字の URL は null 化（Zod は url() を通しつつ空文字も許容している）
+        venueUrl: rest.venueUrl || null,
+        ticketUrl: rest.ticketUrl || null,
+        coverUrl: resolvedCoverUrl,
         creatorId: ctx.user.id,
+        ...(media.length > 0 ? { media: { create: toMediaCreate(media) } } : {}),
       },
     })
   }),
@@ -46,12 +65,35 @@ export const eventRouter = router({
       if (event.creatorId !== ctx.user.id) {
         throw new TRPCError({ code: 'FORBIDDEN', message: '主催者のみ編集できます' })
       }
-      const clean = {
-        ...input.data,
-        ...(input.data.venueUrl !== undefined ? { venueUrl: input.data.venueUrl || null } : {}),
-        ...(input.data.ticketUrl !== undefined ? { ticketUrl: input.data.ticketUrl || null } : {}),
-      }
-      return ctx.prisma.event.update({ where: { id: input.id }, data: clean })
+      const { media, ...rest } = input.data
+      const mediaProvided = media !== undefined
+      const nextMedia = media ?? []
+      const nextCoverUrl = mediaProvided
+        ? deriveCoverUrl(nextMedia)
+        : rest.coverUrl !== undefined
+          ? rest.coverUrl || null
+          : undefined // 未指定 = coverUrl は触らない
+
+      return ctx.prisma.$transaction(async (tx) => {
+        const updated = await tx.event.update({
+          where: { id: input.id },
+          data: {
+            ...rest,
+            ...(rest.venueUrl !== undefined ? { venueUrl: rest.venueUrl || null } : {}),
+            ...(rest.ticketUrl !== undefined ? { ticketUrl: rest.ticketUrl || null } : {}),
+            ...(nextCoverUrl !== undefined ? { coverUrl: nextCoverUrl } : {}),
+          },
+        })
+        if (mediaProvided) {
+          await tx.eventMedia.deleteMany({ where: { eventId: input.id } })
+          if (nextMedia.length > 0) {
+            await tx.eventMedia.createMany({
+              data: toMediaCreate(nextMedia).map((m) => ({ ...m, eventId: input.id })),
+            })
+          }
+        }
+        return updated
+      })
     }),
 
   publish: protectedProcedure
