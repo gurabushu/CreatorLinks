@@ -19,7 +19,7 @@ import { CoverImageUpload } from '@/components/upload/cover-image-upload'
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 
-const GENRES = ['ボーカル', '作曲', '作詞', '編曲', '演奏', 'ミックス・マスタリング', 'DTM・トラックメイキング', 'ライブサポート・PA・照明', 'その他']
+const GENRES = ['ボーカル', '作曲', '作詞', '編曲', '演奏', 'エンジニア（レコーディング・音響）', 'ミックス・マスタリング', 'DTM・トラックメイキング', 'ライブサポート・PA・照明', 'その他']
 
 interface Props {
   user: {
