@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { refreshConnectStatusAction } from '@/server/actions/payouts'
@@ -107,19 +108,32 @@ export default async function PayoutsPage({ searchParams }: Props) {
             )}
           </div>
         </div>
-        <div className="mb-3 flex items-center gap-2 text-xs text-gray-600">
-          <span>確定申告用 CSV:</span>
+        <div className="mb-3 flex items-center gap-2 text-xs text-gray-600 flex-wrap">
+          <span>確定申告用:</span>
+          <Link
+            href={`/dashboard/payouts/year/${new Date().getFullYear()}`}
+            className="px-2 py-1 rounded border border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium"
+          >
+            今年の帳票一覧
+          </Link>
+          <Link
+            href={`/dashboard/payouts/year/${new Date().getFullYear() - 1}`}
+            className="px-2 py-1 rounded border border-gray-300 hover:bg-gray-50 text-gray-700"
+          >
+            昨年の帳票一覧
+          </Link>
+          <span className="mx-1 text-gray-300">/</span>
           <a
             href={`/api/payouts/csv?year=${new Date().getFullYear()}`}
             className="px-2 py-1 rounded border border-gray-300 hover:bg-gray-50 text-gray-700"
           >
-            今年 ({new Date().getFullYear()})
+            今年 CSV
           </a>
           <a
             href={`/api/payouts/csv?year=${new Date().getFullYear() - 1}`}
             className="px-2 py-1 rounded border border-gray-300 hover:bg-gray-50 text-gray-700"
           >
-            昨年 ({new Date().getFullYear() - 1})
+            昨年 CSV
           </a>
         </div>
         <PaymentHistory rows={historyRows} />
