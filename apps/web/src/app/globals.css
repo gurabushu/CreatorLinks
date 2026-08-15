@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* モバイルで長いバッジやコピーが右にはみ出しても横スクロールを発生させない防護柵。
+   個別コンポーネントの overflow-x 追加漏れをアプリ全体でカバーする。 */
+html,
+body {
+  overflow-x: hidden;
+  overflow-wrap: break-word;
+}
+
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;

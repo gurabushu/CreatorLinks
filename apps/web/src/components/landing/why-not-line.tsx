@@ -48,17 +48,18 @@ export function WhyNotLine() {
         <ol className="space-y-4 sm:space-y-5">
           {REASONS.map((r) => (
             <li key={r.tag} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-[240px,1fr] gap-0">
-                <div className="bg-purple-50/60 p-5 sm:p-6 border-b sm:border-b-0 sm:border-r border-purple-100">
+              {/* SP: 縦積み、sm-md: 220px、lg: 260px の 2 段階で左カラム幅を最適化 */}
+              <div className="grid grid-cols-1 sm:grid-cols-[minmax(200px,220px),1fr] lg:grid-cols-[260px,1fr] gap-0">
+                <div className="bg-purple-50/60 p-4 sm:p-5 lg:p-6 border-b sm:border-b-0 sm:border-r border-purple-100">
                   <div className="text-xs font-bold text-purple-600 tracking-wider mb-2">{r.tag}</div>
                   <div className="text-xs text-gray-500 leading-relaxed">{r.detail}</div>
                 </div>
-                <div className="p-5 sm:p-6 space-y-3">
-                  <div className="flex items-start gap-3">
+                <div className="p-4 sm:p-5 lg:p-6 space-y-3 min-w-0">
+                  <div className="flex items-start gap-2 sm:gap-3">
                     <span className="shrink-0 mt-0.5 text-[10px] font-bold bg-gray-200 text-gray-600 px-2 py-0.5 rounded">LINE</span>
                     <p className="text-sm text-gray-500 leading-relaxed">{r.line}</p>
                   </div>
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2 sm:gap-3">
                     <span className="shrink-0 mt-0.5 text-[10px] font-bold bg-purple-600 text-white px-2 py-0.5 rounded">EncoreCue</span>
                     <p className="text-sm text-gray-900 leading-relaxed font-medium">{r.encore}</p>
                   </div>

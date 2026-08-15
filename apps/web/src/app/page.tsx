@@ -237,7 +237,8 @@ export default async function HomePage() {
         <p className="text-sm sm:text-base text-gray-600 mb-8">
           汎用クラウドソーシングの 3 分の 1 以下。手取りは 93% がアーティストに残ります。
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        {/* SP は 2 列 (¥ 4 社を 2x2)、md 中間帯は狭くて 4 列で潰れるため sm 継続、lg で 4 列 */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[
             { name: 'ランサーズ', fee: '16.5%', highlight: false },
             { name: 'クラウドワークス', fee: '20%', highlight: false },
@@ -246,13 +247,13 @@ export default async function HomePage() {
           ].map((item) => (
             <div
               key={item.name}
-              className={`rounded-2xl p-4 sm:p-6 ${
+              className={`rounded-2xl p-4 sm:p-6 min-w-0 ${
                 item.highlight
                   ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-md'
                   : 'bg-gray-50 border border-gray-200'
               }`}
             >
-              <p className={`text-xs sm:text-sm mb-2 ${item.highlight ? 'text-purple-100' : 'text-gray-500'}`}>
+              <p className={`text-[11px] sm:text-sm mb-2 truncate ${item.highlight ? 'text-purple-100' : 'text-gray-500'}`}>
                 {item.name}
               </p>
               <p className={`text-2xl sm:text-3xl font-bold ${item.highlight ? 'text-white' : 'text-gray-800'}`}>

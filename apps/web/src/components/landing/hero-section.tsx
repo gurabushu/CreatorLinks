@@ -3,14 +3,14 @@ import { DashboardMock } from './dashboard-mock'
 
 export function HeroSection() {
   return (
-    <section className="bg-white px-4 py-12 sm:py-16 md:py-20">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-8 items-center">
-        {/* 左: コピー & CTA */}
-        <div className="text-center md:text-left">
-          <span className="inline-block text-xs font-bold tracking-wider text-purple-600 bg-purple-50 border border-purple-200/70 px-3 py-1 rounded-full mb-4">
+    <section className="bg-white px-4 py-10 sm:py-14 md:py-20">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-8 items-center">
+        {/* 左: コピー & CTA。SP でも読み切れる範囲に文字サイズを段階制御 */}
+        <div className="text-center md:text-left min-w-0">
+          <span className="inline-flex flex-wrap items-center justify-center md:justify-start gap-x-1 text-[11px] sm:text-xs font-bold tracking-wider text-purple-600 bg-purple-50 border border-purple-200/70 px-3 py-1 rounded-full mb-4 max-w-full">
             イベント掲示板 × 仕事 DX × マッチング
           </span>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.15] tracking-tight text-gray-900">
+          <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.2] tracking-tight text-gray-900 break-keep">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
               「また一緒に」
             </span>
@@ -18,7 +18,7 @@ export function HeroSection() {
             <br />
             続く、音楽の場所。
           </h1>
-          <p className="mt-6 text-base sm:text-lg text-gray-600 leading-relaxed">
+          <p className="mt-5 sm:mt-6 text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed">
             ライブ・セッション告知の <b>掲示板</b>、LINE や DM でやってた依頼の <b>仕事 DX</b>、
             音楽業界特化の <b>マッチング</b>。
             <br className="hidden sm:block" />
@@ -64,8 +64,10 @@ export function HeroSection() {
           </p>
         </div>
 
-        {/* 右: モック */}
-        <div className="order-first md:order-none">
+        {/* 右: モック
+            SP では order-first で最上部に来ると Hero copy まで scroll が必要になり
+            見切れ感が強まるため、SP では非表示。md 以上でのみ表示する。 */}
+        <div className="hidden md:block">
           <DashboardMock />
         </div>
       </div>
