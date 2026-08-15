@@ -76,6 +76,8 @@ export default async function DashboardPage() {
   let myProjects: MyProject[] = []
   let upcomingEvents: EventItem[] = []
   let unreadCount = 0
+  // 今月の帳票ウィジェット用: 受注アーティスト側で今月支払い/送金が発生した件数
+  let thisMonthDocCount = 0
 
   try {
     const me = await prisma.user.findUnique({
@@ -87,7 +89,10 @@ export default async function DashboardPage() {
       guestExpiresAt = new Date(me.createdAt.getTime() + 24 * 60 * 60 * 1000)
     }
 
-    const [applied, active, projects, unread, myEvents, followRows] = await Promise.all([
+    // 今月の帳票発行対象件数: Payment 支払い (paidAt) が今月に入った受注案件
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    const [applied, active, projects, unread, myEvents, followRows, monthDocCount] = await Promise.all([
       prisma.match.findMany({
         where: { artistId: userId, status: 'APPLIED' },
         take: 5,
@@ -132,12 +137,20 @@ export default async function DashboardPage() {
         where: { followerId: userId },
         select: { followingId: true },
       }),
+      prisma.payment.count({
+        where: {
+          match: { artistId: userId },
+          status: { in: ['HELD', 'RELEASED'] },
+          paidAt: { gte: monthStart },
+        },
+      }),
     ])
 
     appliedMatches = applied
     activeMatches = active
     myProjects = projects
     unreadCount = unread
+    thisMonthDocCount = monthDocCount
 
     const followingIds = followRows.map((f) => f.followingId)
     const followingEvents = followingIds.length === 0
@@ -336,6 +349,29 @@ export default async function DashboardPage() {
           </ul>
         )}
       </section>
+
+      {/* 今月の帳票（受注アーティスト向け）: 支払いが発生したら見積/契約/請求/領収が発行可能 */}
+      {thisMonthDocCount > 0 && (
+        <section className="mb-8">
+          <Link
+            href="/dashboard/payouts"
+            className="block bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 hover:shadow-sm transition"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs text-purple-700 font-medium mb-0.5">今月の帳票</p>
+                <p className="text-sm text-gray-800">
+                  今月支払いが発生した案件{' '}
+                  <span className="font-bold text-purple-700">{thisMonthDocCount} 件</span>
+                  {' '}
+                  <span className="text-gray-500 text-xs">見積 / 契約 / 請求 / 領収 が発行できます</span>
+                </p>
+              </div>
+              <span className="text-purple-600 text-lg">→</span>
+            </div>
+          </Link>
+        </section>
+      )}
 
       {/* クイックアクション */}
       <section>
