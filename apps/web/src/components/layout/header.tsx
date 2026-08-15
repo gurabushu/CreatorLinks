@@ -116,6 +116,24 @@ export async function Header() {
                   <span className="hidden sm:inline">仲間を招待</span>
                 </Link>
                 <NotificationBell userId={session.user.id} />
+                {/* アカウント名 → /dashboard/profile への導線。
+                    SP はイニシャル 1 文字だけの円アイコン、sm 以上は名前も表示。 */}
+                <Link
+                  href="/dashboard/profile"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 text-sm text-gray-700 hover:text-purple-700 transition-colors font-medium min-w-0 max-w-[140px] sm:max-w-[180px] shrink-0"
+                  aria-label="マイプロフィール"
+                  title={session.user.name}
+                >
+                  <span
+                    aria-hidden
+                    className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs sm:text-sm font-bold uppercase"
+                  >
+                    {(session.user.name?.trim()?.[0] ?? '?')}
+                  </span>
+                  <span className="hidden sm:inline truncate">
+                    {session.user.name ?? 'マイページ'}
+                  </span>
+                </Link>
                 {/* ログアウト: SP はアイコンのみ (log-out アイコン)、sm 以上はテキスト */}
                 <form
                   action={async () => {
