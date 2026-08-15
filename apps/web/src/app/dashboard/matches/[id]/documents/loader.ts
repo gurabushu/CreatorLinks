@@ -19,7 +19,12 @@ export async function loadDocumentMatch(matchId: string) {
       completedAt: true,
       createdAt: true,
       artistId: true,
-      artist: { select: { id: true, name: true, displayName: true, email: true } },
+      artist: {
+        select: {
+          id: true, name: true, displayName: true, email: true,
+          role: true, isFounderExempt: true,
+        },
+      },
       project: {
         select: {
           id: true,
@@ -28,7 +33,12 @@ export async function loadDocumentMatch(matchId: string) {
           budget: true,
           clientId: true,
           contractType: true,
-          client: { select: { id: true, name: true, displayName: true, email: true } },
+          client: {
+            select: {
+              id: true, name: true, displayName: true, email: true,
+              isFounderExempt: true,
+            },
+          },
         },
       },
       payment: {
@@ -53,8 +63,13 @@ export async function loadDocumentMatch(matchId: string) {
 
   // Payment が未作成でも帳票は budget ベースで表示できるようフォールバック
   const budget = match.project.budget ?? 0
-  const platformFeeYen = match.payment?.platformFeeYen ?? calcPlatformFee(budget)
-  const artistPayoutYen = match.payment?.artistPayoutYen ?? calcArtistPayout(budget)
+  const isProArtist = match.artist.role === 'PRO'
+  const isFounderExempt =
+    match.artist.isFounderExempt || match.project.client.isFounderExempt
+  const platformFeeYen =
+    match.payment?.platformFeeYen ?? calcPlatformFee(budget, { isProArtist, isFounderExempt })
+  const artistPayoutYen =
+    match.payment?.artistPayoutYen ?? calcArtistPayout(budget, { isProArtist, isFounderExempt })
 
   return {
     ok: true as const,
@@ -65,6 +80,8 @@ export async function loadDocumentMatch(matchId: string) {
       platformFeeYen,
       artistPayoutYen,
       currency: CURRENCY,
+      isFounderExempt, // 帳票側で「手数料 0 の理由」を条件分岐して表示するため
+      isProArtist,
     },
   }
 }

@@ -29,6 +29,29 @@ function ProSubscribeContent() {
     )
   }
 
+  // 恩人枠（isFounderExempt）は月額 0 円 + 案件手数料 0% の永年無償枠。
+  // このバッジは本人のセッションでのみ描画され、他ユーザーには一切露出しない。
+  if (session?.user?.isFounderExempt) {
+    return (
+      <div className="max-w-md mx-auto py-20 px-4 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-400 to-orange-300 px-4 py-1.5 text-sm font-bold text-rose-900 mb-4">
+          無償枠 (Founding Supporter)
+        </div>
+        <h1 className="text-xl font-bold mb-2">月額料金・案件手数料ともに無償です</h1>
+        <p className="text-gray-500 mb-6">
+          立ち上げ期にお世話になった方向けの永年無償枠が有効になっています。<br />
+          PRO 特典・案件のプラットフォーム手数料は一切かかりません。
+        </p>
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="bg-rose-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-rose-600 transition"
+        >
+          ダッシュボードへ
+        </button>
+      </div>
+    )
+  }
+
   if (session?.user?.role === 'PRO') {
     return (
       <div className="max-w-md mx-auto py-20 px-4 text-center">

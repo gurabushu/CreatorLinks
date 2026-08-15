@@ -80,3 +80,21 @@ describe('PRO 手数料減額 (isProArtist: true)', () => {
     }
   })
 })
+
+describe('恩人枠 (isFounderExempt: true)', () => {
+  it('金額に関わらず fee は 0', () => {
+    for (const amount of [1, 999, 10000, 1_234_567]) {
+      expect(calcPlatformFee(amount, { isFounderExempt: true })).toBe(0)
+    }
+  })
+
+  it('payout は amount と一致（100% 受取）', () => {
+    expect(calcArtistPayout(10000, { isFounderExempt: true })).toBe(10000)
+    expect(calcArtistPayout(30000, { isFounderExempt: true })).toBe(30000)
+  })
+
+  it('isProArtist と併用しても fee=0 が優先', () => {
+    expect(calcPlatformFee(10000, { isProArtist: true, isFounderExempt: true })).toBe(0)
+    expect(calcArtistPayout(10000, { isProArtist: true, isFounderExempt: true })).toBe(10000)
+  })
+})

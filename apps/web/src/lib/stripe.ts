@@ -43,10 +43,13 @@ export function getStripe(): Stripe {
 export type FeeOpts = {
   /** true なら PRO 用の 5% 率を適用（未指定 = 7%）。判定はアーティスト側の役割で行う。 */
   isProArtist?: boolean
+  /** 発注側・受注側いずれか一方でも User.isFounderExempt=true のとき true。手数料を 0 にする。 */
+  isFounderExempt?: boolean
 }
 
 /** 依頼金額から Platform 側の手数料（円・整数）を算出 */
 export function calcPlatformFee(amountYen: number, opts?: FeeOpts): number {
+  if (opts?.isFounderExempt) return 0
   const rate = opts?.isProArtist ? PLATFORM_FEE_RATE_PRO : PLATFORM_FEE_RATE
   return Math.round(amountYen * rate)
 }

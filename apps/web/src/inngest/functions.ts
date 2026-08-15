@@ -281,6 +281,7 @@ export const expireEarlyBirdFreeTier = inngest.createFunction(
         role: 'PRO',
         hasPaidSubscription: false,
         hasLifetimeFreePro: false, // プロモコード付与の永年無料組は失効させない
+        isFounderExempt: false, // 恩人枠は永年 PRO 相当・失効対象外
         earlyBirdSlot: { not: null },
         earlyBirdExpiresAt: { lt: now, not: null },
       },
@@ -306,6 +307,7 @@ export const notifyEarlyBirdExpiring = inngest.createFunction(
         role: 'PRO',
         hasPaidSubscription: false,
         hasLifetimeFreePro: false, // 永年無料組には期限切れ通知不要
+        isFounderExempt: false, // 恩人枠にも切迫通知不要（そもそも失効しない）
         earlyBirdSlot: { not: null },
         earlyBirdReminderSentAt: null,
         earlyBirdExpiresAt: { gte: in7days, lte: in14days },

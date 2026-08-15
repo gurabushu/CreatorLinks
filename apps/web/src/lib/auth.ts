@@ -56,17 +56,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // Session にロール・ユーザーIDを追加。退会後 30 日以内のトークン持ち回りを弾く
     async session({ session, token }) {
       if (session.user) {
-        // 退会検知: DB を確認して deletedAt を持つユーザーの JWT を無効化。
+        // 退会検知 + 恩人枠フラグの最新値取得を同じクエリで済ませる。
         // JWT strategy のため mass invalidate 手段がなく、次アクセスで捕捉する方針。
         const id = token.id as string | undefined
         if (id) {
           const dbUser = await prisma.user
-            .findUnique({ where: { id }, select: { deletedAt: true } })
+            .findUnique({
+              where: { id },
+              select: { deletedAt: true, isFounderExempt: true },
+            })
             .catch(() => null)
           if (!dbUser || dbUser.deletedAt) {
             // Auth.js は callback から null を返すとログアウト扱い
             return null as unknown as typeof session
           }
+          session.user.isFounderExempt = dbUser.isFounderExempt
         }
         session.user.id = token.id as string
         session.user.role = token.role as UserRole
@@ -100,6 +104,7 @@ declare module 'next-auth' {
       name: string
       role: UserRole
       image?: string | null
+      isFounderExempt?: boolean
     }
   }
 }

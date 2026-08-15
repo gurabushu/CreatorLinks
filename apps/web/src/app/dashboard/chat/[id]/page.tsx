@@ -34,11 +34,18 @@ export default async function ChatPage({ params, searchParams }: Props) {
     where: { id: matchId },
     include: {
       project: {
-        select: { id: true, title: true, clientId: true, budget: true },
+        select: {
+          id: true, title: true, clientId: true, budget: true,
+          client: { select: { isFounderExempt: true } },
+        },
       },
       artist: {
         // role は Checkout 前 fee 表示 (5%/7%) を actions/payments 側の記録と一致させるため
-        select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true, role: true },
+        // isFounderExempt はどちらか一方でも true なら手数料 0 表示にする
+        select: {
+          id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true,
+          role: true, isFounderExempt: true,
+        },
       },
       partner: {
         select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true },
@@ -121,11 +128,13 @@ export default async function ChatPage({ params, searchParams }: Props) {
 
   const budget = isP2P ? null : match.project!.budget
   const isProArtist = match.artist.role === 'PRO'
+  const isFounderExempt =
+    match.artist.isFounderExempt || (match.project?.client.isFounderExempt ?? false)
   const feeBreakdown =
     budget && budget > 0
       ? {
-          platformFeeYen: calcPlatformFee(budget, { isProArtist }),
-          artistPayoutYen: calcArtistPayout(budget, { isProArtist }),
+          platformFeeYen: calcPlatformFee(budget, { isProArtist, isFounderExempt }),
+          artistPayoutYen: calcArtistPayout(budget, { isProArtist, isFounderExempt }),
         }
       : null
 

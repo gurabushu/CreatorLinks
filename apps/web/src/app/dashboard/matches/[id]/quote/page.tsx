@@ -111,7 +111,13 @@ export default async function QuotePage({
 
       <div className="text-xs text-gray-600 space-y-1 mb-6">
         <p>お支払い方法: {SITE_NAME} 上での Stripe エスクロー決済（納品確認後に受注者へ送金）</p>
-        <p>プラットフォーム手数料 7% は受注者受取額から差し引かれます</p>
+        <p>
+          {amounts.isFounderExempt
+            ? `プラットフォーム手数料は本案件では 0%（${SITE_NAME} 恩人枠適用）`
+            : amounts.isProArtist
+              ? 'プラットフォーム手数料 5% (PRO 会員特典) は受注者受取額から差し引かれます'
+              : 'プラットフォーム手数料 7% は受注者受取額から差し引かれます'}
+        </p>
         <p>本見積は上記有効期限内でのご発注に限り有効です</p>
       </div>
 

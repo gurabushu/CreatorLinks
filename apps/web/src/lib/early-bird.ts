@@ -63,13 +63,16 @@ export function isEarlyBirdFreeActive(user: {
 }
 
 // 月額料金を免除される PRO アクセス権があるか。
-// 創設メンバー無料期間中 or プロモコードで付与された「永年無料」ユーザー。
-// 案件成立時の手数料（PLATFORM_FEE_RATE）はこの判定に関係なく別途徴収される
+// 創設メンバー無料期間中 or プロモコードで付与された「永年無料」ユーザー、
+// または isFounderExempt=true の恩人枠ユーザー。
+// 案件成立時の手数料（PLATFORM_FEE_RATE）は別途 stripe.ts 側で判定する。
 export function hasFreeProAccess(user: {
   earlyBirdSlot: number | null
   earlyBirdExpiresAt: Date | null
   hasLifetimeFreePro: boolean
+  isFounderExempt?: boolean
 }): boolean {
+  if (user.isFounderExempt) return true
   if (user.hasLifetimeFreePro) return true
   return isEarlyBirdFreeActive(user)
 }

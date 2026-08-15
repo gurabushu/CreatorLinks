@@ -161,6 +161,13 @@ model User {
   featuredPortfolioId         String? // アーティスト本人が一覧カードのメインに見せる作品
   isGuest                     Boolean          @default(false) // テスト用ゲストアカウント（24h で自動削除）
   isOfficial                  Boolean          @default(false) // プラットフォーム公式アカウント。通常 1 人だけ true
+  // 恩義のある少数の関係者向け「無償枠」フラグ。
+  // 立ち上げ期にお世話になった 5 名前後を想定。手動で SQL / 管理画面から true にする。
+  // このフラグが true のユーザーは:
+  //   - Stripe 案件手数料: 発注側・受注側いずれか一方でも true なら platformFee=0
+  //   - PRO サブスク: hasFreeProAccess が常に true を返し、失効 cron の対象外
+  //   - UI: 本人にだけ「無償枠」バッジを表示、他ユーザーには非表示
+  isFounderExempt             Boolean          @default(false)
   announcementsReadAt         DateTime? // 最後にお知らせ一覧を開いたタイムスタンプ。未読件数の判定基準
   deletedAt                   DateTime? // 退会（アカウント削除）実行時刻。PII は匿名化済み。FK 整合のため row は残す
   createdAt                   DateTime         @default(now())

@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
           earlyBirdSlot: true,
           earlyBirdExpiresAt: true,
           hasLifetimeFreePro: true,
+          isFounderExempt: true,
           role: true,
         },
       })
