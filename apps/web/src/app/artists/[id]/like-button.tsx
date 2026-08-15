@@ -29,7 +29,8 @@ export function ArtistLikeButton({
 
   const toggle = () => {
     if (!isLoggedIn) {
-      router.push(`/auth?next=/artists/${targetUserId}`)
+      // ログイン後にこの詳細ページへ戻す
+      router.push(`/auth?next=${encodeURIComponent(`/artists/${targetUserId}`)}`)
       return
     }
     setError(null)

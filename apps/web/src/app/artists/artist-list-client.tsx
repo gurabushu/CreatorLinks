@@ -323,7 +323,9 @@ function LikeButton({
     e.stopPropagation()
     if (busy) return
     if (!loggedIn) {
-      router.push('/login?next=/artists')
+      // 認証ページのパスは /auth。/login は存在せず 404 になっていた。
+      // next を渡してログイン後にアーティスト一覧へ戻す。
+      router.push('/auth?next=' + encodeURIComponent('/artists'))
       return
     }
     setBusy(true)

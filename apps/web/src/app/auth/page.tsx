@@ -5,12 +5,30 @@
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useActionState, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { signUpAction, signUpAsGuestAction } from '@/server/actions/auth'
 import PasswordInput from '@/components/ui/password-input'
 import { SITE_NAME } from '@/lib/brand'
 
+// ログイン後のリダイレクト先を安全に決める。
+// - `/xxx` のみ許可（相対パス）
+// - `//example.com` や `/\example.com`（protocol-relative URL）は open redirect 攻撃になるため拒否
+// - `://` を含むもの、外部 URL、`javascript:` 等のスキーマは全て拒否
+// - 未指定/不正なら fallback を返す
+function safeNextPath(raw: string | null, fallback: string): string {
+  if (!raw) return fallback
+  if (!raw.startsWith('/')) return fallback
+  if (raw.startsWith('//') || raw.startsWith('/\\')) return fallback
+  if (raw.includes('://')) return fallback
+  // 認証ページ自身へのループを防ぐ
+  if (raw === '/auth' || raw.startsWith('/auth/') || raw.startsWith('/auth?')) return fallback
+  return raw
+}
+
 // ---- ログインフォーム ----
 function LoginForm() {
+  const searchParams = useSearchParams()
+  const nextPath = safeNextPath(searchParams.get('next'), '/dashboard')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -37,7 +55,7 @@ function LoginForm() {
         return
       }
       // フルリロードで新しい auth cookie をサーバーに確実に伝える
-      window.location.href = '/dashboard'
+      window.location.href = nextPath
     } catch (err) {
       console.error('[login] signIn failed', err)
       setError('ログインに失敗しました。時間をおいて再度お試しください')
@@ -102,6 +120,9 @@ function LoginForm() {
 
 // ---- サインアップフォーム ----
 function SignUpForm({ onSuccess: _onSuccess }: { onSuccess: () => void }) {
+  const searchParams = useSearchParams()
+  // signup は既定で /onboarding。next 指定時は「意図した遷移先」を優先。
+  const nextPath = safeNextPath(searchParams.get('next'), '/onboarding')
   const [state, action, isPending] = useActionState(
     async (_prev: { success: false; error: string; field?: string } | null, formData: FormData) => {
       const email = formData.get('email') as string
@@ -117,8 +138,7 @@ function SignUpForm({ onSuccess: _onSuccess }: { onSuccess: () => void }) {
           return { success: false as const, error: 'アカウントは作成されましたが、ログインに失敗しました。ログインページからサインインしてください。', field: 'general' as const }
         }
         // フルリロードで新しい auth cookie をサーバーに確実に伝える。
-        // signup 直後は onboarding（仕事仲間招待ステップ）へ誘導。
-        window.location.href = '/onboarding'
+        window.location.href = nextPath
         return null
       }
       return result
@@ -225,6 +245,8 @@ function SignUpForm({ onSuccess: _onSuccess }: { onSuccess: () => void }) {
 
 // ---- ゲストログインボタン ----
 function GuestLoginButton() {
+  const searchParams = useSearchParams()
+  const nextPath = safeNextPath(searchParams.get('next'), '/dashboard')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -246,7 +268,7 @@ function GuestLoginButton() {
         setError('ゲストログインに失敗しました')
         return
       }
-      window.location.href = '/dashboard'
+      window.location.href = nextPath
     } catch (err) {
       console.error('[guest-login] failed', err)
       setError('ゲストログインに失敗しました。時間をおいて再度お試しください')
