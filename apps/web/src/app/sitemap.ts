@@ -4,12 +4,10 @@
 
 import type { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
-
-// preview 環境や DB 未接続時のフォールバック URL
-const FALLBACK_URL = 'http://localhost:3000'
+import { resolveAppUrl } from '@/lib/app-url'
 
 function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? FALLBACK_URL
+  return resolveAppUrl()
 }
 
 // sitemap は Search Console 経由でクロール優先度のヒントに使われるだけで、

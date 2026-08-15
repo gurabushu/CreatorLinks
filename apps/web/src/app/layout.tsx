@@ -8,11 +8,13 @@ import { Footer } from '@/components/layout/footer'
 import { SITE_NAME, SITE_TAGLINE } from '@/lib/brand'
 import { JsonLd } from '@/components/seo/json-ld'
 import { organizationJsonLd, websiteJsonLd } from '@/lib/seo'
+import { resolveAppUrl } from '@/lib/app-url'
 
 const inter = Inter({ subsets: ['latin'] })
+const APP_URL = resolveAppUrl()
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(APP_URL),
   title: {
     default: `${SITE_NAME} — ${SITE_TAGLINE}`,
     template: `%s | ${SITE_NAME}`,
@@ -41,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'ja_JP',
-    url: process.env.NEXT_PUBLIC_APP_URL,
+    url: APP_URL,
     siteName: SITE_NAME,
     images: [
       {

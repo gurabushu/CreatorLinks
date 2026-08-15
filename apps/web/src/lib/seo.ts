@@ -8,9 +8,10 @@
 // この lib は必ず絶対 URL 前提で組む。
 
 import { SITE_NAME, SITE_TAGLINE } from './brand'
+import { resolveAppUrl } from './app-url'
 
 function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  return resolveAppUrl()
 }
 
 // -------- Site-wide --------

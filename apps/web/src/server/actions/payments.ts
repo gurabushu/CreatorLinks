@@ -15,13 +15,14 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CURRENCY, calcArtistPayout, calcPlatformFee, getStripe } from '@/lib/stripe'
 import { releasePayment } from '@/lib/payment-release'
+import { resolveAppUrl } from '@/lib/app-url'
 
 export type ReleaseActionResult =
   | { success: true }
   | { success: false; error: string }
 
 function appUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  return resolveAppUrl()
 }
 
 // 発注者が案件代金を支払う Checkout Session を作成し、Stripe へ redirect

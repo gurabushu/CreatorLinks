@@ -10,9 +10,10 @@ import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getStripe } from '@/lib/stripe'
+import { resolveAppUrl } from '@/lib/app-url'
 
 function appUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  return resolveAppUrl()
 }
 
 export async function startConnectOnboardingAction() {

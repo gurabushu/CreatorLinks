@@ -10,7 +10,9 @@ export const resend = process.env.RESEND_API_KEY
 export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'noreply@creatorlinks.jp'
 // 過去 import 互換のため再エクスポート。新規コードは '@/lib/brand' から取ること。
 export { SITE_NAME }
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+// APP_URL: 招待 URL / メール本文 / リンクの生成に使う。多段フォールバックは lib/app-url.ts に集約。
+import { resolveAppUrl } from './app-url'
+export const APP_URL = resolveAppUrl()
 
 // メール送信ヘルパー。
 // - dev / preview で RESEND_API_KEY 未設定: ターミナルに links を出力（reset リンク拾い用）

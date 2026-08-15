@@ -3,11 +3,10 @@
 // preview/dev: 全 disallow（Google に preview URL が拾われないようにする）
 
 import type { MetadataRoute } from 'next'
-
-const FALLBACK_URL = 'http://localhost:3000'
+import { resolveAppUrl } from '@/lib/app-url'
 
 function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? FALLBACK_URL
+  return resolveAppUrl()
 }
 
 export default function robots(): MetadataRoute.Robots {
