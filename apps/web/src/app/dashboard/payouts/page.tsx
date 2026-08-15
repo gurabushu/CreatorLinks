@@ -106,6 +106,21 @@ export default async function PayoutsPage({ searchParams }: Props) {
             )}
           </div>
         </div>
+        <div className="mb-3 flex items-center gap-2 text-xs text-gray-600">
+          <span>確定申告用 CSV:</span>
+          <a
+            href={`/api/payouts/csv?year=${new Date().getFullYear()}`}
+            className="px-2 py-1 rounded border border-gray-300 hover:bg-gray-50 text-gray-700"
+          >
+            今年 ({new Date().getFullYear()})
+          </a>
+          <a
+            href={`/api/payouts/csv?year=${new Date().getFullYear() - 1}`}
+            className="px-2 py-1 rounded border border-gray-300 hover:bg-gray-50 text-gray-700"
+          >
+            昨年 ({new Date().getFullYear() - 1})
+          </a>
+        </div>
         <PaymentHistory rows={historyRows} />
       </div>
     </div>
