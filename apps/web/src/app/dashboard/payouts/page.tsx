@@ -57,7 +57,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
         releasedAt: true,
         match: {
           select: {
-            project: { select: { title: true } },
+            project: { select: { id: true, title: true } },
           },
         },
       },
@@ -71,6 +71,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
     amountYen: p.amountYen,
     artistPayoutYen: p.artistPayoutYen,
     projectTitle: p.match.project?.title ?? null,
+    projectId: p.match.project?.id ?? null,
     paidAt: p.paidAt?.toISOString() ?? null,
     releasedAt: p.releasedAt?.toISOString() ?? null,
   }))
