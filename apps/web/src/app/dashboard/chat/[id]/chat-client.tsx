@@ -469,7 +469,7 @@ export function ChatClient({
         )}
 
         {isCompleted && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
               完了済み
             </span>
@@ -479,6 +479,15 @@ export function ChatClient({
             >
               レビューを書く
             </button>
+            {isClient && (
+              <Link
+                href={`/projects/new?fromMatch=${matchId}`}
+                className="text-xs bg-purple-600 text-white px-3 py-1 rounded-full font-bold hover:bg-purple-700 transition"
+                title="同じ内容で再依頼（金額・日程だけ変えて送信）"
+              >
+                同じ内容で再依頼
+              </Link>
+            )}
           </div>
         )}
 

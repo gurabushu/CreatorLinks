@@ -124,6 +124,61 @@ export async function applyToProjectAction(
 }
 
 // 自分の非公開案件一覧（チャットで共有する選択肢を出すため）
+// 過去 Match から案件内容を引き継ぐ prefill（1 タップ再依頼）
+// 認可: 発注者本人 (client) or 受注者本人 (artist) の Match だけ prefill 可能
+export async function getProjectPrefillFromMatchAction(matchId: string): Promise<
+  | {
+      ok: true
+      prefill: {
+        title: string
+        description: string | null
+        genres: string[]
+        contractType: string
+        commitmentLevel: string
+        budget: number | null
+      }
+    }
+  | { ok: false; error: string }
+> {
+  const session = await auth()
+  if (!session) return { ok: false, error: 'ログインが必要です' }
+
+  const match = await prisma.match.findUnique({
+    where: { id: matchId },
+    select: {
+      artistId: true,
+      project: {
+        select: {
+          clientId: true,
+          title: true,
+          description: true,
+          genres: true,
+          contractType: true,
+          commitmentLevel: true,
+          budget: true,
+        },
+      },
+    },
+  })
+  if (!match || !match.project) return { ok: false, error: '対象の案件が見つかりません' }
+
+  const isParticipant =
+    match.artistId === session.user.id || match.project.clientId === session.user.id
+  if (!isParticipant) return { ok: false, error: '権限がありません' }
+
+  return {
+    ok: true,
+    prefill: {
+      title: match.project.title,
+      description: match.project.description,
+      genres: match.project.genres,
+      contractType: match.project.contractType,
+      commitmentLevel: match.project.commitmentLevel,
+      budget: match.project.budget,
+    },
+  }
+}
+
 export async function listMyPrivateProjectsAction() {
   const session = await auth()
   if (!session) return []

@@ -2,9 +2,12 @@
 
 'use client'
 
-import { useActionState, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createProjectAction } from '@/server/actions/project'
+import { useActionState, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import {
+  createProjectAction,
+  getProjectPrefillFromMatchAction,
+} from '@/server/actions/project'
 import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/shared'
 
 const GENRES = ['音楽', 'イラスト', '動画', 'デザイン', '写真', '文章', '声優', 'その他']
@@ -61,6 +64,8 @@ const TEMPLATES: readonly Template[] = [
 
 export default function NewProjectPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromMatch = searchParams.get('fromMatch')
   const [step, setStep] = useState(1)
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [contractType, setContractType] = useState<'SPOT' | 'SUBSCRIPTION'>('SPOT')
@@ -69,6 +74,28 @@ export default function NewProjectPage() {
   const [description, setDescription] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null)
+  const [prefillLoaded, setPrefillLoaded] = useState(false)
+
+  // ?fromMatch=<matchId> で過去の Match から案件内容を引き継ぐ（1 タップ再依頼）
+  useEffect(() => {
+    if (!fromMatch || prefillLoaded) return
+    let cancelled = false
+    ;(async () => {
+      const result = await getProjectPrefillFromMatchAction(fromMatch)
+      if (cancelled) return
+      if (result.ok) {
+        setTitle(result.prefill.title)
+        setDescription(result.prefill.description ?? '')
+        setSelectedGenres(result.prefill.genres)
+        setContractType(result.prefill.contractType === 'SUBSCRIPTION' ? 'SUBSCRIPTION' : 'SPOT')
+        setCommitmentLevel(result.prefill.commitmentLevel as CommitmentLevel)
+      }
+      setPrefillLoaded(true)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [fromMatch, prefillLoaded])
 
   const applyTemplate = (t: Template) => {
     setTitle(t.title)
@@ -111,6 +138,15 @@ export default function NewProjectPage() {
         <h1 className="text-xl sm:text-2xl font-bold mb-1">案件を作成する</h1>
         <p className="text-gray-400 text-xs sm:text-sm">ステップ {step} / 3</p>
       </div>
+
+      {fromMatch && prefillLoaded && title && (
+        <div className="mb-6 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-xs sm:text-sm text-purple-800">
+          <span className="font-bold">前回の案件から引き継ぎました</span>
+          <span className="block text-[11px] text-purple-600 mt-0.5">
+            金額・日程は変更できます。そのまま作成すれば同じ内容で再依頼できます。
+          </span>
+        </div>
+      )}
 
       {/* ステップインジケーター */}
       <div className="flex gap-2 mb-6 sm:mb-8">
