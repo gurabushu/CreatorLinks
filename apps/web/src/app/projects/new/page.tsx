@@ -375,6 +375,28 @@ export default function NewProjectPage() {
               </p>
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-medium mb-1.5">開始日時（任意）</label>
+                <input
+                  name="scheduledStartAt"
+                  type="datetime-local"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1.5">終了日時（任意）</label>
+                <input
+                  name="scheduledEndAt"
+                  type="datetime-local"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <p className="sm:col-span-2 text-xs text-gray-400 -mt-1">
+                入力すると受注確定後、両者のカレンダーに自動で反映されます。「いつ空いてる？」の返信が要りません。
+              </p>
+            </div>
+
             {/* 公開範囲 */}
             <label className="flex items-start gap-3 bg-pink-50 border border-pink-200 rounded-xl p-4 cursor-pointer">
               <input

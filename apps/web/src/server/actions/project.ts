@@ -33,6 +33,8 @@ export async function createProjectAction(
     contractType: formData.get('contractType'),
     commitmentLevel: formData.get('commitmentLevel') || 'HOBBY',
     isPrivate: formData.get('isPrivate') === 'on' || formData.get('isPrivate') === 'true',
+    scheduledStartAt: formData.get('scheduledStartAt') || undefined,
+    scheduledEndAt: formData.get('scheduledEndAt') || undefined,
   }
 
   const parsed = CreateProjectSchema.safeParse(raw)

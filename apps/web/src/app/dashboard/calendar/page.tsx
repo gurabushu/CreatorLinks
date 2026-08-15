@@ -41,8 +41,15 @@ type EventSummary = {
   creator?: Artist
 }
 
-type Role = 'ORGANIZER' | 'PERFORMER' | 'STAFF' | 'GUEST' | 'AUDIENCE' | 'FOLLOWING'
-type Entry = { event: EventSummary; role: Role }
+type Role =
+  | 'ORGANIZER'
+  | 'PERFORMER'
+  | 'STAFF'
+  | 'GUEST'
+  | 'AUDIENCE'
+  | 'FOLLOWING'
+  | 'PROJECT' // Match ACCEPTED (Project.scheduledStartAt) 案件予定
+type Entry = { event: EventSummary; role: Role; href: string }
 
 const ROLE_LABELS: Record<Role, string> = {
   ORGANIZER: '主催',
@@ -51,6 +58,7 @@ const ROLE_LABELS: Record<Role, string> = {
   GUEST: 'ゲスト',
   AUDIENCE: '観覧',
   FOLLOWING: 'フォロー中',
+  PROJECT: '案件',
 }
 
 // カレンダーセル内 pill 用（軽め）
@@ -61,6 +69,7 @@ const ROLE_PILL: Record<Role, string> = {
   GUEST: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
   AUDIENCE: 'bg-pink-100 text-pink-700 hover:bg-pink-200',
   FOLLOWING: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200',
+  PROJECT: 'bg-amber-100 text-amber-700 hover:bg-amber-200',
 }
 
 // アジェンダ用（濃さ調整）
@@ -71,16 +80,18 @@ const ROLE_BADGE: Record<Role, string> = {
   GUEST: 'bg-yellow-100 text-yellow-700',
   AUDIENCE: 'bg-pink-100 text-pink-700',
   FOLLOWING: 'bg-indigo-100 text-indigo-700',
+  PROJECT: 'bg-amber-100 text-amber-700',
 }
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'] as const
 const PRIORITY: Record<Role, number> = {
   ORGANIZER: 0,
-  PERFORMER: 1,
-  STAFF: 2,
-  GUEST: 3,
-  AUDIENCE: 4,
-  FOLLOWING: 5,
+  PROJECT: 1, // 確定した案件は自分の予定として最優先レベル
+  PERFORMER: 2,
+  STAFF: 3,
+  GUEST: 4,
+  AUDIENCE: 5,
+  FOLLOWING: 6,
 }
 
 function parseYm(ym: string | undefined): { year: number; month: number } {
@@ -161,9 +172,10 @@ export default async function CalendarPage({
     entries = followingEvents.map((e) => ({
       event: e,
       role: 'FOLLOWING' as const,
+      href: `/events/${e.id}`,
     }))
   } else {
-    const [created, participations, interests] = await Promise.all([
+    const [created, participations, interests, projectMatches] = await Promise.all([
       prisma.event.findMany({
         where: {
           creatorId: session.user.id,
@@ -202,15 +214,61 @@ export default async function CalendarPage({
           },
         },
       }),
+      // Match ACCEPTED (発注/受注どちらでも) + Project.scheduledStartAt がグリッド範囲内
+      // 案件確定 = カレンダーに自動反映される、というプロダクト方針
+      prisma.match.findMany({
+        where: {
+          status: { in: ['ACCEPTED', 'COMPLETED'] },
+          project: { scheduledStartAt: { gte: gridStart, lte: gridEnd } },
+          OR: [
+            { artistId: session.user.id },
+            { project: { clientId: session.user.id } },
+          ],
+        },
+        select: {
+          id: true,
+          project: {
+            select: {
+              id: true,
+              title: true,
+              scheduledStartAt: true,
+              scheduledEndAt: true,
+            },
+          },
+        },
+      }),
     ])
 
     const merged: Entry[] = [
-      ...created.map((e) => ({ event: e, role: 'ORGANIZER' as const })),
+      ...created.map((e) => ({
+        event: e,
+        role: 'ORGANIZER' as const,
+        href: `/events/${e.id}`,
+      })),
       ...participations.map((p) => ({
         event: p.event,
         role: p.role as Role,
+        href: `/events/${p.event.id}`,
       })),
-      ...interests.map((i) => ({ event: i.event, role: 'AUDIENCE' as const })),
+      ...interests.map((i) => ({
+        event: i.event,
+        role: 'AUDIENCE' as const,
+        href: `/events/${i.event.id}`,
+      })),
+      ...projectMatches
+        .filter((m) => m.project?.scheduledStartAt)
+        .map((m) => ({
+          event: {
+            id: m.id, // Match id, カレンダー内キーとして使用
+            title: m.project!.title,
+            startAt: m.project!.scheduledStartAt!,
+            type: 'PROJECT' as string, // アジェンダ EVENT_TYPE_LABELS に載らないが type ラベル出しは条件分岐
+            venueName: null,
+            city: null,
+          },
+          role: 'PROJECT' as const,
+          href: `/dashboard/chat/${m.id}`,
+        })),
     ]
 
     // 同一イベントは高優先度ロール（主催 > 出演 > その他）で 1 件に集約
@@ -383,7 +441,7 @@ export default async function CalendarPage({
                   return (
                     <Link
                       key={entry.event.id}
-                      href={`/events/${entry.event.id}`}
+                      href={entry.href}
                       title={`${fmtTime(entry.event.startAt)} ${artistName ? `[${artistName}] ` : ''}${entry.event.title}`}
                       className={`text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded truncate transition-colors ${
                         ROLE_PILL[entry.role]
@@ -411,7 +469,7 @@ export default async function CalendarPage({
         <span>{view === 'following' ? '種別:' : 'ロール:'}</span>
         {(view === 'following'
           ? (['FOLLOWING'] as Role[])
-          : (['ORGANIZER', 'PERFORMER', 'STAFF', 'GUEST', 'AUDIENCE'] as Role[])
+          : (['ORGANIZER', 'PROJECT', 'PERFORMER', 'STAFF', 'GUEST', 'AUDIENCE'] as Role[])
         ).map((r) => (
           <span key={r} className={`px-1.5 py-0.5 rounded ${ROLE_BADGE[r]}`}>
             {ROLE_LABELS[r]}
@@ -452,7 +510,7 @@ export default async function CalendarPage({
               return (
                 <li key={entry.event.id}>
                   <Link
-                    href={`/events/${entry.event.id}`}
+                    href={entry.href}
                     className="block rounded-xl border border-purple-100/60 bg-white hover:shadow-sm hover:shadow-purple-200/40 transition p-4"
                   >
                     <div className="flex items-start gap-3">
@@ -463,7 +521,9 @@ export default async function CalendarPage({
                         <div className="text-xs text-gray-500 mb-1">
                           {fmtDate(entry.event.startAt)}
                           <span className="mx-1">·</span>
-                          {EVENT_TYPE_LABELS[entry.event.type as EventType]}
+                          {entry.role === 'PROJECT'
+                            ? '受注案件'
+                            : EVENT_TYPE_LABELS[entry.event.type as EventType]}
                           {entry.event.venueName && (
                             <>
                               <span className="mx-1">·</span>

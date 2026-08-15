@@ -222,12 +222,18 @@ model Project {
   budget          Int? // 円単位
   contractType    ContractType
   commitmentLevel CommitmentLevel @default(HOBBY) // 案件の本気度（趣味/副業/プロ）
+  // 予定日時（任意）。Match ACCEPTED 後、双方のカレンダーに自動で反映される。
+  // 単一時点イベント（レコーディング/ライブ）は End=null で運用、
+  // 期間を持つ案件（合宿・複数回セッション等）は End も設定する。
+  scheduledStartAt DateTime?
+  scheduledEndAt   DateTime?
   status          ProjectStatus   @default(OPEN)
   createdAt       DateTime        @default(now())
 
   client  User    @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
   matches Match[]
 
+  @@index([scheduledStartAt])
   @@map("projects")
 }
 

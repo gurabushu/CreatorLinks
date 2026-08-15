@@ -14,6 +14,8 @@ export const CreateProjectSchema = z.object({
   contractType: z.enum(['SPOT', 'SUBSCRIPTION']),
   commitmentLevel: CommitmentLevelSchema,
   isPrivate: z.boolean().optional(), // true なら ProjectStatus.PRIVATE で作成
+  scheduledStartAt: z.coerce.date().optional(),
+  scheduledEndAt: z.coerce.date().optional(),
 })
 
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>
