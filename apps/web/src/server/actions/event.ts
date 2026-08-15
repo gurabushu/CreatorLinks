@@ -9,7 +9,16 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import type { z } from 'zod'
 import { CreateEventSchema, UpdateEventSchema } from '@creator-links/shared'
-import type { EventParticipantRole, EventVisibility } from '@creator-links/shared'
+import type { EventMediaInput, EventParticipantRole, EventVisibility } from '@creator-links/shared'
+
+// 入力の media[] を position で正規化しつつ、先頭 IMAGE を coverUrl に採用する。
+// media が空なら coverUrl も null（フォーム側で明示的に upload → 全削除したケース）。
+function deriveCoverUrl(media: EventMediaInput[]): string | null {
+  const firstImage = [...media]
+    .sort((a, b) => a.position - b.position)
+    .find((m) => m.type === 'IMAGE')
+  return firstImage?.url ?? null
+}
 
 // --- イベント作成 ---
 // 入力は CreateEventSchema でバリデーションする。form / API どちらも同じ検証を通す。
@@ -42,6 +51,11 @@ export async function createEventAction(
   const input = parsed.data
   const publish = publishNow ?? false
 
+  // フォームから media を受け取っている場合は先頭 IMAGE が coverUrl の実体になる。
+  // フォームに UI が無い旧経路（API 直叩き等）では従来通り input.coverUrl を優先する。
+  const coverFromMedia = deriveCoverUrl(input.media)
+  const resolvedCoverUrl = input.media.length > 0 ? coverFromMedia : input.coverUrl || null
+
   const event = await prisma.event.create({
     data: {
       creatorId: session.user.id,
@@ -62,9 +76,22 @@ export async function createEventAction(
       ticketUrl: input.ticketUrl || null,
       ticketPriceYen: input.ticketPriceYen ?? null,
       isFree: input.isFree,
-      coverUrl: input.coverUrl || null,
+      coverUrl: resolvedCoverUrl,
       status: publish ? 'PUBLISHED' : 'DRAFT',
       publishedAt: publish ? new Date() : null,
+      media:
+        input.media.length > 0
+          ? {
+              create: input.media.map((m, idx) => ({
+                type: m.type,
+                url: m.url,
+                caption: m.caption?.trim() || null,
+                // フォーム側の position を尊重しつつ、未指定 (デフォルト 0) が並ぶ場合の
+                // 順序決定用に配列 index も反映する（同値時の tiebreaker）。
+                position: m.position * 1000 + idx,
+              })),
+            }
+          : undefined,
     },
     select: { id: true },
   })
@@ -107,36 +134,63 @@ export async function updateEventAction(
   }
   const input = parsed.data
 
-  await prisma.event.update({
-    where: { id: eventId },
-    data: {
-      ...(input.title !== undefined && { title: input.title.trim() }),
-      ...(input.description !== undefined && {
-        description: input.description?.trim() || null,
-      }),
-      ...(input.type !== undefined && { type: input.type }),
-      ...(input.visibility !== undefined && { visibility: input.visibility }),
-      ...(input.startAt !== undefined && { startAt: input.startAt }),
-      ...(input.endAt !== undefined && { endAt: input.endAt ?? null }),
-      ...(input.isAllDay !== undefined && { isAllDay: input.isAllDay }),
-      ...(input.hasSpecificDate !== undefined && { hasSpecificDate: input.hasSpecificDate }),
-      ...(input.venueName !== undefined && {
-        venueName: input.venueName?.trim() || null,
-      }),
-      ...(input.venueAddress !== undefined && {
-        venueAddress: input.venueAddress?.trim() || null,
-      }),
-      ...(input.venueUrl !== undefined && { venueUrl: input.venueUrl || null }),
-      ...(input.city !== undefined && { city: input.city?.trim() || null }),
-      ...(input.genres !== undefined && { genres: input.genres }),
-      ...(input.isOnline !== undefined && { isOnline: input.isOnline }),
-      ...(input.ticketUrl !== undefined && { ticketUrl: input.ticketUrl || null }),
-      ...(input.ticketPriceYen !== undefined && {
-        ticketPriceYen: input.ticketPriceYen ?? null,
-      }),
-      ...(input.isFree !== undefined && { isFree: input.isFree }),
-      ...(input.coverUrl !== undefined && { coverUrl: input.coverUrl || null }),
-    },
+  // media が明示的に渡された場合は全置換 (delete → create) + coverUrl 自動同期。
+  // 部分更新はサポートしない：フォームは常に「今の全リスト」を送る前提。
+  const mediaProvided = input.media !== undefined
+  const nextMedia = input.media ?? []
+  const nextCoverUrl = mediaProvided
+    ? deriveCoverUrl(nextMedia)
+    : input.coverUrl !== undefined
+      ? input.coverUrl || null
+      : undefined // 未指定 = coverUrl を更新しない
+
+  await prisma.$transaction(async (tx) => {
+    await tx.event.update({
+      where: { id: eventId },
+      data: {
+        ...(input.title !== undefined && { title: input.title.trim() }),
+        ...(input.description !== undefined && {
+          description: input.description?.trim() || null,
+        }),
+        ...(input.type !== undefined && { type: input.type }),
+        ...(input.visibility !== undefined && { visibility: input.visibility }),
+        ...(input.startAt !== undefined && { startAt: input.startAt }),
+        ...(input.endAt !== undefined && { endAt: input.endAt ?? null }),
+        ...(input.isAllDay !== undefined && { isAllDay: input.isAllDay }),
+        ...(input.hasSpecificDate !== undefined && { hasSpecificDate: input.hasSpecificDate }),
+        ...(input.venueName !== undefined && {
+          venueName: input.venueName?.trim() || null,
+        }),
+        ...(input.venueAddress !== undefined && {
+          venueAddress: input.venueAddress?.trim() || null,
+        }),
+        ...(input.venueUrl !== undefined && { venueUrl: input.venueUrl || null }),
+        ...(input.city !== undefined && { city: input.city?.trim() || null }),
+        ...(input.genres !== undefined && { genres: input.genres }),
+        ...(input.isOnline !== undefined && { isOnline: input.isOnline }),
+        ...(input.ticketUrl !== undefined && { ticketUrl: input.ticketUrl || null }),
+        ...(input.ticketPriceYen !== undefined && {
+          ticketPriceYen: input.ticketPriceYen ?? null,
+        }),
+        ...(input.isFree !== undefined && { isFree: input.isFree }),
+        ...(nextCoverUrl !== undefined && { coverUrl: nextCoverUrl }),
+      },
+    })
+
+    if (mediaProvided) {
+      await tx.eventMedia.deleteMany({ where: { eventId } })
+      if (nextMedia.length > 0) {
+        await tx.eventMedia.createMany({
+          data: nextMedia.map((m, idx) => ({
+            eventId,
+            type: m.type,
+            url: m.url,
+            caption: m.caption?.trim() || null,
+            position: m.position * 1000 + idx,
+          })),
+        })
+      }
+    }
   })
 
   revalidatePath('/events')

@@ -36,6 +36,10 @@ export default async function EditEventPage({ params }: Params) {
       ticketUrl: true,
       ticketPriceYen: true,
       isFree: true,
+      media: {
+        orderBy: { position: 'asc' },
+        select: { type: true, url: true, caption: true },
+      },
     },
   })
 
@@ -59,6 +63,11 @@ export default async function EditEventPage({ params }: Params) {
     ticketUrl: event.ticketUrl ?? '',
     ticketPriceYen: event.ticketPriceYen != null ? String(event.ticketPriceYen) : '',
     isFree: event.isFree,
+    media: event.media.map((m) => ({
+      type: m.type as 'IMAGE' | 'VIDEO',
+      url: m.url,
+      caption: m.caption ?? '',
+    })),
   }
 
   return (

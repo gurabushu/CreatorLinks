@@ -126,6 +126,14 @@ enum EventOpenRoleStatus {
   CLOSED // 主催者が締め切った
 }
 
+// イベント添付メディアの種別
+// IMAGE: Vercel Blob に保存したフライヤー・会場図・セットリスト等（url は Blob URL）
+// VIDEO: YouTube / Vimeo の埋め込み用 URL（外部ホスト、iframe で埋め込む）
+enum EventMediaType {
+  IMAGE
+  VIDEO
+}
+
 // =============================================
 // モデル定義
 // =============================================
@@ -504,6 +512,7 @@ model Event {
   follows      EventFollow[]
   interests    EventInterest[]
   messages     Message[] // Event グループチャット (主催 + CONFIRMED のみ投稿可)
+  media        EventMedia[] // 追加フライヤー画像 (最大 5 枚) + 動画埋め込み URL (最大 3 本)
 
   @@index([status, visibility, startAt]) // 公開中の閲覧可能イベント検索用
   @@index([creatorId, startAt])
@@ -591,6 +600,24 @@ model Follow {
   @@unique([followerId, followingId])
   @@index([followingId]) // フォロワー一覧・数の取得用
   @@map("follows")
+}
+
+// イベントに紐づくメディア（フライヤー画像・動画埋め込み URL）。
+// Event.coverUrl は list card / OG メタデータ用に「先頭画像を派生列として保持」する運用で、
+// 実データはこのテーブル。position 順で並べ、IMAGE の先頭が coverUrl に自動同期される。
+model EventMedia {
+  id        String         @id @default(cuid())
+  eventId   String
+  type      EventMediaType
+  url       String // IMAGE: Vercel Blob URL / VIDEO: YouTube・Vimeo の動画 URL
+  caption   String? // 「会場図」「セットリスト」等の任意メモ（最大 100 文字）
+  position  Int            @default(0) // 表示順（小さい順）。UI 側で drag & drop できるように埋めておく
+  createdAt DateTime       @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, position])
+  @@map("event_media")
 }
 
 // ユーザーの参加表明（オーディエンス向けの「行く/興味あり」）

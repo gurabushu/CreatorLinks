@@ -12,6 +12,7 @@ import {
   EVENT_STATUS_LABELS,
   EVENT_VISIBILITY_LABELS,
   EVENT_VISIBILITY_ICONS,
+  parseVideoEmbed,
 } from '@creator-links/shared'
 import type {
   EventType,
@@ -86,6 +87,10 @@ export default async function EventDetailPage({ params }: Params) {
       },
       openRoles: {
         orderBy: { createdAt: 'asc' },
+      },
+      media: {
+        orderBy: { position: 'asc' },
+        select: { id: true, type: true, url: true, caption: true },
       },
     },
   })
@@ -162,13 +167,77 @@ export default async function EventDetailPage({ params }: Params) {
         </p>
       </div>
 
-      {event.coverUrl && (
-        <img
-          src={event.coverUrl}
-          alt=""
-          className="w-full aspect-video object-cover rounded-xl mb-6"
-        />
-      )}
+      {/* メディア:
+          - hero = 先頭画像 (EventMedia の IMAGE 先頭、無ければ既存 coverUrl フォールバック)
+          - additional images = 2 枚目以降をグリッド表示 (クリックで別タブに開く)
+          - videos = YouTube / Vimeo 埋め込み iframe */}
+      {(() => {
+        const images = event.media.filter((m) => m.type === 'IMAGE')
+        const videos = event.media.filter((m) => m.type === 'VIDEO')
+        const heroUrl = images[0]?.url ?? event.coverUrl
+        const extraImages = images.slice(1)
+        return (
+          <>
+            {heroUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={heroUrl}
+                alt={images[0]?.caption ?? ''}
+                className="w-full aspect-video object-cover rounded-xl mb-4"
+              />
+            )}
+            {extraImages.length > 0 && (
+              <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+                {extraImages.map((img) => (
+                  <li key={img.id}>
+                    <a
+                      href={img.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block aspect-video rounded-lg overflow-hidden bg-gray-100 hover:opacity-90 transition"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.url}
+                        alt={img.caption ?? ''}
+                        className="w-full h-full object-cover"
+                      />
+                    </a>
+                    {img.caption && (
+                      <p className="mt-1 text-[11px] text-gray-500 truncate">{img.caption}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!extraImages.length && heroUrl && <div className="mb-6" />}
+            {videos.length > 0 && (
+              <div className="mb-6 space-y-3">
+                {videos.map((v) => {
+                  const embed = parseVideoEmbed(v.url)
+                  if (!embed) return null
+                  return (
+                    <div key={v.id}>
+                      <div className="aspect-video rounded-xl overflow-hidden bg-black">
+                        <iframe
+                          src={embed.embedUrl}
+                          title={v.caption ?? '動画'}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                      {v.caption && (
+                        <p className="mt-1 text-xs text-gray-500">{v.caption}</p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {/* 基本情報 */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 mb-6 space-y-2 text-sm">

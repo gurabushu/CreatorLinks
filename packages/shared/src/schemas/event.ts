@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isSupportedVideoUrl } from '../lib/video-embed'
 
 // =============================================
 // Event Zod スキーマ
@@ -20,6 +21,49 @@ export const EventVisibilitySchema = z.enum(['PRIVATE', 'PARTICIPANTS_ONLY', 'FO
 export const EventParticipantRoleSchema = z.enum(['ORGANIZER', 'PERFORMER', 'STAFF', 'GUEST', 'AUDIENCE'])
 export const EventParticipantStatusSchema = z.enum(['INVITED', 'CONFIRMED', 'DECLINED', 'CANCELLED'])
 export const EventOpenRoleStatusSchema = z.enum(['OPEN', 'FILLED', 'CLOSED'])
+export const EventMediaTypeSchema = z.enum(['IMAGE', 'VIDEO'])
+
+// --- イベント添付メディア ---
+// IMAGE: Vercel Blob の公開 URL / VIDEO: YouTube・Vimeo の視聴 URL
+// 型ごとに別バリデーション: IMAGE は http(s) URL、VIDEO は parseVideoEmbed が通る URL のみ
+export const EventMediaInputSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('IMAGE'),
+    url: z
+      .string()
+      .url('URL 形式で入力してください')
+      .refine((u) => /^https?:\/\//i.test(u), 'http/https の URL を指定してください'),
+    caption: z.string().max(100, 'キャプションは100文字以内').optional(),
+    position: z.number().int().min(0).max(100).default(0),
+  }),
+  z.object({
+    type: z.literal('VIDEO'),
+    url: z
+      .string()
+      .url('URL 形式で入力してください')
+      .refine(isSupportedVideoUrl, 'YouTube または Vimeo の URL を指定してください'),
+    caption: z.string().max(100, 'キャプションは100文字以内').optional(),
+    position: z.number().int().min(0).max(100).default(0),
+  }),
+])
+export type EventMediaInput = z.infer<typeof EventMediaInputSchema>
+
+// メディア配列の上限（画像 5 + 動画 3）。他所で再利用したいので export しておく。
+export const MEDIA_MAX_IMAGES = 5
+export const MEDIA_MAX_VIDEOS = 3
+
+const mediaArraySchema = z
+  .array(EventMediaInputSchema)
+  .max(MEDIA_MAX_IMAGES + MEDIA_MAX_VIDEOS, '添付は最大 8 件までです')
+  .refine(
+    (arr) => arr.filter((m) => m.type === 'IMAGE').length <= MEDIA_MAX_IMAGES,
+    { message: `画像は最大 ${MEDIA_MAX_IMAGES} 枚までです` },
+  )
+  .refine(
+    (arr) => arr.filter((m) => m.type === 'VIDEO').length <= MEDIA_MAX_VIDEOS,
+    { message: `動画は最大 ${MEDIA_MAX_VIDEOS} 本までです` },
+  )
+  .default([])
 
 // --- Event 本体 ---
 
@@ -47,7 +91,10 @@ const EventShape = z.object({
   ticketUrl: httpUrl.optional().or(z.literal('')),
   ticketPriceYen: z.number().int().nonnegative().max(10_000_000).optional(),
   isFree: z.boolean().default(false),
+  // coverUrl は list card / OG メタ用の派生列（先頭 IMAGE.url を server action が自動同期）。
+  // API 直叩きの後方互換のため受け取り自体は続けるが、通常は media 配列経由で更新される。
   coverUrl: httpUrl.optional().or(z.literal('')),
+  media: mediaArraySchema,
 })
 
 // endAt が指定されているなら startAt より後であること。Update では両方揃った時のみ検証。

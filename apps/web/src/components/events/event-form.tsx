@@ -10,6 +10,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createEventAction, updateEventAction } from '@/server/actions/event'
+import { uploadBlob } from '@/lib/blob-upload'
 import {
   EVENT_TYPES,
   EVENT_TYPE_LABELS,
@@ -17,8 +18,18 @@ import {
   EVENT_VISIBILITY_LABELS,
   EVENT_VISIBILITY_DESCRIPTIONS,
   EVENT_VISIBILITY_ICONS,
+  MEDIA_MAX_IMAGES,
+  MEDIA_MAX_VIDEOS,
+  parseVideoEmbed,
 } from '@creator-links/shared'
 import type { EventType, EventVisibility } from '@creator-links/shared'
+
+// フォーム上で扱う 1 メディア。IMAGE は既にアップロード済 URL を保持、
+// VIDEO は入力中の生テキスト URL。送信時は parseVideoEmbed が通ったものだけ payload に含める。
+type MediaItem =
+  | { kind: 'image'; url: string; caption: string; uploading?: false }
+  | { kind: 'image'; url: ''; caption: string; uploading: true; tempId: string; progress: number }
+  | { kind: 'video'; url: string; caption: string }
 
 export type EventFormInitial = {
   type: EventType
@@ -34,6 +45,8 @@ export type EventFormInitial = {
   ticketUrl: string
   ticketPriceYen: string // input value 用の string
   isFree: boolean
+  // 編集時に既存 media を prefill するための初期値。position 順で渡すこと。
+  media?: { type: 'IMAGE' | 'VIDEO'; url: string; caption: string }[]
 }
 
 type EventFormProps =
@@ -85,6 +98,87 @@ export function EventForm(props: EventFormProps) {
   const [ticketPriceYen, setTicketPriceYen] = useState(initial.ticketPriceYen)
   const [isFree, setIsFree] = useState(initial.isFree)
   const [publishNow, setPublishNow] = useState(true)
+  const [media, setMedia] = useState<MediaItem[]>(() =>
+    (initial.media ?? []).map((m) =>
+      m.type === 'IMAGE'
+        ? ({ kind: 'image', url: m.url, caption: m.caption } as MediaItem)
+        : ({ kind: 'video', url: m.url, caption: m.caption } as MediaItem),
+    ),
+  )
+  const [mediaError, setMediaError] = useState<string | null>(null)
+
+  const imageCount = media.filter((m) => m.kind === 'image').length
+  const videoCount = media.filter((m) => m.kind === 'video').length
+
+  const handleImagePick = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setMediaError(null)
+    const remaining = MEDIA_MAX_IMAGES - imageCount
+    const pickList = Array.from(files).slice(0, remaining)
+    if (files.length > remaining) {
+      setMediaError(`画像は最大 ${MEDIA_MAX_IMAGES} 枚までです`)
+    }
+    for (const file of pickList) {
+      if (!file.type.startsWith('image/')) {
+        setMediaError('画像ファイルのみアップロード可能です')
+        continue
+      }
+      const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      setMedia((prev) => [
+        ...prev,
+        { kind: 'image', url: '', caption: '', uploading: true, tempId, progress: 0 },
+      ])
+      try {
+        const { url } = await uploadBlob(file, {
+          onProgress: (p) =>
+            setMedia((prev) =>
+              prev.map((m) =>
+                m.kind === 'image' && 'tempId' in m && m.tempId === tempId
+                  ? { ...m, progress: p }
+                  : m,
+              ),
+            ),
+        })
+        setMedia((prev) =>
+          prev.map((m) =>
+            m.kind === 'image' && 'tempId' in m && m.tempId === tempId
+              ? { kind: 'image', url, caption: '' }
+              : m,
+          ),
+        )
+      } catch (err) {
+        setMedia((prev) => prev.filter((m) => !('tempId' in m) || m.tempId !== tempId))
+        setMediaError(err instanceof Error ? err.message : 'アップロードに失敗しました')
+      }
+    }
+  }
+
+  const addVideoRow = () => {
+    if (videoCount >= MEDIA_MAX_VIDEOS) {
+      setMediaError(`動画は最大 ${MEDIA_MAX_VIDEOS} 本までです`)
+      return
+    }
+    setMediaError(null)
+    setMedia((prev) => [...prev, { kind: 'video', url: '', caption: '' }])
+  }
+
+  const updateMediaAt = (index: number, patch: Partial<MediaItem>) => {
+    setMedia((prev) =>
+      prev.map((m, i) => (i === index ? ({ ...m, ...patch } as MediaItem) : m)),
+    )
+  }
+  const removeMediaAt = (index: number) => {
+    setMedia((prev) => prev.filter((_, i) => i !== index))
+  }
+  const moveMedia = (index: number, dir: -1 | 1) => {
+    setMedia((prev) => {
+      const target = index + dir
+      if (target < 0 || target >= prev.length) return prev
+      const next = [...prev]
+      ;[next[index], next[target]] = [next[target], next[index]]
+      return next
+    })
+  }
 
   // type 変更時にデフォルト visibility を賢く提案（強制はしない）
   const changeType = (newType: EventType) => {
@@ -110,8 +204,32 @@ export function EventForm(props: EventFormProps) {
 
   const submit = () => {
     setError(null)
+    setMediaError(null)
     if (!title.trim()) return setError('タイトルを入力してください')
     if (!startAt) return setError('開始日時を入力してください')
+
+    // アップロード中の画像が残っていたら送信させない（url が空のまま zod で弾かれるため）
+    if (media.some((m) => m.kind === 'image' && 'uploading' in m && m.uploading)) {
+      return setMediaError('画像のアップロード完了をお待ちください')
+    }
+    // 動画 URL は parse 通過分のみ送信。空 URL 行は無視する。
+    const videoRows = media.filter((m): m is Extract<MediaItem, { kind: 'video' }> => m.kind === 'video')
+    const invalidVideo = videoRows.find((v) => v.url.trim() !== '' && !parseVideoEmbed(v.url))
+    if (invalidVideo) {
+      return setMediaError('YouTube または Vimeo の URL を指定してください')
+    }
+
+    const mediaPayload = media
+      .map((m, idx) => {
+        if (m.kind === 'image' && m.url) {
+          return { type: 'IMAGE' as const, url: m.url, caption: m.caption || undefined, position: idx }
+        }
+        if (m.kind === 'video' && m.url.trim() && parseVideoEmbed(m.url)) {
+          return { type: 'VIDEO' as const, url: m.url.trim(), caption: m.caption || undefined, position: idx }
+        }
+        return null
+      })
+      .filter((v): v is NonNullable<typeof v> => v !== null)
 
     startTransition(async () => {
       const payload = {
@@ -130,6 +248,7 @@ export function EventForm(props: EventFormProps) {
         ticketUrl: ticketUrl || undefined,
         ticketPriceYen: ticketPriceYen ? Number(ticketPriceYen) : undefined,
         isFree,
+        media: mediaPayload,
       }
 
       if (props.mode === 'edit') {
@@ -300,6 +419,174 @@ export function EventForm(props: EventFormProps) {
           placeholder="例: ロック, インディー, ポップス"
           className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm"
         />
+      </div>
+
+      {/* メディア: フライヤー画像 (最大 5 枚) + 動画埋め込み (最大 3 本) */}
+      <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4 space-y-4">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium">
+              フライヤー・チラシ画像
+              <span className="ml-2 text-xs text-gray-500">
+                ({imageCount} / {MEDIA_MAX_IMAGES})
+              </span>
+            </label>
+            <label className="inline-flex items-center gap-1 text-xs bg-white border border-gray-300 rounded-lg px-3 py-1.5 cursor-pointer hover:bg-gray-50">
+              画像を追加
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                disabled={imageCount >= MEDIA_MAX_IMAGES}
+                onChange={(e) => {
+                  handleImagePick(e.target.files)
+                  e.currentTarget.value = ''
+                }}
+              />
+            </label>
+          </div>
+          <p className="text-[11px] text-gray-500 mb-2">
+            先頭の画像がトップ画像として一覧・OG に表示されます。並び替えで先頭を変更できます。
+          </p>
+          {imageCount === 0 && (
+            <p className="text-xs text-gray-400 py-3 text-center border border-dashed border-gray-300 rounded-lg bg-white">
+              まだ画像がありません
+            </p>
+          )}
+          {imageCount > 0 && (
+            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {media.map((m, idx) => {
+                if (m.kind !== 'image') return null
+                const isUploading = 'uploading' in m && m.uploading
+                return (
+                  <li
+                    key={('tempId' in m ? m.tempId : m.url) + idx}
+                    className="relative rounded-lg overflow-hidden border border-gray-200 bg-white group"
+                  >
+                    <div className="aspect-video bg-gray-100 flex items-center justify-center">
+                      {isUploading ? (
+                        <div className="text-xs text-gray-500 p-2 text-center">
+                          アップロード中… {m.progress}%
+                        </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={m.url} alt="" className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                    {!isUploading && (
+                      <div className="absolute inset-x-0 top-0 flex items-center justify-between p-1 opacity-0 group-hover:opacity-100 transition bg-gradient-to-b from-black/50 to-transparent">
+                        <div className="flex gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => moveMedia(idx, -1)}
+                            className="w-6 h-6 rounded bg-white/90 text-xs hover:bg-white"
+                            aria-label="上へ"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveMedia(idx, +1)}
+                            className="w-6 h-6 rounded bg-white/90 text-xs hover:bg-white"
+                            aria-label="下へ"
+                          >
+                            ↓
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeMediaAt(idx)}
+                          className="w-6 h-6 rounded bg-white/90 text-xs text-red-600 hover:bg-white"
+                          aria-label="削除"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {idx === media.findIndex((x) => x.kind === 'image' && x.url) && !isUploading && (
+                      <span className="absolute bottom-1 left-1 bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded">
+                        トップ
+                      </span>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium">
+              動画 (YouTube / Vimeo)
+              <span className="ml-2 text-xs text-gray-500">
+                ({videoCount} / {MEDIA_MAX_VIDEOS})
+              </span>
+            </label>
+            <button
+              type="button"
+              onClick={addVideoRow}
+              disabled={videoCount >= MEDIA_MAX_VIDEOS}
+              className="text-xs bg-white border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              動画 URL を追加
+            </button>
+          </div>
+          {videoCount === 0 && (
+            <p className="text-xs text-gray-400 py-3 text-center border border-dashed border-gray-300 rounded-lg bg-white">
+              まだ動画がありません
+            </p>
+          )}
+          {media.map((m, idx) => {
+            if (m.kind !== 'video') return null
+            const parsed = m.url.trim() ? parseVideoEmbed(m.url) : null
+            const isInvalid = m.url.trim() !== '' && !parsed
+            return (
+              <div key={idx} className="mb-2 rounded-lg border border-gray-200 bg-white p-3 space-y-2">
+                <div className="flex gap-2 items-start">
+                  <input
+                    type="url"
+                    value={m.url}
+                    onChange={(e) => updateMediaAt(idx, { url: e.target.value })}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className={`flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                      isInvalid ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeMediaAt(idx)}
+                    className="text-xs px-3 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50"
+                  >
+                    削除
+                  </button>
+                </div>
+                {isInvalid && (
+                  <p className="text-xs text-red-600">
+                    YouTube または Vimeo の URL を指定してください
+                  </p>
+                )}
+                {parsed && (
+                  <div className="aspect-video rounded overflow-hidden bg-black">
+                    <iframe
+                      src={parsed.embedUrl}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {mediaError && (
+          <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs p-2">
+            {mediaError}
+          </div>
+        )}
       </div>
 
       {/* チケット */}
