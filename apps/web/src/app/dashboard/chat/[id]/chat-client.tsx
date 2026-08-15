@@ -121,13 +121,14 @@ function ReviewModal({
 }) {
   const [score, setScore] = useState(5)
   const [comment, setComment] = useState('')
+  const [wantAgain, setWantAgain] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [done, setDone] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     startTransition(async () => {
-      const result = await createReviewAction(matchId, score, comment || undefined)
+      const result = await createReviewAction(matchId, score, comment || undefined, wantAgain)
       if (result.success) setDone(true)
     })
   }
@@ -185,6 +186,20 @@ function ReviewModal({
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
             />
           </div>
+          <label className="flex items-start gap-2 p-3 rounded-xl border border-gray-200 bg-purple-50 cursor-pointer hover:bg-purple-100 transition">
+            <input
+              type="checkbox"
+              checked={wantAgain}
+              onChange={(e) => setWantAgain(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-purple-600"
+            />
+            <span className="text-sm text-gray-800">
+              <span className="font-bold">また一緒にやりたい</span>
+              <span className="block text-xs text-gray-500 mt-0.5">
+                相手も同じにチェックすると「Encore 相性」バッジが両者のプロフィールに付きます
+              </span>
+            </span>
+          </label>
           <div className="flex gap-3">
             <button
               type="button"

@@ -366,6 +366,8 @@ model Review {
   reviewerId String
   score      Int      @db.SmallInt // 1〜5
   comment    String?
+  // 「また一緒にやりたい」flag。双方 true で「Encore 相性」バッジ成立
+  wantAgain  Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   match    Match @relation(fields: [matchId], references: [id], onDelete: Cascade)

@@ -158,7 +158,8 @@ export async function completeMatchAction(matchId: string): Promise<MatchActionR
 export async function createReviewAction(
   matchId: string,
   score: number,
-  comment?: string
+  comment?: string,
+  wantAgain: boolean = false
 ): Promise<MatchActionResult> {
   const session = await auth()
   if (!session) return { success: false, error: 'ログインが必要です' }
@@ -190,7 +191,7 @@ export async function createReviewAction(
   if (score < 1 || score > 5) return { success: false, error: '評価は1〜5で入力してください' }
 
   await prisma.review.create({
-    data: { matchId, reviewerId: session.user.id, score, comment },
+    data: { matchId, reviewerId: session.user.id, score, comment, wantAgain },
   })
 
   // averageRating を再集計（アーティスト側の評価のみ）

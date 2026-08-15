@@ -93,7 +93,7 @@ export default async function ArtistDetailPage({ params }: Props) {
   // Phase A.6: フォロー状態・フォロワー数 + Like 状態
   const viewerId = session?.user?.id ?? null
   const isSelf = viewerId === id
-  const [followerCount, initialIsFollowing, initialLiked] = await Promise.all([
+  const [followerCount, initialIsFollowing, initialLiked, mutualEncoreRows] = await Promise.all([
     prisma.follow.count({ where: { followingId: id } }),
     viewerId && !isSelf
       ? prisma.follow
@@ -113,8 +113,19 @@ export default async function ArtistDetailPage({ params }: Props) {
           })
           .then((l) => !!l)
       : Promise.resolve(false),
+    // Encore 相性: 本人が wantAgain=true でレビューし、かつ相手も同一 match で wantAgain=true でレビューした match 数
+    // 案件相手が変わっても match 単位で 1 カウント（＝実質「Encore 成立案件数」）
+    prisma.$queryRaw<{ c: bigint }[]>`
+      SELECT COUNT(DISTINCT r1.match_id)::bigint AS c
+      FROM reviews r1
+      JOIN reviews r2 ON r1.match_id = r2.match_id AND r1.reviewer_id <> r2.reviewer_id
+      WHERE r1.reviewer_id = ${id}
+        AND r1.want_again = true
+        AND r2.want_again = true
+    `.catch(() => [] as { c: bigint }[]),
   ])
   const isFollower = initialIsFollowing
+  const mutualEncoreCount = Number(mutualEncoreRows[0]?.c ?? 0)
 
   // 今後のイベント（visibility に応じて）
   const eventVisibilityOr: Array<Record<string, unknown>> = [{ visibility: 'PUBLIC' }]
@@ -205,6 +216,15 @@ export default async function ArtistDetailPage({ params }: Props) {
               </span>
             )}
             <FoundingMemberBadge slot={user.earlyBirdSlot} size="md" />
+            {mutualEncoreCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border border-purple-200 text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full shrink-0"
+                title="双方が「また一緒にやりたい」を付けた案件数"
+              >
+                <span aria-hidden>★</span>
+                Encore 相性 {mutualEncoreCount}
+              </span>
+            )}
           </div>
           <div className="flex gap-1.5 mt-1 flex-wrap">
             {user.genres.map((g: string) => (
