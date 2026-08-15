@@ -118,6 +118,9 @@ function MediaHero({
           muted
           loop
           playsInline
+          // iOS Safari は autoPlay 属性が mount 時に付いていないと muted でも自動再生を弾くことがある。
+          // .play() 呼び出しと重複しても副作用なし。
+          autoPlay
           preload="metadata"
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -411,7 +414,9 @@ function ArtistCard({
     return () => mql.removeEventListener('change', update)
   }, [])
 
-  // ホバー不可端末（スマホ等）はビューポートで半分以上見えたら自動再生
+  // ホバー不可端末（スマホ等）はビューポートで 30% 以上見えたら自動再生。
+  // 閾値 0.5 だと縦長カードが画面中央でも 40% 前後にしかならず発火しなかった。
+  // threshold を細かく刻み、視界内での小さな移動でも intersection callback が発火するようにする。
   useEffect(() => {
     if (hasHover) return
     const el = cardRef.current
@@ -420,9 +425,9 @@ function ArtistCard({
       (entries) => {
         const entry = entries[0]
         if (!entry) return
-        setViewportActive(entry.intersectionRatio >= 0.5)
+        setViewportActive(entry.intersectionRatio >= 0.3)
       },
-      { threshold: [0, 0.5, 1] },
+      { threshold: [0, 0.1, 0.3, 0.5, 0.75, 1] },
     )
     observer.observe(el)
     return () => observer.disconnect()
