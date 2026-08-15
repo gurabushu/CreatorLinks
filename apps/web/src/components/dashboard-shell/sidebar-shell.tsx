@@ -249,7 +249,7 @@ export function SidebarShell({
       )}
 
       <aside
-        className="peer group hidden md:flex md:flex-col md:fixed md:left-0 md:top-16 md:bottom-0 md:w-14 hover:md:w-60 focus-within:md:w-60 transition-[width] duration-300 ease-out md:overflow-y-auto md:overflow-x-hidden md:border-r md:border-purple-100/60 bg-gradient-to-b from-white via-purple-50/30 to-white z-30 hover:shadow-md hover:shadow-purple-200/40"
+        className="peer group hidden md:flex md:flex-col md:fixed md:left-0 md:top-20 lg:top-24 md:bottom-0 md:w-14 hover:md:w-60 focus-within:md:w-60 transition-[width] duration-300 ease-out md:overflow-y-auto md:overflow-x-hidden md:border-r md:border-purple-100/60 bg-gradient-to-b from-white via-purple-50/30 to-white z-30 hover:shadow-md hover:shadow-purple-200/40"
       >
         <SidebarNav user={user} items={items} isActive={isActive} onNavigate={close} collapsible />
       </aside>
