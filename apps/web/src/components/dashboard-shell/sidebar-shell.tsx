@@ -225,14 +225,17 @@ export function SidebarShell({
 
       {mobileOpen && (
         <>
+          {/* SP 展開時のバックドロップ。半透明は使わず不透明のダークグレーで完全に背後を遮る
+              （旧来の bg-black/40 が端末によってちらつく／見づらい問題への対応） */}
           <button
             type="button"
             aria-label="メニューを閉じる"
             onClick={close}
-            className="md:hidden fixed inset-0 bg-black/40 z-40"
+            className="md:hidden fixed inset-0 bg-gray-900 z-40"
           />
-          <aside className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-gradient-to-b from-white via-purple-50/30 to-white border-r border-purple-100/60 z-50 flex flex-col overflow-y-auto shadow-lg shadow-purple-200/30">
-            <div className="px-4 py-3 border-b border-purple-100/60 flex items-center justify-between">
+          {/* サイドバー本体も完全不透明。旧グラデ (via-purple-50/30 の 30% 透明) を廃止 */}
+          <aside className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-purple-100 z-50 flex flex-col overflow-y-auto shadow-lg">
+            <div className="px-4 py-3 border-b border-purple-100 flex items-center justify-between">
               <p className="font-semibold text-purple-600">メニュー</p>
               <button
                 type="button"
