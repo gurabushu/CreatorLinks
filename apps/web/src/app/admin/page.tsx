@@ -1,27 +1,99 @@
 // app/admin/page.tsx — 管理画面 (SSR / ADMIN のみ)
+//
+// ゲスト体験ユーザーの活動を目視で追える構造：
+// 1. 全体統計 + ゲスト統計を並置
+// 2. 最近登録したゲスト一覧に活動指標 (ポートフォリオ/案件/Match/メッセージ数) を出す
+// 3. 「編集して触った」判定は updatedAt > createdAt (init から進んでるか)
 
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
+// 相対時刻表示。SSR で now を使うので毎リクエスト再計算される
+function relTime(d: Date): string {
+  const diffMs = Date.now() - new Date(d).getTime()
+  const min = Math.floor(diffMs / 60000)
+  if (min < 1) return 'たった今'
+  if (min < 60) return `${min} 分前`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr} 時間前`
+  const day = Math.floor(hr / 24)
+  return `${day} 日前`
+}
+
 export default async function AdminPage() {
   const session = await auth()
   if (!session || session.user.role !== 'ADMIN') redirect('/')
 
-  let userCount = 0, projectCount = 0, matchCount = 0, proCount = 0
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let recentUsers: any[] = []
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
+  let userCount = 0
+  let projectCount = 0
+  let matchCount = 0
+  let proCount = 0
+  let guestActive = 0
+  let guestNew24h = 0
+  let guestNew7d = 0
+  type RecentUser = { id: string; name: string; email: string; role: string; createdAt: Date }
+  let recentUsers: RecentUser[] = []
+  type GuestRow = {
+    id: string
+    name: string
+    email: string
+    createdAt: Date
+    updatedAt: Date
+    _count: { portfolios: number; projectsAsClient: number; matchesAsArtist: number; sentMessages: number }
+  }
+  let recentGuests: GuestRow[] = []
+
   try {
-    ;[userCount, projectCount, matchCount, proCount] = await Promise.all([
+    ;[
+      userCount,
+      projectCount,
+      matchCount,
+      proCount,
+      guestActive,
+      guestNew24h,
+      guestNew7d,
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.project.count(),
       prisma.match.count(),
       prisma.user.count({ where: { role: 'PRO' } }),
+      prisma.user.count({ where: { isGuest: true } }),
+      prisma.user.count({ where: { isGuest: true, createdAt: { gte: dayAgo } } }),
+      prisma.user.count({ where: { isGuest: true, createdAt: { gte: weekAgo } } }),
     ])
+
     recentUsers = await prisma.user.findMany({
+      where: { isGuest: false },
       take: 20,
       orderBy: { createdAt: 'desc' },
       select: { id: true, name: true, email: true, role: true, createdAt: true },
+    })
+
+    recentGuests = await prisma.user.findMany({
+      where: { isGuest: true },
+      take: 30,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            portfolios: true,
+            projectsAsClient: true,
+            matchesAsArtist: true,
+            sentMessages: true,
+          },
+        },
+      },
     })
   } catch {
     // DB unreachable — show zeros
@@ -29,13 +101,13 @@ export default async function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4">
-        <h1 className="text-2xl font-bold mb-8">管理画面</h1>
+      <h1 className="text-2xl font-bold mb-8">管理画面</h1>
 
       {/* 統計 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           { label: 'ユーザー数', value: userCount },
-          { label: 'PROユーザー', value: proCount },
+          { label: 'PRO ユーザー', value: proCount },
           { label: '案件数', value: projectCount },
           { label: 'マッチング数', value: matchCount },
         ].map((stat) => (
@@ -46,44 +118,140 @@ export default async function AdminPage() {
         ))}
       </div>
 
-      {/* ユーザー一覧 */}
-      <section>
-        <h2 className="text-xl font-bold mb-4">最近登録したユーザー</h2>
+      {/* ゲスト統計 */}
+      <div className="bg-purple-50/60 border border-purple-200/60 rounded-2xl p-5 mb-10">
+        <div className="flex items-baseline gap-2 mb-3">
+          <h2 className="text-lg font-bold text-purple-900">🧪 ゲスト体験ユーザー</h2>
+          <span className="text-xs text-purple-700/80">24 時間で自動削除</span>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: '現在アクティブ', value: guestActive },
+            { label: '24h 新規', value: guestNew24h },
+            { label: '7 日 新規', value: guestNew7d },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl p-4 text-center">
+              <p className="text-xs text-gray-500">{stat.label}</p>
+              <p className="text-2xl font-bold text-purple-700">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 最近のゲスト活動 */}
+      <section className="mb-10">
+        <h2 className="text-xl font-bold mb-3">最近登録したゲスト（活動指標付き）</h2>
+        <p className="text-xs text-gray-500 mb-3">
+          「触った」= プロフィール編集・ポートフォリオ登録・案件作成・Match 作成・メッセージ送信 のいずれかがあること。
+          初期状態のまま消えるゲストは、体験してもらえていない可能性が高い。
+        </p>
         <div className="bg-white border rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-4 py-3">名前</th>
-                <th className="text-left px-4 py-3">メール</th>
-                <th className="text-left px-4 py-3">ロール</th>
-                <th className="text-left px-4 py-3">登録日</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {recentUsers.map((u: { id: string; name: string | null; email: string; role: string; createdAt: Date }) => (
-                <tr key={u.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">{u.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{u.email}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs ${
-                        u.role === 'PRO'
-                          ? 'bg-amber-100 text-amber-700'
-                          : u.role === 'ADMIN'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {new Date(u.createdAt).toLocaleDateString('ja-JP')}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-purple-50/60">
+                <tr>
+                  <th className="text-left px-4 py-3">名前</th>
+                  <th className="text-left px-4 py-3 whitespace-nowrap">登録</th>
+                  <th className="text-left px-4 py-3 whitespace-nowrap">最終更新</th>
+                  <th className="text-center px-3 py-3" title="ポートフォリオ数">📁</th>
+                  <th className="text-center px-3 py-3" title="作成した案件数">📋</th>
+                  <th className="text-center px-3 py-3" title="Match 数（アーティスト側）">🤝</th>
+                  <th className="text-center px-3 py-3" title="送信メッセージ数">💬</th>
+                  <th className="text-center px-3 py-3" title="触った判定">✨</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y">
+                {recentGuests.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="text-center text-gray-500 py-6 text-sm">
+                      ゲストは現在いません（配布して待ちましょう）
+                    </td>
+                  </tr>
+                )}
+                {recentGuests.map((g) => {
+                  // 触った判定: updatedAt が createdAt より 5 秒以上進んでいる、または各種活動がある
+                  const initDelta = new Date(g.updatedAt).getTime() - new Date(g.createdAt).getTime()
+                  const anyActivity =
+                    g._count.portfolios > 0 ||
+                    g._count.projectsAsClient > 0 ||
+                    g._count.matchesAsArtist > 0 ||
+                    g._count.sentMessages > 0
+                  const touched = anyActivity || initDelta > 5000
+                  return (
+                    <tr key={g.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 truncate max-w-[180px]">{g.name}</td>
+                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{relTime(g.createdAt)}</td>
+                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                        {initDelta > 5000 ? relTime(g.updatedAt) : <span className="text-gray-400">未編集</span>}
+                      </td>
+                      <td className="px-3 py-3 text-center font-mono text-xs">
+                        {g._count.portfolios > 0 ? g._count.portfolios : <span className="text-gray-300">·</span>}
+                      </td>
+                      <td className="px-3 py-3 text-center font-mono text-xs">
+                        {g._count.projectsAsClient > 0 ? g._count.projectsAsClient : <span className="text-gray-300">·</span>}
+                      </td>
+                      <td className="px-3 py-3 text-center font-mono text-xs">
+                        {g._count.matchesAsArtist > 0 ? g._count.matchesAsArtist : <span className="text-gray-300">·</span>}
+                      </td>
+                      <td className="px-3 py-3 text-center font-mono text-xs">
+                        {g._count.sentMessages > 0 ? g._count.sentMessages : <span className="text-gray-300">·</span>}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {touched ? (
+                          <span className="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">✓ 触った</span>
+                        ) : (
+                          <span className="text-xs text-gray-400">未</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* 通常ユーザー一覧 */}
+      <section>
+        <h2 className="text-xl font-bold mb-4">最近登録したユーザー（ゲスト以外）</h2>
+        <div className="bg-white border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-4 py-3">名前</th>
+                  <th className="text-left px-4 py-3">メール</th>
+                  <th className="text-left px-4 py-3">ロール</th>
+                  <th className="text-left px-4 py-3 whitespace-nowrap">登録日</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {recentUsers.map((u) => (
+                  <tr key={u.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 truncate max-w-[180px]">{u.name}</td>
+                    <td className="px-4 py-3 text-gray-500 truncate max-w-[220px]">{u.email}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs ${
+                          u.role === 'PRO'
+                            ? 'bg-amber-100 text-amber-700'
+                            : u.role === 'ADMIN'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      {new Date(u.createdAt).toLocaleDateString('ja-JP')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
