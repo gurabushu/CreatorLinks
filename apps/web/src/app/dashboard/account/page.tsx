@@ -5,6 +5,7 @@ import AccountNameForm from './AccountNameForm'
 import EmailChangeSection from './EmailChangeSection'
 import PasswordChangeSection from './PasswordChangeSection'
 import DeleteAccountSection from './DeleteAccountSection'
+import DataExportSection from './DataExportSection'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'アカウント設定' }
@@ -34,6 +35,7 @@ export default async function AccountSettingsPage() {
         <AccountNameForm initialName={user.name} />
         <EmailChangeSection currentEmail={user.email} />
         <PasswordChangeSection passwordSet={Boolean(user.passwordHash)} />
+        <DataExportSection />
         <DeleteAccountSection
           passwordSet={Boolean(user.passwordHash)}
           isGuest={user.isGuest}
