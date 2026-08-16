@@ -119,7 +119,7 @@ export default async function AdminPage() {
       </div>
 
       {/* ゲスト統計 */}
-      <div className="bg-purple-50/60 border border-purple-200/60 rounded-2xl p-5 mb-10">
+      <div className="bg-purple-50/60 border border-purple-200/60 rounded-2xl p-5 mb-6">
         <div className="flex items-baseline gap-2 mb-3">
           <h2 className="text-lg font-bold text-purple-900">🧪 ゲスト体験ユーザー</h2>
           <span className="text-xs text-purple-700/80">24 時間で自動削除</span>
@@ -137,6 +137,81 @@ export default async function AdminPage() {
           ))}
         </div>
       </div>
+
+      {/* ゲスト活動ファネル: 直近 30 名の recentGuests から集計。
+          初期状態のまま消えるゲストを可視化して、体験導線のどこで離脱しているかを把握する。 */}
+      {recentGuests.length > 0 && (() => {
+        const total = recentGuests.length
+        const editedProfile = recentGuests.filter(
+          (g) => new Date(g.updatedAt).getTime() - new Date(g.createdAt).getTime() > 5000,
+        ).length
+        const withPortfolio = recentGuests.filter((g) => g._count.portfolios > 0).length
+        const withProject = recentGuests.filter((g) => g._count.projectsAsClient > 0).length
+        const withMatch = recentGuests.filter((g) => g._count.matchesAsArtist > 0).length
+        const withMessage = recentGuests.filter((g) => g._count.sentMessages > 0).length
+        const anyActivity = recentGuests.filter(
+          (g) =>
+            new Date(g.updatedAt).getTime() - new Date(g.createdAt).getTime() > 5000 ||
+            g._count.portfolios > 0 ||
+            g._count.projectsAsClient > 0 ||
+            g._count.matchesAsArtist > 0 ||
+            g._count.sentMessages > 0,
+        ).length
+
+        const steps = [
+          { label: '登録', value: total, color: 'bg-gray-500' },
+          { label: '触った', value: anyActivity, color: 'bg-emerald-500', hint: '編集/PF/案件/Match/msg いずれか' },
+          { label: 'プロフィール編集', value: editedProfile, color: 'bg-purple-500' },
+          { label: 'ポートフォリオ登録', value: withPortfolio, color: 'bg-indigo-500' },
+          { label: '案件作成', value: withProject, color: 'bg-blue-500' },
+          { label: 'Match 発生', value: withMatch, color: 'bg-teal-500' },
+          { label: 'メッセージ送信', value: withMessage, color: 'bg-pink-500' },
+        ]
+
+        return (
+          <div className="bg-white border rounded-2xl p-5 mb-10">
+            <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
+              <h3 className="font-bold text-gray-800">🚀 ゲスト活動ファネル</h3>
+              <span className="text-xs text-gray-500">直近 {total} 名のゲストから集計</span>
+            </div>
+            <ul className="space-y-2">
+              {steps.map((step, i) => {
+                const prev = i === 0 ? null : steps[i - 1]
+                const pctOfTotal = total > 0 ? Math.round((step.value / total) * 100) : 0
+                const pctOfPrev =
+                  prev && prev.value > 0 ? Math.round((step.value / prev.value) * 100) : null
+                return (
+                  <li key={step.label} className="flex items-center gap-3">
+                    <div className="w-40 shrink-0 text-sm">
+                      <div className="font-medium text-gray-800">{step.label}</div>
+                      {step.hint && <div className="text-[10px] text-gray-400">{step.hint}</div>}
+                    </div>
+                    <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden relative">
+                      <div
+                        className={`${step.color} h-full rounded-full transition-all`}
+                        style={{ width: `${pctOfTotal}%` }}
+                      />
+                      <div className="absolute inset-0 flex items-center px-3 text-xs font-mono text-gray-800">
+                        <span className="font-bold">{step.value}</span>
+                        <span className="text-gray-500 ml-1">/ {total} 人 ({pctOfTotal}%)</span>
+                        {pctOfPrev !== null && (
+                          <span className="ml-auto text-[10px] text-gray-500">
+                            前段階から {pctOfPrev}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="text-[11px] text-gray-400 mt-3 leading-relaxed">
+              各段階の分母は「登録」= 直近 {total} 名。前段階からの残存率も表示。
+              「触った」以下の 5 行は排他ではなく重複可 (プロフィール編集した人がメッセージも送っていれば両方カウント)。
+            </p>
+          </div>
+        )
+      })()}
 
       {/* 最近のゲスト活動 */}
       <section className="mb-10">
