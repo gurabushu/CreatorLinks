@@ -61,6 +61,12 @@ export async function loadDocumentMatch(matchId: string) {
     match.artistId === session.user.id || match.project.clientId === session.user.id
   if (!isParticipant) return { ok: false as const, reason: 'forbidden' as const }
 
+  // 帳票 (見積/契約/請求/領収) は「合意成立以降」に意味を持つ。
+  // APPLIED (応募中) / SCOUTED (オファー待ち) / REJECTED (拒否済み) の状態で
+  // 契約書等を出すのは commitment 誤解を招くため notFound とする。
+  const canIssueDocuments = ['ACCEPTED', 'COMPLETED'].includes(match.status)
+  if (!canIssueDocuments) return { ok: false as const, reason: 'not_found' as const }
+
   // Payment が未作成でも帳票は budget ベースで表示できるようフォールバック
   const budget = match.project.budget ?? 0
   const isProArtist = match.artist.role === 'PRO'

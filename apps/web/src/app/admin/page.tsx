@@ -45,6 +45,7 @@ export default async function AdminPage() {
     email: string
     createdAt: Date
     updatedAt: Date
+    deletedAt: Date | null // 退会（soft-delete）済みかを表示で識別する
     _count: { portfolios: number; projectsAsClient: number; matchesAsArtist: number; sentMessages: number }
   }
   let recentGuests: GuestRow[] = []
@@ -85,6 +86,7 @@ export default async function AdminPage() {
         email: true,
         createdAt: true,
         updatedAt: true,
+        deletedAt: true,
         _count: {
           select: {
             portfolios: true,
@@ -252,9 +254,17 @@ export default async function AdminPage() {
                     g._count.matchesAsArtist > 0 ||
                     g._count.sentMessages > 0
                   const touched = anyActivity || initDelta > 5000
+                  const isDeleted = !!g.deletedAt
                   return (
-                    <tr key={g.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 truncate max-w-[180px]">{g.name}</td>
+                    <tr key={g.id} className={`hover:bg-gray-50 ${isDeleted ? 'opacity-60' : ''}`}>
+                      <td className="px-4 py-3 truncate max-w-[180px]">
+                        {g.name}
+                        {isDeleted && (
+                          <span className="ml-2 text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
+                            退会済
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{relTime(g.createdAt)}</td>
                       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                         {initDelta > 5000 ? relTime(g.updatedAt) : <span className="text-gray-400">未編集</span>}
