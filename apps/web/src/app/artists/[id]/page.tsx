@@ -4,8 +4,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { recordProfileView } from '@/lib/profile-analytics'
 import { getDisplayName } from '@/lib/user'
 import { PortfolioGallery } from './portfolio-gallery'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
@@ -94,6 +96,20 @@ export default async function ArtistDetailPage({ params }: Props) {
   // Phase A.6: フォロー状態・フォロワー数 + Like 状態
   const viewerId = session?.user?.id ?? null
   const isSelf = viewerId === id
+
+  // プロフィール PV 記録 (PRO 分析用)。fire-and-forget で表示ブロッキングしない。
+  // 自分自身のアクセスは記録せず、匿名は IP hash で 30 分 dedup、ゲストプロフィールは対象外。
+  if (!user.isGuest) {
+    const hdrs = await headers()
+    const ip = (hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      hdrs.get('x-real-ip')?.trim() ??
+      null) as string | null
+    void recordProfileView({
+      profileUserId: id,
+      viewerUserId: viewerId,
+      viewerIp: ip,
+    }).catch(() => null)
+  }
   const [followerCount, initialIsFollowing, initialLiked, mutualEncoreRows] = await Promise.all([
     prisma.follow.count({ where: { followingId: id } }),
     viewerId && !isSelf

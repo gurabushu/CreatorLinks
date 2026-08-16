@@ -210,6 +210,10 @@ model User {
   followsGiven    Follow[] @relation("FollowsGiven")
   followsReceived Follow[] @relation("FollowsReceived")
 
+  // プロフィール分析 (PRO 特典): 自プロフィールが受けた PV, 自分が他プロフィールに行った PV
+  profileViewsReceived ProfileView[] @relation("ProfileViewsReceived")
+  profileViewsGiven    ProfileView[] @relation("ProfileViewsGiven")
+
   @@index([isGuest, createdAt])
   @@map("users")
 }
@@ -635,6 +639,25 @@ model EventInterest {
   @@unique([userId, eventId])
   @@index([eventId, isAttending])
   @@map("event_interests")
+}
+
+// プロフィール分析 (PRO 特典) 用の PV ログ。
+// - viewerUserId が null なら匿名 (未ログイン) からのアクセス
+// - 自分自身のアクセスは記録しない (SSR page 側でスキップ)
+// - Bot 排除のため同一 IP からの短時間再訪は viewerIpHash で dedup (30 分単位)
+model ProfileView {
+  id            String   @id @default(cuid())
+  profileUserId String // 見られた側のアーティスト
+  viewerUserId  String? // 見た人。匿名は null
+  viewerIpHash  String? // 匿名再訪の丸め防止 (IP + salt の短い hash)
+  createdAt     DateTime @default(now())
+
+  profileUser User  @relation("ProfileViewsReceived", fields: [profileUserId], references: [id], onDelete: Cascade)
+  viewerUser  User? @relation("ProfileViewsGiven", fields: [viewerUserId], references: [id], onDelete: SetNull)
+
+  @@index([profileUserId, createdAt])
+  @@index([profileUserId, viewerUserId, createdAt]) // ログインユーザーの重複防止クエリ用
+  @@map("profile_views")
 }
 
 // =============================================

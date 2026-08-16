@@ -104,6 +104,13 @@ const ShieldIcon = () => (
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 )
+const ChartIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+  </svg>
+)
 const GiftIcon = () => (
   <svg className={iconClass} {...iconProps}>
     <polyline points="20 12 20 22 4 22 4 12" />
@@ -205,6 +212,11 @@ export function SidebarShell({
     { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },
     { href: '/projects/manage', label: '案件管理', icon: <ClipboardIcon /> },
     { href: '/dashboard/payouts', label: '入金設定', icon: <WalletIcon /> },
+    // PRO 特典: プロフィール分析 (PV / フォロー / 成約率)。GENERAL ユーザーには表示しない。
+    // ロール判定は user.role のみ (Early Bird / hasLifetimeFreePro / isFounderExempt も全て role='PRO' に集約されている)
+    ...(user.role === 'PRO'
+      ? [{ href: '/dashboard/analytics', label: 'プロフィール分析', icon: <ChartIcon /> } as NavItem]
+      : []),
     { href: '/events', label: 'イベント', icon: <MicIcon /> },
     { href: '/dashboard/calendar', label: 'カレンダー', icon: <CalendarIcon /> },
     { href: '/dashboard/account', label: 'アカウント設定', icon: <CogIcon /> },
