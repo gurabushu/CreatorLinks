@@ -85,7 +85,14 @@ export default async function YearlyDocumentsPage({ params }: Params) {
             確定申告用。各案件の見積・契約・請求・領収を個別に開いて印刷 (PDF 保存) できます。
           </p>
         </div>
-        <div className="flex gap-2 text-xs">
+        <div className="flex gap-2 text-xs flex-wrap">
+          <Link
+            href={`/dashboard/payouts/year/${year}/print`}
+            target="_blank"
+            className="px-3 py-1.5 rounded border border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium"
+          >
+            🖨 全請求書を一括印刷 (PDF)
+          </Link>
           <a
             href={`/api/payouts/csv?year=${year}`}
             className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 text-gray-700"
