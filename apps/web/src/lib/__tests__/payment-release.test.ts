@@ -54,14 +54,18 @@ describe('releasePayment', () => {
     const result = await releasePayment('pay_1')
 
     expect(result).toEqual({ ok: true, transferId: 'tr_1', paymentId: 'pay_1' })
-    expect(mockTransfersCreate).toHaveBeenCalledWith({
-      amount: 9300,
-      currency: 'jpy',
-      destination: 'acct_1',
-      transfer_group: 'match_match_1',
-      source_transaction: 'ch_1',
-      metadata: { paymentId: 'pay_1', matchId: 'match_1' },
-    })
+    expect(mockTransfersCreate).toHaveBeenCalledWith(
+      {
+        amount: 9300,
+        currency: 'jpy',
+        destination: 'acct_1',
+        transfer_group: 'match_match_1',
+        source_transaction: 'ch_1',
+        metadata: { paymentId: 'pay_1', matchId: 'match_1' },
+      },
+      // idempotencyKey は cron 再実行時の二重送金防止 (releasePayment 実装)
+      { idempotencyKey: 'release_pay_1' },
+    )
     expect(mockPaymentUpdate).toHaveBeenCalledWith({
       where: { id: 'pay_1' },
       data: expect.objectContaining({

@@ -7,7 +7,7 @@ const {
   mockPaymentUpdate,
   mockPaymentUpdateMany,
   mockCreateCheckout,
-  mockListCheckouts,
+  mockRetrieveCheckout,
   mockRetrievePI,
   mockReleasePayment,
   mockRedirect,
@@ -19,7 +19,7 @@ const {
   mockPaymentUpdate: vi.fn(),
   mockPaymentUpdateMany: vi.fn(),
   mockCreateCheckout: vi.fn(),
-  mockListCheckouts: vi.fn(),
+  mockRetrieveCheckout: vi.fn(),
   mockRetrievePI: vi.fn(),
   mockReleasePayment: vi.fn(),
   mockRedirect: vi.fn((url: string) => {
@@ -47,7 +47,7 @@ vi.mock('@/lib/stripe', async () => {
   return {
     ...actual,
     getStripe: () => ({
-      checkout: { sessions: { create: mockCreateCheckout, list: mockListCheckouts } },
+      checkout: { sessions: { create: mockCreateCheckout, retrieve: mockRetrieveCheckout } },
       paymentIntents: { retrieve: mockRetrievePI },
     }),
   }
@@ -212,37 +212,37 @@ describe('checkPaymentStatusAction', () => {
       payment: null,
     })
     await checkPaymentStatusAction('match_1')
-    expect(mockListCheckouts).not.toHaveBeenCalled()
+    expect(mockRetrieveCheckout).not.toHaveBeenCalled()
   })
 
   it('他ユーザーは no-op（情報漏洩防止）', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'someone_else' } })
     mockMatchFindUnique.mockResolvedValue({
       project: { clientId: 'client_1' },
-      payment: { id: 'pay_1', status: 'AWAITING' },
+      payment: { id: 'pay_1', status: 'AWAITING', stripeCheckoutSessionId: 'cs_1' },
     })
     await checkPaymentStatusAction('match_1')
-    expect(mockListCheckouts).not.toHaveBeenCalled()
+    expect(mockRetrieveCheckout).not.toHaveBeenCalled()
   })
 
   it('既に HELD なら no-op', async () => {
     mockAuth.mockResolvedValue(authedSession)
     mockMatchFindUnique.mockResolvedValue({
       project: { clientId: 'client_1' },
-      payment: { id: 'pay_1', status: 'HELD' },
+      payment: { id: 'pay_1', status: 'HELD', stripeCheckoutSessionId: 'cs_1' },
     })
     await checkPaymentStatusAction('match_1')
-    expect(mockListCheckouts).not.toHaveBeenCalled()
+    expect(mockRetrieveCheckout).not.toHaveBeenCalled()
   })
 
-  it('該当 checkout session なしは no-op', async () => {
+  it('stripeCheckoutSessionId が未保存なら no-op', async () => {
     mockAuth.mockResolvedValue(authedSession)
     mockMatchFindUnique.mockResolvedValue({
       project: { clientId: 'client_1' },
-      payment: { id: 'pay_1', status: 'AWAITING' },
+      payment: { id: 'pay_1', status: 'AWAITING', stripeCheckoutSessionId: null },
     })
-    mockListCheckouts.mockResolvedValue({ data: [{ metadata: { paymentId: 'other' } }] })
     await checkPaymentStatusAction('match_1')
+    expect(mockRetrieveCheckout).not.toHaveBeenCalled()
     expect(mockPaymentUpdateMany).not.toHaveBeenCalled()
   })
 
@@ -250,23 +250,21 @@ describe('checkPaymentStatusAction', () => {
     mockAuth.mockResolvedValue(authedSession)
     mockMatchFindUnique.mockResolvedValue({
       project: { clientId: 'client_1' },
-      payment: { id: 'pay_1', status: 'AWAITING' },
+      payment: { id: 'pay_1', status: 'AWAITING', stripeCheckoutSessionId: 'cs_1' },
     })
-    mockListCheckouts.mockResolvedValue({
-      data: [{ metadata: { paymentId: 'pay_1' }, payment_intent: 'pi_1' }],
-    })
-    mockRetrievePI.mockResolvedValue({ status: 'succeeded', latest_charge: 'ch_1' })
+    // 実装は sessions.retrieve(stripeCheckoutSessionId) → paymentIntents.retrieve(piId) の順で呼ぶ
+    mockRetrieveCheckout.mockResolvedValue({ payment_intent: 'pi_1' })
+    mockRetrievePI.mockResolvedValue({ status: 'succeeded', latest_charge: 'ch_1', id: 'pi_1' })
     mockPaymentUpdateMany.mockResolvedValue({ count: 1 })
+    mockPaymentUpdate.mockResolvedValue({})
 
     await checkPaymentStatusAction('match_1')
 
+    expect(mockRetrieveCheckout).toHaveBeenCalledWith('cs_1')
+    expect(mockRetrievePI).toHaveBeenCalledWith('pi_1')
     expect(mockPaymentUpdateMany).toHaveBeenCalledWith({
       where: { id: 'pay_1', status: 'AWAITING' },
-      data: expect.objectContaining({
-        status: 'HELD',
-        stripePaymentIntentId: 'pi_1',
-        stripeChargeId: 'ch_1',
-      }),
+      data: expect.objectContaining({ status: 'HELD' }),
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/dashboard/chat/match_1')
   })
@@ -275,12 +273,10 @@ describe('checkPaymentStatusAction', () => {
     mockAuth.mockResolvedValue(authedSession)
     mockMatchFindUnique.mockResolvedValue({
       project: { clientId: 'client_1' },
-      payment: { id: 'pay_1', status: 'AWAITING' },
+      payment: { id: 'pay_1', status: 'AWAITING', stripeCheckoutSessionId: 'cs_1' },
     })
-    mockListCheckouts.mockResolvedValue({
-      data: [{ metadata: { paymentId: 'pay_1' }, payment_intent: 'pi_1' }],
-    })
-    mockRetrievePI.mockResolvedValue({ status: 'processing' })
+    mockRetrieveCheckout.mockResolvedValue({ payment_intent: 'pi_1' })
+    mockRetrievePI.mockResolvedValue({ status: 'processing', id: 'pi_1' })
 
     await checkPaymentStatusAction('match_1')
     expect(mockPaymentUpdateMany).not.toHaveBeenCalled()

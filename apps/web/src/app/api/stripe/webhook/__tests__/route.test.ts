@@ -6,18 +6,27 @@ const {
   mockUserFindUnique,
   mockUserUpdate,
   mockCheckRateLimit,
+  mockProcessedEventCreate,
+  mockProcessedEventDelete,
 } = vi.hoisted(() => ({
   mockConstructEvent: vi.fn(),
   mockPaymentUpdateMany: vi.fn(),
   mockUserFindUnique: vi.fn(),
   mockUserUpdate: vi.fn(),
   mockCheckRateLimit: vi.fn(),
+  mockProcessedEventCreate: vi.fn(),
+  mockProcessedEventDelete: vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     payment: { updateMany: mockPaymentUpdateMany },
     user: { findUnique: mockUserFindUnique, update: mockUserUpdate },
+    // 冪等性ガード用の ProcessedStripeEvent。route.ts 側で create → 失敗時に delete でロールバック。
+    processedStripeEvent: {
+      create: mockProcessedEventCreate,
+      delete: mockProcessedEventDelete,
+    },
   },
 }))
 
@@ -46,12 +55,18 @@ describe('stripe webhook', () => {
     mockUserFindUnique.mockReset()
     mockUserUpdate.mockReset()
     mockCheckRateLimit.mockReset()
+    mockProcessedEventCreate.mockReset()
+    mockProcessedEventDelete.mockReset()
     mockCheckRateLimit.mockResolvedValue({ ok: true })
+    // 既定: 初出イベント（重複ではない）として通過させる
+    mockProcessedEventCreate.mockResolvedValue({})
+    mockProcessedEventDelete.mockResolvedValue({})
   })
 
-  it('rate limit されたら 429', async () => {
+  it('rate limit されたら 429（署名欠落時のみレート制限が発火）', async () => {
     mockCheckRateLimit.mockResolvedValueOnce({ ok: false, retryAfterSec: 60 })
-    const res = await POST(makeRequest('{}') as never)
+    // 署名なしのリクエストでレート制限パスに入る (route.ts の !signature ブロック)
+    const res = await POST(makeRequest('{}', null) as never)
     expect(res.status).toBe(429)
     expect(res.headers.get('Retry-After')).toBe('60')
   })
@@ -73,9 +88,12 @@ describe('stripe webhook', () => {
 
   it('payment_intent.succeeded: AWAITING のみ HELD に遷移（冪等性）', async () => {
     mockConstructEvent.mockReturnValue({
+      // event.id は ProcessedStripeEvent の冪等性ガードで参照される
+      id: 'evt_1',
       type: 'payment_intent.succeeded',
       data: {
         object: {
+          id: 'pi_1',
           metadata: { paymentId: 'pay_1' },
           latest_charge: 'ch_1',
         },
@@ -85,12 +103,17 @@ describe('stripe webhook', () => {
 
     const res = await POST(makeRequest('{}') as never)
     expect(res.status).toBe(200)
+    // 実装は 2 段の updateMany を撃つ:
+    //   1. charge_id / pi_id を埋める（status 判定なし）
+    //   2. status='AWAITING' のみを HELD に遷移
+    expect(mockPaymentUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ stripeChargeId: 'ch_1', stripePaymentIntentId: 'pi_1' }),
+      }),
+    )
     expect(mockPaymentUpdateMany).toHaveBeenCalledWith({
       where: { id: 'pay_1', status: 'AWAITING' },
-      data: expect.objectContaining({
-        status: 'HELD',
-        stripeChargeId: 'ch_1',
-      }),
+      data: expect.objectContaining({ status: 'HELD' }),
     })
   })
 
@@ -176,8 +199,10 @@ describe('stripe webhook', () => {
 
   it('charge.refunded: HELD の Payment だけ REFUNDED に', async () => {
     mockConstructEvent.mockReturnValue({
+      id: 'evt_refund_1',
       type: 'charge.refunded',
-      data: { object: { payment_intent: 'pi_1' } },
+      // 実装は `refunded === true` または amount 全額返金 のとき REFUNDED に遷移する
+      data: { object: { payment_intent: 'pi_1', refunded: true, amount: 1000, amount_refunded: 1000 } },
     })
     mockPaymentUpdateMany.mockResolvedValue({ count: 1 })
 
