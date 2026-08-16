@@ -456,47 +456,59 @@ function ArtistCard({
 
       {/* 本文 */}
       <div className="px-4 pt-3 pb-3">
-        <div className="flex items-center gap-2 mb-1">
-          {/* アバター（名前の左） */}
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white text-sm font-bold shrink-0">
+        {/* 上段: アバター + 名前 + LikeButton
+            名前は 2 行まで許可、text-base sm:text-lg に up してバンド名等の長文名を潰さない */}
+        <div className="flex items-start gap-2.5 mb-2">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white text-sm font-bold shrink-0">
             {artist.avatarUrl ? (
               <Image
                 src={artist.avatarUrl}
                 alt={getDisplayName(artist)}
-                width={36}
-                height={36}
+                width={44}
+                height={44}
                 className="w-full h-full object-cover"
               />
             ) : (
               getDisplayName(artist).charAt(0)
             )}
           </div>
-          <p className="font-bold text-gray-900 group-hover:text-purple-700 transition truncate flex-1 min-w-0">
-            {getDisplayName(artist)}
-          </p>
-          {artist.skillLevel && (
-            <span
-              title={COMMITMENT_LEVEL_LABELS[artist.skillLevel].description}
-              className={`text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${SKILL_BADGE_CLASS[artist.skillLevel]}`}
+          <div className="flex-1 min-w-0">
+            <p
+              className="font-bold text-base sm:text-lg text-gray-900 group-hover:text-purple-700 transition leading-snug line-clamp-2 break-words"
+              title={getDisplayName(artist)}
             >
-              {COMMITMENT_LEVEL_LABELS[artist.skillLevel].label}
-            </span>
-          )}
-          {artist.role === 'PRO' && (
-            <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-bold shrink-0">
-              PRO
-            </span>
-          )}
-          <FoundingMemberBadge slot={artist.earlyBirdSlot} />
-
+              {getDisplayName(artist)}
+            </p>
+            {/* 名前下段: skillLevel + PRO + founding バッジ。名前スペースを奪わない配置 */}
+            {(artist.skillLevel || artist.role === 'PRO' || artist.earlyBirdSlot != null) && (
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                {artist.skillLevel && (
+                  <span
+                    title={COMMITMENT_LEVEL_LABELS[artist.skillLevel].description}
+                    className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${SKILL_BADGE_CLASS[artist.skillLevel]}`}
+                  >
+                    {COMMITMENT_LEVEL_LABELS[artist.skillLevel].label}
+                  </span>
+                )}
+                {artist.role === 'PRO' && (
+                  <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                    PRO
+                  </span>
+                )}
+                <FoundingMemberBadge slot={artist.earlyBirdSlot} />
+              </div>
+            )}
+          </div>
           {!isMe && (
-            <LikeButton
-              artistId={artist.id}
-              liked={liked}
-              onChange={onLikeChange}
-              onMatched={onMatched}
-              loggedIn={loggedIn}
-            />
+            <div className="shrink-0">
+              <LikeButton
+                artistId={artist.id}
+                liked={liked}
+                onChange={onLikeChange}
+                onMatched={onMatched}
+                loggedIn={loggedIn}
+              />
+            </div>
           )}
         </div>
 
