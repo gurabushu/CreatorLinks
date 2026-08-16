@@ -201,11 +201,12 @@ export function SidebarShell({
     { href: '/dashboard/account', label: 'アカウント設定', icon: <CogIcon /> },
     { href: '/announcements', label: 'お知らせ', icon: <MegaphoneIcon />, badge: announcementUnread },
     { href: '/support', label: 'サポート・お問い合わせ', icon: <LifeBuoyIcon /> },
-    // ADMIN 専用: 管理ダッシュボード + お知らせ配信
-    // /admin は matchExact にしないと /admin/announcements と両方 highlight してしまう
+    // ADMIN 専用: 管理ダッシュボード + サポート受信箱 + お知らせ配信
+    // /admin は matchExact にしないと /admin/* と両方 highlight してしまう
     ...(user.role === 'ADMIN'
       ? [
           { href: '/admin', label: '管理ダッシュボード (Admin)', icon: <ShieldIcon />, matchExact: true } as NavItem,
+          { href: '/admin/support', label: 'サポート受信箱 (Admin)', icon: <LifeBuoyIcon /> } as NavItem,
           { href: '/admin/announcements', label: 'お知らせ配信 (Admin)', icon: <MegaphoneIcon /> } as NavItem,
         ]
       : []),
