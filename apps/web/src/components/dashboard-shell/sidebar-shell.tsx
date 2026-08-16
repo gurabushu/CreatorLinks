@@ -104,6 +104,15 @@ const ShieldIcon = () => (
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 )
+const GiftIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <polyline points="20 12 20 22 4 22 4 12" />
+    <rect x="2" y="7" width="20" height="5" />
+    <line x1="12" y1="22" x2="12" y2="7" />
+    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+  </svg>
+)
 
 function SidebarNav({
   user,
@@ -201,13 +210,14 @@ export function SidebarShell({
     { href: '/dashboard/account', label: 'アカウント設定', icon: <CogIcon /> },
     { href: '/announcements', label: 'お知らせ', icon: <MegaphoneIcon />, badge: announcementUnread },
     { href: '/support', label: 'サポート・お問い合わせ', icon: <LifeBuoyIcon /> },
-    // ADMIN 専用: 管理ダッシュボード + サポート受信箱 + 決済管理 + お知らせ配信
+    // ADMIN 専用: 管理ダッシュボード + サポート + 決済 + プロモ + お知らせ
     // /admin は matchExact にしないと /admin/* と両方 highlight してしまう
     ...(user.role === 'ADMIN'
       ? [
           { href: '/admin', label: '管理ダッシュボード (Admin)', icon: <ShieldIcon />, matchExact: true } as NavItem,
           { href: '/admin/support', label: 'サポート受信箱 (Admin)', icon: <LifeBuoyIcon /> } as NavItem,
           { href: '/admin/payments', label: '決済管理 (Admin)', icon: <WalletIcon /> } as NavItem,
+          { href: '/admin/promo', label: 'プロモコード管理 (Admin)', icon: <GiftIcon /> } as NavItem,
           { href: '/admin/announcements', label: 'お知らせ配信 (Admin)', icon: <MegaphoneIcon /> } as NavItem,
         ]
       : []),
