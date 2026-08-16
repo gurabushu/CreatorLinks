@@ -125,6 +125,13 @@ export default async function EventDetailPage({ params }: Params) {
 
   if (!canView) notFound()
 
+  // Event グループチャットへのアクセス権: creator + CONFIRMED participant のみ
+  // (INVITED や AUDIENCE/DECLINED は含めない。event-chat.ts checkMembership と一致)
+  const canAccessChat = !!(
+    isCreator ||
+    (viewerId && event.participants.some((p) => p.userId === viewerId && p.status === 'CONFIRMED'))
+  )
+
   const myInterest = session
     ? await prisma.eventInterest.findUnique({
         where: { userId_eventId: { userId: session.user.id, eventId: id } },
@@ -291,6 +298,21 @@ export default async function EventDetailPage({ params }: Params) {
             eventId={event.id}
             currentIsAttending={myInterest?.isAttending ?? null}
           />
+        </div>
+      )}
+
+      {/* グループチャット導線（creator + CONFIRMED participant のみ） */}
+      {canAccessChat && (
+        <div className="mb-6">
+          <Link
+            href={`/dashboard/chat/event/${event.id}`}
+            className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <span>グループチャットへ</span>
+          </Link>
         </div>
       )}
 
