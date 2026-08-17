@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { refreshConnectStatusAction } from '@/server/actions/payouts'
 import { PayoutsClient } from './payouts-client'
-import { PaymentHistory, type PayoutHistoryRow } from './payment-history'
+import { PaymentHistory, type PayoutHistoryRow, calcProUpliftYen } from './payment-history'
 import type { PaymentStatus } from '@/components/payments/payment-badge'
 
 export const dynamic = 'force-dynamic'
@@ -32,6 +32,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: {
+      role: true, // PRO 判定に使用（Free ユーザーには「PRO なら +¥X」列を出す）
       stripeConnectAccountId: true,
       stripeChargesEnabled: true,
       stripePayoutsEnabled: true,
@@ -81,6 +82,15 @@ export default async function PayoutsPage({ searchParams }: Props) {
     .filter((r) => r.status === 'RELEASED')
     .reduce((sum, r) => sum + r.artistPayoutYen, 0)
   const pendingCount = historyRows.filter((r) => r.status === 'HELD').length
+
+  // PRO 差額の累計（Free ユーザー向けの upsell 材料）
+  // RELEASED のみ集計（HELD/REFUNDED は確定していないので数字が動く）
+  const isFree = user?.role !== 'PRO'
+  const proUpliftTotal = isFree
+    ? historyRows
+        .filter((r) => r.status === 'RELEASED')
+        .reduce((sum, r) => sum + calcProUpliftYen(r), 0)
+    : 0
 
   return (
     <div className="max-w-3xl mx-auto py-12 px-4">
@@ -136,7 +146,33 @@ export default async function PayoutsPage({ searchParams }: Props) {
             昨年 CSV
           </a>
         </div>
-        <PaymentHistory rows={historyRows} />
+        {/* Free ユーザーで RELEASED 案件があるなら、PRO への upsell バナーを表示 */}
+        {isFree && proUpliftTotal > 0 && (
+          <div className="mb-4 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/70 p-4 sm:p-5">
+            <div className="flex items-start gap-3 flex-wrap">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base font-bold text-purple-900 leading-snug">
+                  もし PRO で受注していたら、累計 <span className="text-lg text-purple-700">+¥{proUpliftTotal.toLocaleString()}</span> 手取りが増えていました。
+                </p>
+                <p className="text-xs text-purple-800/80 mt-1 leading-relaxed">
+                  PRO プラン（¥980/月）は手数料 <b>7% → 5%</b> に減額。案件が動く月ほど元が取れます。
+                </p>
+              </div>
+              <Link
+                href="/pro/subscribe"
+                className="shrink-0 inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-lg transition"
+              >
+                PRO の詳細を見る →
+              </Link>
+            </div>
+          </div>
+        )}
+        {!isFree && (
+          <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-xs text-emerald-800">
+            🎉 PRO 特典で手数料 5% 適用中。全案件からアーティスト受取が最大化されています。
+          </div>
+        )}
+        <PaymentHistory rows={historyRows} showProUpsell={isFree} />
       </div>
     </div>
   )

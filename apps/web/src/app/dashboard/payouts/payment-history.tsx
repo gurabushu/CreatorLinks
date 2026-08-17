@@ -1,8 +1,12 @@
 // 受取履歴一覧（アーティスト側視点）: HELD / RELEASED / REFUNDED を新しい順に並べる
 // 純サーバコンポーネント想定 — 状態管理なし・data はサーバから渡す
+//
+// PRO 差額表示: viewer が Free（GENERAL）の時、各行に「PRO なら +¥X」を表示。
+// PRO のときは (すでに 5% 適用済のため) 差額表示は不要。
 
 import Link from 'next/link'
 import { PaymentBadge, type PaymentStatus } from '@/components/payments/payment-badge'
+import { PLATFORM_FEE_RATE_PRO } from '@/lib/stripe'
 
 export interface PayoutHistoryRow {
   paymentId: string
@@ -16,6 +20,13 @@ export interface PayoutHistoryRow {
   releasedAt: string | null
 }
 
+// 「PRO なら受け取れた額」との差分。負や 0 は upsell 対象外（既に PRO or 免除で得している）。
+export function calcProUpliftYen(row: { amountYen: number; artistPayoutYen: number }): number {
+  const proPayout = row.amountYen - Math.round(row.amountYen * PLATFORM_FEE_RATE_PRO)
+  const diff = proPayout - row.artistPayoutYen
+  return diff > 0 ? diff : 0
+}
+
 function formatDate(iso: string | null): string {
   if (!iso) return '-'
   return new Date(iso).toLocaleDateString('ja-JP', {
@@ -25,7 +36,14 @@ function formatDate(iso: string | null): string {
   })
 }
 
-export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
+export function PaymentHistory({
+  rows,
+  showProUpsell = false,
+}: {
+  rows: PayoutHistoryRow[]
+  /** true のとき「PRO なら +¥X」列を表示（Free ユーザー向け upsell） */
+  showProUpsell?: boolean
+}) {
   if (rows.length === 0) {
     return (
       <p className="text-sm text-gray-400 py-8 text-center border rounded-2xl bg-white">
@@ -34,20 +52,27 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
     )
   }
 
+  const gridCols = showProUpsell
+    ? 'sm:grid-cols-[1fr_90px_90px_110px_90px_90px_120px]'
+    : 'sm:grid-cols-[1fr_100px_100px_120px_100px_120px]'
+
   return (
     <div className="border rounded-2xl bg-white overflow-hidden">
-      <div className="hidden sm:grid grid-cols-[1fr_100px_100px_120px_100px_120px] gap-3 px-5 py-3 text-xs font-medium text-gray-500 bg-gray-50 border-b">
+      <div className={`hidden sm:grid ${gridCols} gap-3 px-5 py-3 text-xs font-medium text-gray-500 bg-gray-50 border-b`}>
         <div>案件</div>
         <div>支払日</div>
         <div>送金日</div>
         <div className="text-right">受取額</div>
+        {showProUpsell && <div className="text-right text-purple-600">PRO なら</div>}
         <div className="text-right">状態</div>
         <div className="text-right">帳票</div>
       </div>
       <ul className="divide-y">
-        {rows.map((row) => (
+        {rows.map((row) => {
+          const proUplift = showProUpsell ? calcProUpliftYen(row) : 0
+          return (
           <li key={row.paymentId} className="px-5 py-4">
-            <div className="sm:grid sm:grid-cols-[1fr_100px_100px_120px_100px_120px] sm:gap-3 sm:items-center">
+            <div className={`sm:grid ${gridCols} sm:gap-3 sm:items-center`}>
               <div className="min-w-0">
                 <Link
                   href={`/dashboard/chat/${row.matchId}`}
@@ -67,6 +92,17 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
               <div className="text-sm font-bold text-purple-700 mt-1 sm:mt-0 sm:text-right">
                 ¥{row.artistPayoutYen.toLocaleString()}
               </div>
+              {showProUpsell && (
+                <div className="mt-1 sm:mt-0 sm:text-right">
+                  {proUplift > 0 ? (
+                    <span className="inline-block text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">
+                      +¥{proUplift.toLocaleString()}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-300">—</span>
+                  )}
+                </div>
+              )}
               <div className="mt-1.5 sm:mt-0 sm:text-right">
                 <PaymentBadge status={row.status} size="sm" />
               </div>
@@ -117,7 +153,8 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
               </div>
             </div>
           </li>
-        ))}
+          )
+        })}
       </ul>
     </div>
   )
