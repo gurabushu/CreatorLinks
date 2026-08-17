@@ -11,6 +11,7 @@ import { HeroSection } from '@/components/landing/hero-section'
 import { FeatureBar } from '@/components/landing/feature-bar'
 import { WhyNotLine } from '@/components/landing/why-not-line'
 import { HowItWorks } from '@/components/landing/how-it-works'
+import { PricingComparison } from '@/components/landing/pricing-comparison'
 import { Faq } from '@/components/landing/faq'
 import { SITE_NAME } from '@/lib/brand'
 
@@ -268,6 +269,9 @@ export default async function HomePage() {
           （比較値は各社公式ページ記載の一般料率、2026 年 8 月時点）
         </p>
       </section>
+
+      {/* Free vs PRO 比較（一元管理の付加価値でお金を取る動線） */}
+      <PricingComparison />
 
       <Faq />
     </div>
