@@ -220,6 +220,8 @@ export function SidebarShell({
     { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },
     { href: '/projects/manage', label: '案件管理', icon: <ClipboardIcon /> },
     { href: '/dashboard/payouts', label: '入金設定', icon: <WalletIcon /> },
+    // CRM 顧客一覧 — Free でも 3 件見せる (残りは PRO で解放)
+    { href: '/dashboard/crm', label: '顧客一覧 (CRM)', icon: <UsersIcon /> },
     // PRO 特典: プロフィール分析 (PV / フォロー / 成約率)。GENERAL ユーザーには表示しない。
     // ロール判定は user.role のみ (Early Bird / hasLifetimeFreePro / isFounderExempt も全て role='PRO' に集約されている)
     ...(user.role === 'PRO'
