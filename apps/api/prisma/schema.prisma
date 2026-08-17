@@ -134,6 +134,14 @@ enum EventMediaType {
   VIDEO
 }
 
+// ストーリー投稿の中身の種別
+// IMAGE / VIDEO は Vercel Blob URL、TEXT は本文のみ (背景色オプション)
+enum StoryMediaType {
+  IMAGE
+  VIDEO
+  TEXT
+}
+
 // =============================================
 // モデル定義
 // =============================================
@@ -213,6 +221,10 @@ model User {
   // プロフィール分析 (PRO 特典): 自プロフィールが受けた PV, 自分が他プロフィールに行った PV
   profileViewsReceived ProfileView[] @relation("ProfileViewsReceived")
   profileViewsGiven    ProfileView[] @relation("ProfileViewsGiven")
+
+  // 24h ストーリー投稿。author 側 + 閲覧履歴 (viewer 側)
+  stories     Story[]     @relation("StoriesAuthored")
+  storyViews  StoryView[] @relation("StoryViewer")
 
   @@index([isGuest, createdAt])
   @@map("users")
@@ -622,6 +634,43 @@ model EventMedia {
 
   @@index([eventId, position])
   @@map("event_media")
+}
+
+// 24 時間で消える一言・ワンショット投稿（Instagram Story 風）。
+// アーティスト一覧の先頭に「フォロー中ユーザー」のアバター帯として並び、
+// タップで全画面 viewer を開く。expiresAt を過ぎたレコードは cron で物理削除する予定。
+model Story {
+  id              String         @id @default(cuid())
+  authorId        String
+  mediaType       StoryMediaType
+  mediaUrl        String? // IMAGE/VIDEO: Vercel Blob URL、TEXT: null
+  body            String? // テキストオーバーレイ or TEXT のみ本文（最大 500 文字）
+  backgroundColor String? // TEXT 用背景色（#RRGGBB 想定、null は既定パープル）
+  expiresAt       DateTime // createdAt + 24h。表示側は now < expiresAt で絞る
+  createdAt       DateTime       @default(now())
+
+  author User        @relation("StoriesAuthored", fields: [authorId], references: [id], onDelete: Cascade)
+  views  StoryView[]
+
+  @@index([authorId, createdAt])
+  @@index([expiresAt]) // cron の失効一括削除 + list クエリの共通フィルタ用
+  @@map("stories")
+}
+
+// Story を「見た」記録。unviewed リング判定・視聴者一覧に使う。
+// storyId + viewerId が unique（重複視聴は最初の 1 回だけ記録）。
+model StoryView {
+  id       String   @id @default(cuid())
+  storyId  String
+  viewerId String
+  viewedAt DateTime @default(now())
+
+  story  Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer User  @relation("StoryViewer", fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, viewerId])
+  @@index([viewerId, viewedAt])
+  @@map("story_views")
 }
 
 // ユーザーの参加表明（オーディエンス向けの「行く/興味あり」）

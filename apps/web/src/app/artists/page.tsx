@@ -5,6 +5,7 @@ import { listArtistsAction } from '@/server/actions/artist'
 import { listMyLikedIdsAction } from '@/server/actions/like'
 import { auth } from '@/lib/auth'
 import { ArtistSearchForm } from '@/components/layout/artist-search-form'
+import { StoriesSection } from '@/components/stories/stories-section'
 import { SITE_NAME } from '@/lib/brand'
 
 export const metadata: Metadata = {
@@ -50,6 +51,10 @@ export default async function ArtistsPage({ searchParams }: Props) {
           <h1 className="text-2xl sm:text-3xl font-bold">アーティスト一覧</h1>
           <p className="text-gray-500 text-sm sm:text-base mt-1">音楽クリエイターと直接つながれます</p>
         </div>
+        {/* Stories bar: フォロー中ユーザーの 24h 投稿を先頭に横スクロールで表示 */}
+        <Suspense fallback={null}>
+          <StoriesSection />
+        </Suspense>
         <Suspense
           fallback={
             <div className="mb-6 sm:mb-8 h-12 sm:h-14 md:h-16 w-full max-w-2xl rounded-xl sm:rounded-2xl bg-gray-100" aria-hidden />
