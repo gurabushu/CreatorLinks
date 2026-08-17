@@ -185,14 +185,109 @@ function MediaHero({
     )
   }
 
-  // 4) Twitter / その他URL → 再生はできないので ▶ アイコンのみ
-  if (source && (source.kind === 'twitter' || source.kind === 'other')) {
+  // 3.5) TikTok → ホバー時に iframe を mount
+  if (source?.kind === 'tiktok') {
+    return (
+      <>
+        {coverUrl && (
+          <Image
+            src={coverUrl}
+            alt={lead?.title ?? `${getDisplayName(artist)}の動画`}
+            fill
+            className={`object-cover transition-opacity duration-200 ${isActive ? 'opacity-0' : 'opacity-100'}`}
+            unoptimized
+          />
+        )}
+        {isActive && (
+          <iframe
+            src={source.embedUrl}
+            title={lead?.title ?? `${getDisplayName(artist)}の TikTok`}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            loading="lazy"
+          />
+        )}
+        <HoverHint visible={!isActive} label="TikTok" />
+      </>
+    )
+  }
+
+  // 3.6) Spotify → ホバー時に iframe (音楽なので常時 muted 相当、controls あり)
+  if (source?.kind === 'spotify') {
+    return (
+      <>
+        {coverUrl && (
+          <Image
+            src={coverUrl}
+            alt={lead?.title ?? `${getDisplayName(artist)}の Spotify`}
+            fill
+            className={`object-cover transition-opacity duration-200 ${isActive ? 'opacity-0' : 'opacity-100'}`}
+            unoptimized
+          />
+        )}
+        {isActive && (
+          <iframe
+            src={source.embedUrl}
+            title={lead?.title ?? `${getDisplayName(artist)}の Spotify`}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          />
+        )}
+        <HoverHint visible={!isActive} label="Spotify" />
+      </>
+    )
+  }
+
+  // 3.7) SoundCloud → ホバー時に widget iframe
+  if (source?.kind === 'soundcloud') {
+    return (
+      <>
+        {coverUrl && (
+          <Image
+            src={coverUrl}
+            alt={lead?.title ?? `${getDisplayName(artist)}の SoundCloud`}
+            fill
+            className={`object-cover transition-opacity duration-200 ${isActive ? 'opacity-0' : 'opacity-100'}`}
+            unoptimized
+          />
+        )}
+        {isActive && (
+          <iframe
+            src={source.embedUrl}
+            title={lead?.title ?? `${getDisplayName(artist)}の SoundCloud`}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay"
+            loading="lazy"
+          />
+        )}
+        <HoverHint visible={!isActive} label="SoundCloud" />
+      </>
+    )
+  }
+
+  // 4) Twitter / Bandcamp / Instagram / その他URL → 再生できないので ▶ アイコンのみ
+  if (
+    source &&
+    (source.kind === 'twitter' ||
+      source.kind === 'bandcamp' ||
+      source.kind === 'instagram' ||
+      source.kind === 'other')
+  ) {
+    const label =
+      source.kind === 'twitter'
+        ? 'X'
+        : source.kind === 'bandcamp'
+          ? 'Bandcamp'
+          : source.kind === 'instagram'
+            ? 'Instagram'
+            : 'リンク'
     return (
       <>
         {coverUrl && (
           <Image src={coverUrl} alt={getDisplayName(artist)} fill className="object-cover" unoptimized />
         )}
-        <HoverHint visible label={source.kind === 'twitter' ? 'X' : 'リンク'} />
+        <HoverHint visible label={label} />
       </>
     )
   }
@@ -267,9 +362,15 @@ function ThumbnailStrip({ works }: { works: Portfolio[] }) {
         const previewUrl =
           isImageFile ? src.url : src.kind === 'youtube' ? src.thumbnailUrl : null
         const overlay =
-          p.mediaType === 'VIDEO' || src.kind === 'youtube' || src.kind === 'vimeo'
+          p.mediaType === 'VIDEO' ||
+          src.kind === 'youtube' ||
+          src.kind === 'vimeo' ||
+          src.kind === 'tiktok'
             ? '▶'
-            : p.mediaType === 'AUDIO'
+            : p.mediaType === 'AUDIO' ||
+                src.kind === 'spotify' ||
+                src.kind === 'soundcloud' ||
+                src.kind === 'bandcamp'
               ? '音声'
               : null
         return (

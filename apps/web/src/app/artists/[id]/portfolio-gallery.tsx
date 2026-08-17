@@ -46,8 +46,15 @@ function PortfolioTile({
       ? source.thumbnailUrl
       : null
   const showPlay =
-    portfolio.mediaType === 'VIDEO' || source.kind === 'youtube' || source.kind === 'vimeo'
-  const showAudio = portfolio.mediaType === 'AUDIO'
+    portfolio.mediaType === 'VIDEO' ||
+    source.kind === 'youtube' ||
+    source.kind === 'vimeo' ||
+    source.kind === 'tiktok'
+  const showAudio =
+    portfolio.mediaType === 'AUDIO' ||
+    source.kind === 'spotify' ||
+    source.kind === 'soundcloud' ||
+    source.kind === 'bandcamp'
 
   return (
     <button

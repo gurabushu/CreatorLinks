@@ -1,13 +1,19 @@
 // Portfolio.fileKey に格納された値が
 // - Vercel Blob などの直接 URL（新規はこれ）
 // - 旧 Uploadthing のファイルキー（legacy、utfs.io にフォールバック）
-// - YouTube / Vimeo / Twitter(X) などの埋め込み可能な URL
+// - YouTube / Vimeo / Spotify / SoundCloud / Bandcamp / TikTok / Twitter(X) などの
+//   埋め込み可能・不可能 な URL
 // のどれであるかを判定し、表示に必要な情報を返す。
 
 export type MediaSource =
   | { kind: 'file'; url: string }
   | { kind: 'youtube'; videoId: string; embedUrl: string; thumbnailUrl: string; watchUrl: string }
   | { kind: 'vimeo'; videoId: string; embedUrl: string; watchUrl: string }
+  | { kind: 'spotify'; embedUrl: string; watchUrl: string }
+  | { kind: 'soundcloud'; embedUrl: string; watchUrl: string }
+  | { kind: 'bandcamp'; watchUrl: string } // Bandcamp embed は album/track ID が必要で URL 単体からは特定不可 → リンクのみ
+  | { kind: 'tiktok'; videoId: string; embedUrl: string; watchUrl: string }
+  | { kind: 'instagram'; watchUrl: string } // Meta oEmbed が承認 gate なのでリンクのみ
   | { kind: 'twitter'; watchUrl: string }
   | { kind: 'other'; watchUrl: string }
 
@@ -22,6 +28,45 @@ export function buildVimeoEmbed(videoId: string, opts?: { muted?: boolean }): st
   return muted
     ? `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=1&background=1`
     : `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=0&loop=1&controls=0&title=0&byline=0&portrait=0`
+}
+
+// Spotify embed URL の組み立て。
+// 対象 URL の path をそのまま /embed/ 配下に差し替える (artist/track/album/playlist/episode/show 全てで動く)
+// 例: https://open.spotify.com/track/XXX → https://open.spotify.com/embed/track/XXX
+export function buildSpotifyEmbed(watchUrl: string): string | null {
+  try {
+    const u = new URL(watchUrl)
+    if (!/(^|\.)spotify\.com$/.test(u.hostname)) return null
+    // /track/XXX, /artist/XXX, /playlist/XXX, /album/XXX, /episode/XXX, /show/XXX
+    const m = u.pathname.match(/^\/(track|artist|album|playlist|episode|show)\/([A-Za-z0-9]+)/)
+    if (!m) return null
+    return `https://open.spotify.com/embed/${m[1]}/${m[2]}`
+  } catch {
+    return null
+  }
+}
+
+// SoundCloud oEmbed の代替: 公式 widget iframe を直組み。
+// watchUrl をエンコードして /player URL に渡す。
+export function buildSoundCloudEmbed(watchUrl: string): string {
+  const encoded = encodeURIComponent(watchUrl)
+  return `https://w.soundcloud.com/player/?url=${encoded}&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=true`
+}
+
+// TikTok の embed URL。
+// 例: https://www.tiktok.com/@user/video/1234567890 → https://www.tiktok.com/embed/v2/1234567890
+function extractTikTokVideoId(url: string): string | null {
+  try {
+    const u = new URL(url)
+    if (!/(^|\.)tiktok\.com$/.test(u.hostname)) return null
+    const m = u.pathname.match(/\/video\/(\d+)/)
+    return m?.[1] ?? null
+  } catch {
+    return null
+  }
+}
+export function buildTikTokEmbed(videoId: string): string {
+  return `https://www.tiktok.com/embed/v2/${videoId}`
 }
 
 function extractYouTubeId(url: string): string | null {
@@ -60,6 +105,43 @@ export function resolveMediaSource(fileKey: string): MediaSource {
       embedUrl: buildVimeoEmbed(vimeoId, { muted: true }),
       watchUrl: fileKey,
     }
+  }
+
+  // Spotify (アーティスト / トラック / プレイリスト / アルバム / episode / show)
+  const spotifyEmbed = buildSpotifyEmbed(fileKey)
+  if (spotifyEmbed) {
+    return { kind: 'spotify', embedUrl: spotifyEmbed, watchUrl: fileKey }
+  }
+
+  // SoundCloud (track / playlist / user)
+  if (/(?:^|\.)soundcloud\.com\//.test(fileKey)) {
+    return {
+      kind: 'soundcloud',
+      embedUrl: buildSoundCloudEmbed(fileKey),
+      watchUrl: fileKey,
+    }
+  }
+
+  // Bandcamp: track/album ID の抽出が meta tag 経由必須で URL 単体からは特定できない
+  // → 埋め込み諦めてリンクのみ (favicon + label)
+  if (/(?:^|\.)bandcamp\.com\//.test(fileKey)) {
+    return { kind: 'bandcamp', watchUrl: fileKey }
+  }
+
+  // TikTok (video)
+  const tiktokId = extractTikTokVideoId(fileKey)
+  if (tiktokId) {
+    return {
+      kind: 'tiktok',
+      videoId: tiktokId,
+      embedUrl: buildTikTokEmbed(tiktokId),
+      watchUrl: fileKey,
+    }
+  }
+
+  // Instagram: 2021 以降 oEmbed が Meta 承認必須 → リンクのみ
+  if (/(?:^|\.)instagram\.com\//.test(fileKey)) {
+    return { kind: 'instagram', watchUrl: fileKey }
   }
 
   if (/(?:twitter\.com|x\.com)\//.test(fileKey)) {

@@ -110,9 +110,9 @@ export function PortfolioLightbox({
         {current.description && (
           <p className="text-xs sm:text-sm text-gray-300 mt-1 whitespace-pre-wrap line-clamp-4 sm:line-clamp-none">{current.description}</p>
         )}
-        {(source.kind === 'youtube' || source.kind === 'vimeo' || source.kind === 'twitter' || source.kind === 'other') && (
+        {'watchUrl' in source && (
           <a
-            href={'watchUrl' in source ? source.watchUrl : '#'}
+            href={source.watchUrl}
             target="_blank"
             rel="noreferrer noopener"
             className="inline-block mt-2 text-xs text-pink-300 hover:text-pink-200 underline"
@@ -172,10 +172,44 @@ function MediaFrame({
       />
     )
   }
-  // twitter / other → 単純なリンク誘導
+  if (source.kind === 'spotify') {
+    // Spotify 埋め込みは 152/232/352/500px 相当だが、任意高さでも動くので aspect-video で
+    return (
+      <iframe
+        src={source.embedUrl}
+        title={current.title}
+        className="w-full h-full max-h-full"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        allowFullScreen
+      />
+    )
+  }
+  if (source.kind === 'soundcloud') {
+    return (
+      <iframe
+        src={source.embedUrl}
+        title={current.title}
+        className="w-full h-full max-h-full"
+        allow="autoplay"
+      />
+    )
+  }
+  if (source.kind === 'tiktok') {
+    return (
+      <iframe
+        src={source.embedUrl}
+        title={current.title}
+        className="w-full h-full max-h-full"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+      />
+    )
+  }
+  // bandcamp / instagram / twitter / other → embed 不可なのでリンク誘導
   return (
     <div className="text-center text-white">
       <p className="text-sm">このメディアは外部リンクで公開されています</p>
+      <p className="text-xs text-gray-400 mt-2">下部の「元のページを開く」から確認できます</p>
     </div>
   )
 }
