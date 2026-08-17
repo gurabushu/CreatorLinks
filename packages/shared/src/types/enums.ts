@@ -61,6 +61,62 @@ export const HEIGHT_BUCKET_RANGES: Record<HeightBucket, { minCm: number | null; 
   OVER_180: { minCm: 180, maxCm: null },
 }
 
+// Linktree 型 外部リンクの プラットフォーム enum。
+// Prisma 側 ExternalLinkPlatform と一致させる。
+export type ExternalLinkPlatform =
+  | 'SPOTIFY'
+  | 'APPLE_MUSIC'
+  | 'SOUNDCLOUD'
+  | 'BANDCAMP'
+  | 'YOUTUBE'
+  | 'VIMEO'
+  | 'TIKTOK'
+  | 'INSTAGRAM'
+  | 'TWITTER'
+  | 'THREADS'
+  | 'TIGET'
+  | 'LIVEPOCKET'
+  | 'WEBSITE'
+  | 'OTHER'
+
+// select 表示順 (音源系 → 動画 → SNS → チケット → その他)
+export const EXTERNAL_LINK_PLATFORMS: readonly ExternalLinkPlatform[] = [
+  'SPOTIFY',
+  'APPLE_MUSIC',
+  'SOUNDCLOUD',
+  'BANDCAMP',
+  'YOUTUBE',
+  'VIMEO',
+  'TIKTOK',
+  'INSTAGRAM',
+  'TWITTER',
+  'THREADS',
+  'TIGET',
+  'LIVEPOCKET',
+  'WEBSITE',
+  'OTHER',
+] as const
+
+export const EXTERNAL_LINK_PLATFORM_LABELS: Record<
+  ExternalLinkPlatform,
+  { label: string; hint: string }
+> = {
+  SPOTIFY: { label: 'Spotify', hint: 'アーティストページ or プレイリスト URL' },
+  APPLE_MUSIC: { label: 'Apple Music', hint: 'アーティストページ URL' },
+  SOUNDCLOUD: { label: 'SoundCloud', hint: 'プロフィール URL' },
+  BANDCAMP: { label: 'Bandcamp', hint: 'アーティストページ URL' },
+  YOUTUBE: { label: 'YouTube', hint: 'チャンネル URL' },
+  VIMEO: { label: 'Vimeo', hint: 'プロフィール URL' },
+  TIKTOK: { label: 'TikTok', hint: 'プロフィール URL (@username)' },
+  INSTAGRAM: { label: 'Instagram', hint: 'プロフィール URL (@username)' },
+  TWITTER: { label: 'X (Twitter)', hint: 'プロフィール URL' },
+  THREADS: { label: 'Threads', hint: 'プロフィール URL' },
+  TIGET: { label: 'TIGET', hint: '主催者ページ URL' },
+  LIVEPOCKET: { label: 'ライブポケット', hint: '主催者ページ URL' },
+  WEBSITE: { label: '自分の Web サイト', hint: 'ポートフォリオサイト等' },
+  OTHER: { label: 'その他', hint: 'linktree / bio.fm 等' },
+}
+
 // 標準楽器プリセット。ユーザーは自由タグも追加可能
 export const INSTRUMENT_PRESETS: readonly string[] = [
   'ギター',

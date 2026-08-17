@@ -22,6 +22,7 @@ import type { EventType, EventVisibility } from '@creator-links/shared'
 import { JsonLd } from '@/components/seo/json-ld'
 import { personJsonLd } from '@/lib/seo'
 import { ScoutButton, type ScoutableProject } from './scout-button'
+import { EXTERNAL_LINK_PLATFORM_LABELS } from '@creator-links/shared'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -51,6 +52,11 @@ async function loadArtist(id: string) {
       portfolios: { orderBy: { createdAt: 'desc' as const } },
       featuredEntry: {
         select: { note: true, expiresAt: true },
+      },
+      // Linktree 型 外部リンク (Spotify / SoundCloud / TikTok 等)
+      externalLinks: {
+        orderBy: { position: 'asc' as const },
+        select: { id: true, platform: true, url: true, label: true },
       },
     },
   })
@@ -193,8 +199,12 @@ export default async function ArtistDetailPage({ params }: Props) {
     !!user.featuredEntry &&
     (!user.featuredEntry.expiresAt || user.featuredEntry.expiresAt.getTime() > Date.now())
 
-  // ゲストアカウントは検索インデックス対象外
-  const artistLd = user.isGuest ? null : personJsonLd(user)
+  // ゲストアカウントは検索インデックス対象外。
+  // sameAs に外部リンク URL を渡すと Google Knowledge Panel の同一人物判定に使われる。
+  const externalUrls = user.externalLinks.map((l) => l.url)
+  const artistLd = user.isGuest
+    ? null
+    : personJsonLd({ ...user, sameAs: externalUrls })
 
   // スカウトボタン用: 対象アーティストが PRO で、閲覧者がログイン済み・非本人 の場合のみ、
   // 閲覧者自身の OPEN/PRIVATE Project を取得してモーダルの選択肢に渡す
@@ -335,6 +345,33 @@ export default async function ArtistDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Linktree 型 外部リンク集約 (他プラットフォームで見る) */}
+      {user.externalLinks.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-sm font-semibold text-gray-500 mb-2">他で見る</h2>
+          <ul className="flex flex-wrap gap-2">
+            {user.externalLinks.map((l) => (
+              <li key={l.id}>
+                <a
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs bg-white border border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-700 px-3 py-1.5 rounded-full transition-colors"
+                >
+                  <span>{EXTERNAL_LINK_PLATFORM_LABELS[l.platform].label}</span>
+                  {l.label && <span className="text-gray-400">— {l.label}</span>}
+                  <svg viewBox="0 0 24 24" className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Phase A.6: 今後のイベント（掲示板役割・常時表示） */}
       <section className="mb-8">

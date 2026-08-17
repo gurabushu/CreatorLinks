@@ -222,6 +222,9 @@ model User {
   profileViewsReceived ProfileView[] @relation("ProfileViewsReceived")
   profileViewsGiven    ProfileView[] @relation("ProfileViewsGiven")
 
+  // Linktree 型 外部リンク集約 (Spotify / SoundCloud / TikTok / 自 Web 等)
+  externalLinks UserExternalLink[] @relation("ExternalLinks")
+
   // 24h ストーリー投稿。author 側 + 閲覧履歴 (viewer 側)
   stories     Story[]     @relation("StoriesAuthored")
   storyViews  StoryView[] @relation("StoryViewer")
@@ -688,6 +691,41 @@ model EventInterest {
   @@unique([userId, eventId])
   @@index([eventId, isAttending])
   @@map("event_interests")
+}
+
+// Linktree 型の外部リンク集約。
+// 自分の Spotify / SoundCloud / TikTok / Instagram / Web サイト等を User プロフィールに紐付け、
+// アーティスト詳細ページで「他で見る」セクションとして表示する。
+enum ExternalLinkPlatform {
+  SPOTIFY
+  APPLE_MUSIC
+  SOUNDCLOUD
+  BANDCAMP
+  YOUTUBE
+  VIMEO
+  TIKTOK
+  INSTAGRAM
+  TWITTER
+  THREADS
+  TIGET
+  LIVEPOCKET
+  WEBSITE // 自分の Web サイト・ポートフォリオサイト
+  OTHER // 上記に該当しないもの (linktree, bio.fm 等)
+}
+
+model UserExternalLink {
+  id        String               @id @default(cuid())
+  userId    String
+  platform  ExternalLinkPlatform
+  url       String
+  label     String? // カスタムラベル (自 Web の名前など、null なら platform 名を表示)
+  position  Int                  @default(0) // 表示順序 (小さいほど先頭)
+  createdAt DateTime             @default(now())
+
+  user User @relation("ExternalLinks", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, position])
+  @@map("user_external_links")
 }
 
 // プロフィール分析 (PRO 特典) 用の PV ログ。

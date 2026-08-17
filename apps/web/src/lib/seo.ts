@@ -145,6 +145,9 @@ export type PersonLd = {
   avatarUrl?: string | null
   bio?: string | null
   genres?: string[]
+  /** Linktree 型の外部リンク URL 配列。schema.org の Person.sameAs に流し込む。
+   * Google Knowledge Panel の同一人物判定に使われる。 */
+  sameAs?: string[]
 }
 
 export function personJsonLd(p: PersonLd) {
@@ -157,5 +160,6 @@ export function personJsonLd(p: PersonLd) {
     ...(p.avatarUrl ? { image: p.avatarUrl } : {}),
     ...(p.bio ? { description: p.bio } : {}),
     ...(p.genres && p.genres.length > 0 ? { knowsAbout: p.genres } : {}),
+    ...(p.sameAs && p.sameAs.length > 0 ? { sameAs: p.sameAs } : {}),
   }
 }
