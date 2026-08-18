@@ -2,7 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import PortfolioClient from './PortfolioClient'
-import { FREE_PORTFOLIO_LIMIT } from '@/server/actions/portfolio'
+import { FREE_PORTFOLIO_LIMIT } from '@/lib/portfolio-limits'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'ポートフォリオ管理' }

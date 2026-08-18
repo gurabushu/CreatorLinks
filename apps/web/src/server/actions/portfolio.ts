@@ -4,9 +4,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CreatePortfolioSchema, type CreatePortfolioInput } from '@creator-links/shared'
 import { revalidatePath } from 'next/cache'
-
-// Free ユーザーのポートフォリオ上限 (LP 比較表: Free 10 件, PRO 無制限)
-export const FREE_PORTFOLIO_LIMIT = 10
+// 定数は別ファイル (server actions ファイルは async 関数のみ export 可能)
+import { FREE_PORTFOLIO_LIMIT } from '@/lib/portfolio-limits'
 
 export async function createPortfolioAction(data: CreatePortfolioInput) {
   const session = await auth()
