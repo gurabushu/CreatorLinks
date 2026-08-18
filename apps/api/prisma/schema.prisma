@@ -202,6 +202,7 @@ model User {
   passwordResetTokens PasswordResetToken[] @relation("PasswordResets")
   emailChangeRequests EmailChangeRequest[] @relation("EmailChanges")
   promoRedemptions    PromoRedemption[]
+  projectTemplates    ProjectTemplate[]  @relation("ProjectTemplates") // PRO 特典: 案件テンプレ保存
   promoCodesCreated   PromoCode[]          @relation("PromoCodesCreated")
   featuredEntry       FeaturedArtist?
   accounts            Account[]
@@ -334,6 +335,26 @@ model ProcessedStripeEvent {
 
   @@index([createdAt])
   @@map("processed_stripe_events")
+}
+
+// PRO 特典: 案件テンプレート。ユーザーが自分の再依頼用に案件フォーム内容を保存。
+// 案件作成時に呼び出して 1 タップでプレフィルできる。
+model ProjectTemplate {
+  id              String          @id @default(cuid())
+  userId          String
+  label           String          // ユーザーが付ける管理名 (例: 「MIX 依頼 標準」)
+  title           String
+  description     String?
+  genres          String[]
+  budget          Int?
+  contractType    ContractType    @default(SPOT)
+  commitmentLevel CommitmentLevel @default(HOBBY)
+  createdAt       DateTime        @default(now())
+
+  user User @relation("ProjectTemplates", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("project_templates")
 }
 
 model Like {

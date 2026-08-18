@@ -9,7 +9,14 @@ import {
   getArtistNameAction,
   getProjectPrefillFromMatchAction,
 } from '@/server/actions/project'
+import {
+  createProjectTemplateAction,
+  deleteProjectTemplateAction,
+  listMyProjectTemplatesAction,
+  type MyTemplate,
+} from '@/server/actions/project-template'
 import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/shared'
+import Link from 'next/link'
 
 const GENRES = ['音楽', 'イラスト', '動画', 'デザイン', '写真', '文章', '声優', 'その他']
 
@@ -79,6 +86,14 @@ export default function NewProjectPage() {
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null)
   const [prefillLoaded, setPrefillLoaded] = useState(false)
   const [assignArtistName, setAssignArtistName] = useState<string | null>(null)
+  // F6: マイテンプレ (PRO 特典)
+  const [myTemplates, setMyTemplates] = useState<MyTemplate[]>([])
+  const [isPro, setIsPro] = useState(false)
+  const [templatesLoaded, setTemplatesLoaded] = useState(false)
+  const [budget, setBudget] = useState<string>('')
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false)
+  const [templateLabel, setTemplateLabel] = useState('')
+  const [templateSaveError, setTemplateSaveError] = useState<string | null>(null)
   // 空き日オファーで自動プリフィルする日付 (datetime-local 形式)。デフォルト 10:00〜14:00
   const prefillStart =
     assignDate && /^\d{4}-\d{2}-\d{2}$/.test(assignDate) ? `${assignDate}T10:00` : ''
@@ -106,6 +121,21 @@ export default function NewProjectPage() {
     }
   }, [fromMatch, prefillLoaded])
 
+  // F6: マイテンプレを取得
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const result = await listMyProjectTemplatesAction()
+      if (cancelled) return
+      setMyTemplates(result.templates)
+      setIsPro(result.isPro)
+      setTemplatesLoaded(true)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // ?assignArtist=<id> でアーティスト名 fetch（banner 表示用）
   useEffect(() => {
     if (!assignArtist) return
@@ -128,6 +158,27 @@ export default function NewProjectPage() {
     setAppliedTemplate(t.id)
   }
 
+  // F6: 保存済みマイテンプレ (PRO) を反映。built-in と違い budget と contractType もある。
+  const applyMyTemplate = (t: MyTemplate) => {
+    setTitle(t.title)
+    setDescription(t.description ?? '')
+    setSelectedGenres(t.genres)
+    setContractType(t.contractType === 'SUBSCRIPTION' ? 'SUBSCRIPTION' : 'SPOT')
+    setCommitmentLevel(t.commitmentLevel as CommitmentLevel)
+    if (t.budget != null) setBudget(String(t.budget))
+    setAppliedTemplate(`my:${t.id}`)
+  }
+
+  const handleDeleteMyTemplate = async (id: string) => {
+    if (!confirm('このテンプレを削除します。よろしいですか？')) return
+    const result = await deleteProjectTemplateAction(id)
+    if (result.success) {
+      setMyTemplates((prev) => prev.filter((t) => t.id !== id))
+    } else {
+      alert(result.error)
+    }
+  }
+
   const [state, action, isPending] = useActionState(
     async (_prev: { success: boolean; error?: string; field?: string; projectId?: string } | null, formData: FormData) => {
       // ステップをまたいでアンマウントされる入力値を FormData に注入
@@ -137,8 +188,30 @@ export default function NewProjectPage() {
       formData.set('contractType', contractType)
       formData.set('commitmentLevel', commitmentLevel)
       formData.set('isPrivate', isPrivate ? 'true' : 'false')
+      // budget は step3 で controlled 化しているので FormData 側にも反映
+      if (budget) formData.set('budget', budget)
 
       const result = await createProjectAction(null, formData)
+
+      // F6: 「テンプレとして保存」 (PRO)。案件作成に成功した後に別途保存。
+      // 保存失敗は案件公開の成功を妨げないため銀のエラー扱い。
+      if (result.success && saveAsTemplate && isPro && templateLabel.trim()) {
+        const parsedBudget = budget ? Number(budget) : null
+        const saveResult = await createProjectTemplateAction({
+          label: templateLabel.trim(),
+          title,
+          description,
+          genres: selectedGenres,
+          budget: parsedBudget != null && !Number.isNaN(parsedBudget) ? parsedBudget : null,
+          contractType,
+          commitmentLevel,
+        })
+        if (!saveResult.success) {
+          // 案件公開後なのでリダイレクトは実行、テンプレエラーだけ画面に残す
+          setTemplateSaveError(saveResult.error)
+        }
+      }
+
       if (result.success) {
         router.push(`/projects/${result.projectId}`)
       }
@@ -232,6 +305,88 @@ export default function NewProjectPage() {
                 ゼロから書きたい場合は下のフォームに直接入力してください。
               </p>
             </div>
+
+            {/* F6: マイテンプレ (PRO 特典) — 過去に作った案件をワンタップで再利用 */}
+            {templatesLoaded && (
+              <div>
+                <div className="flex items-baseline justify-between mb-2">
+                  <label className="block font-medium">
+                    マイテンプレ
+                    <span className="text-[10px] font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-1.5 py-0.5 rounded ml-2 align-middle">
+                      PRO
+                    </span>
+                  </label>
+                  {isPro && myTemplates.length > 0 && (
+                    <span className="text-xs text-gray-400">{myTemplates.length} 件</span>
+                  )}
+                </div>
+                {!isPro ? (
+                  <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/60 p-4 text-xs text-purple-800 leading-relaxed">
+                    自分の案件をテンプレ化し、次回以降ワンタップで呼び出せます（
+                    <Link href="/pro/subscribe" className="font-bold underline hover:text-purple-900">
+                      PRO 詳細
+                    </Link>
+                    ）。
+                  </div>
+                ) : myTemplates.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-xs text-gray-500 leading-relaxed">
+                    まだ保存済みテンプレはありません。この画面下部の「テンプレとして保存」で登録できます。
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {myTemplates.map((t) => {
+                      const active = appliedTemplate === `my:${t.id}`
+                      return (
+                        <div
+                          key={t.id}
+                          className={`relative rounded-xl border-2 transition ${
+                            active
+                              ? 'border-purple-600 bg-purple-50'
+                              : 'border-gray-200 bg-white hover:border-purple-300'
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => applyMyTemplate(t)}
+                            className="w-full text-left p-3 pr-9"
+                          >
+                            <div className="text-sm font-medium text-gray-800 leading-tight truncate">
+                              {t.label}
+                            </div>
+                            <div className="text-[11px] text-gray-500 mt-1 leading-snug line-clamp-1">
+                              {t.title}
+                            </div>
+                            <div className="text-[10px] text-gray-400 mt-1 flex flex-wrap gap-1">
+                              {t.genres.slice(0, 3).map((g) => (
+                                <span
+                                  key={g}
+                                  className="bg-gray-100 rounded px-1.5 py-0.5"
+                                >
+                                  {g}
+                                </span>
+                              ))}
+                              {t.budget != null && (
+                                <span className="bg-purple-100 text-purple-700 rounded px-1.5 py-0.5">
+                                  ¥{t.budget.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMyTemplate(t.id)}
+                            aria-label="テンプレを削除"
+                            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center text-xs"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="block font-medium mb-1.5">
@@ -401,6 +556,8 @@ export default function NewProjectPage() {
                   type="number"
                   min={0}
                   step={1000}
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
                   placeholder="例: 30000"
                   className="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
@@ -451,6 +608,61 @@ export default function NewProjectPage() {
                 </p>
               </div>
             </label>
+
+            {/* F6: テンプレとして保存 (PRO 特典) */}
+            {templatesLoaded && (
+              isPro ? (
+                <div className="rounded-xl border border-purple-200 bg-white p-4">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={saveAsTemplate}
+                      onChange={(e) => setSaveAsTemplate(e.target.checked)}
+                      className="mt-1 accent-purple-600"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">
+                        テンプレとして保存
+                        <span className="text-[10px] font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-1.5 py-0.5 rounded ml-2 align-middle">
+                          PRO
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        次回以降、この案件の内容をワンタップで呼び出せます。
+                      </p>
+                    </div>
+                  </label>
+                  {saveAsTemplate && (
+                    <div className="mt-3 pl-7">
+                      <input
+                        type="text"
+                        value={templateLabel}
+                        onChange={(e) => setTemplateLabel(e.target.value)}
+                        maxLength={50}
+                        placeholder="テンプレ名（例: 定期 YouTube BGM 依頼）"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        50 文字以内。マイテンプレ一覧に表示されます。
+                      </p>
+                    </div>
+                  )}
+                  {templateSaveError && (
+                    <p className="text-xs text-red-600 mt-2 pl-7">
+                      テンプレ保存に失敗しました: {templateSaveError}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/60 p-4 text-xs text-purple-800 leading-relaxed">
+                  💡 PRO なら、この案件を「テンプレとして保存」して次回ワンタップで呼び出せます（
+                  <Link href="/pro/subscribe" className="font-bold underline hover:text-purple-900">
+                    PRO 詳細
+                  </Link>
+                  ）。
+                </div>
+              )
+            )}
 
             {/* 確認サマリー */}
             <div className="bg-gray-50 rounded-xl p-5 text-sm space-y-2">
