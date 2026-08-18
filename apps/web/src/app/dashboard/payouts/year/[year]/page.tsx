@@ -8,6 +8,7 @@ import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { PaymentBadge, type PaymentStatus } from '@/components/payments/payment-badge'
+import { calcWithholdingTax } from '@/lib/withholding-tax'
 
 type Params = { params: Promise<{ year: string }> }
 
@@ -27,6 +28,7 @@ export default async function YearlyDocumentsPage({ params }: Params) {
 
   const session = await auth()
   if (!session) redirect('/auth')
+  const isPro = session.user.role === 'PRO'
 
   const rangeStart = new Date(year, 0, 1)
   const rangeEnd = new Date(year + 1, 0, 1)
@@ -70,6 +72,30 @@ export default async function YearlyDocumentsPage({ params }: Params) {
   const totalFee = payments
     .filter((p) => p.status === 'RELEASED')
     .reduce((sum, p) => sum + p.platformFeeYen, 0)
+  const totalWithholding = isPro
+    ? payments
+        .filter((p) => p.status === 'RELEASED')
+        .reduce((sum, p) => sum + calcWithholdingTax(p.amountYen), 0)
+    : 0
+
+  // PRO 限定: 月次集計 (paidAt 基準)
+  type MonthlyRow = { month: string; count: number; amount: number; fee: number; payout: number; withholding: number }
+  const monthlyRows: MonthlyRow[] = []
+  if (isPro && payments.length > 0) {
+    const map = new Map<string, MonthlyRow>()
+    for (const p of payments) {
+      if (!p.paidAt) continue
+      const key = `${p.paidAt.getFullYear()}-${String(p.paidAt.getMonth() + 1).padStart(2, '0')}`
+      const cur = map.get(key) ?? { month: key, count: 0, amount: 0, fee: 0, payout: 0, withholding: 0 }
+      cur.count += 1
+      cur.amount += p.amountYen
+      cur.fee += p.platformFeeYen
+      cur.payout += p.artistPayoutYen
+      cur.withholding += calcWithholdingTax(p.amountYen)
+      map.set(key, cur)
+    }
+    monthlyRows.push(...Array.from(map.values()).sort((a, b) => a.month.localeCompare(b.month)))
+  }
 
   return (
     <div className="max-w-5xl mx-auto py-8 sm:py-10 px-4">
@@ -103,7 +129,7 @@ export default async function YearlyDocumentsPage({ params }: Params) {
       </div>
 
       {payments.length > 0 && (
-        <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className={`mb-6 grid grid-cols-2 gap-3 ${isPro ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
           <div className="rounded-xl border bg-white p-4">
             <p className="text-xs text-gray-500 mb-1">送金確定件数</p>
             <p className="text-2xl font-bold text-purple-700">
@@ -118,6 +144,84 @@ export default async function YearlyDocumentsPage({ params }: Params) {
           <div className="rounded-xl border bg-white p-4 col-span-2 sm:col-span-1">
             <p className="text-xs text-gray-500 mb-1">支払手数料合計</p>
             <p className="text-2xl font-bold text-gray-700">¥{totalFee.toLocaleString()}</p>
+          </div>
+          {isPro && (
+            <div className="rounded-xl border border-purple-300 bg-purple-50/60 p-4 col-span-2 sm:col-span-1">
+              <p className="text-xs text-purple-700 mb-1 flex items-center gap-1">
+                源泉徴収税(目安)
+                <span className="text-[9px] bg-purple-600 text-white px-1 rounded font-bold">PRO</span>
+              </p>
+              <p className="text-2xl font-bold text-purple-700">¥{totalWithholding.toLocaleString()}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* PRO 限定: 月次集計 */}
+      {isPro && monthlyRows.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
+            📊 月次集計
+            <span className="text-[10px] bg-purple-600 text-white px-1.5 py-0.5 rounded font-bold">PRO 特典</span>
+          </h2>
+          <div className="bg-white border rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-purple-50/60">
+                  <tr>
+                    <th className="text-left px-3 py-2 text-xs">月</th>
+                    <th className="text-right px-3 py-2 text-xs">件数</th>
+                    <th className="text-right px-3 py-2 text-xs">総支払額</th>
+                    <th className="text-right px-3 py-2 text-xs">受取額</th>
+                    <th className="text-right px-3 py-2 text-xs">手数料</th>
+                    <th className="text-right px-3 py-2 text-xs">源泉税(目安)</th>
+                    <th className="text-right px-3 py-2 text-xs font-bold">手取り(税引後)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y text-xs">
+                  {monthlyRows.map((r) => (
+                    <tr key={r.month} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 font-mono">{r.month}</td>
+                      <td className="px-3 py-2 text-right">{r.count}</td>
+                      <td className="px-3 py-2 text-right font-mono">¥{r.amount.toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right font-mono text-purple-700">¥{r.payout.toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right font-mono text-gray-500">¥{r.fee.toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right font-mono text-orange-700">¥{r.withholding.toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right font-mono font-bold text-emerald-700">
+                        ¥{(r.payout - r.withholding).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p className="text-[11px] text-gray-500 mt-2 leading-relaxed">
+            ※ 源泉徴収税は所得税法 204 条に基づく 10.21% (100万円超部分は 20.42%) の目安値です。
+            実際の税額は依頼者側の徴収実務・免除規定により変動します。
+          </p>
+        </section>
+      )}
+
+      {/* Free 用: PRO upsell */}
+      {!isPro && payments.length > 0 && (
+        <div className="mb-6 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/70 p-5 sm:p-6">
+          <div className="flex items-start gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm sm:text-base font-bold text-purple-900 mb-1">
+                🎯 PRO なら、源泉徴収税の自動計算 + 月次集計もこの画面に表示
+              </p>
+              <p className="text-xs text-purple-800/80 leading-relaxed">
+                確定申告時に「源泉徴収税額を月ごとに集計する」作業をゼロにできます。
+                CSV 出力も月次サマリ・源泉税列付きの拡張版に切り替わります。
+              </p>
+            </div>
+            <Link
+              href="/pro/subscribe"
+              className="shrink-0 inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-lg transition"
+            >
+              PRO の詳細を見る →
+            </Link>
           </div>
         </div>
       )}
