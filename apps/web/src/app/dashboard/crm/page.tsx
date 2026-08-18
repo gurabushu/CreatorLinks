@@ -154,14 +154,16 @@ export default async function CrmPage() {
   return (
     <div className="max-w-5xl mx-auto py-8 sm:py-12 px-4">
       <div className="flex items-baseline justify-between flex-wrap gap-3 mb-6">
-        <div>
+        {/* min-w-0 + flex-1: 右の統計バッジと同じ行に来た時に説明文が押し出されて見切れないよう
+            左側を伸縮可能にし、テキストを自然に折り返させる */}
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl sm:text-2xl font-bold">CRM 顧客一覧</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
             過去に取引した相手を集約。値付け参考・再依頼にお使いください。
           </p>
         </div>
         {stats.length > 0 && (
-          <div className="text-xs text-gray-600 text-right">
+          <div className="text-xs text-gray-600 text-right shrink-0">
             <div>
               取引相手 <span className="font-bold text-purple-700">{stats.length}</span> 名
             </div>
