@@ -46,12 +46,6 @@ const FEATURES: Feature[] = [
     highlight: true,
   },
   {
-    label: 'カレンダー Google 同期',
-    hint: 'Google Calendar / iCal と双方向同期',
-    free: '—',
-    pro: '✓',
-  },
-  {
     label: '案件テンプレート保存',
     hint: '同じ相手への再依頼をワンタップで',
     free: '—',
@@ -159,7 +153,7 @@ export function PricingComparison() {
             })}
           </div>
           <p className="text-[11px] text-gray-500 mt-4 leading-relaxed">
-            ※ 手数料節約分だけの計算。CRM・分析・カレンダー同期などの高度機能で節約できる作業時間は別途。
+            ※ 手数料節約分だけの計算。CRM・分析・帳票などの高度機能で節約できる作業時間は別途。
           </p>
         </div>
 

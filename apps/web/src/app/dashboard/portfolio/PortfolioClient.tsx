@@ -31,6 +31,8 @@ interface Portfolio {
 interface Props {
   initialPortfolios: Portfolio[]
   initialFeaturedId: string | null
+  isPro: boolean
+  freeLimit: number
 }
 
 const MEDIA_LABEL: Record<MediaType, string> = {
@@ -114,7 +116,7 @@ function FileDropzone({
   )
 }
 
-export default function PortfolioClient({ initialPortfolios, initialFeaturedId }: Props) {
+export default function PortfolioClient({ initialPortfolios, initialFeaturedId, isPro, freeLimit }: Props) {
   const [portfolios, setPortfolios] = useState<Portfolio[]>(initialPortfolios)
   const [featuredId, setFeaturedId] = useState<string | null>(initialFeaturedId)
   const [showForm, setShowForm] = useState(false)
@@ -240,11 +242,27 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
     })
   }
 
+  // Free の上限判定 (PRO は無制限)
+  const atLimit = !isPro && portfolios.length >= freeLimit
+  const nearLimit = !isPro && portfolios.length >= freeLimit - 2 && portfolios.length < freeLimit
+
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">ポートフォリオ管理</h1>
-        {!showForm && (
+      <div className="flex justify-between items-start mb-6 gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">ポートフォリオ管理</h1>
+          {!isPro && (
+            <p className="text-xs text-gray-500 mt-1">
+              Free プラン: {portfolios.length} / {freeLimit} 件
+            </p>
+          )}
+          {isPro && (
+            <p className="text-xs text-purple-700 mt-1">
+              PRO プラン: {portfolios.length} 件 <span className="text-gray-400">(無制限)</span>
+            </p>
+          )}
+        </div>
+        {!showForm && !atLimit && (
           <button
             onClick={() => setShowForm(true)}
             className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition"
@@ -253,6 +271,36 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
           </button>
         )}
       </div>
+
+      {/* 上限到達バナー (Free ユーザー) */}
+      {atLimit && (
+        <div className="mb-6 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/70 p-5">
+          <p className="text-sm sm:text-base font-bold text-purple-900 mb-1">
+            🔒 Free プランの上限 {freeLimit} 件に達しました
+          </p>
+          <p className="text-xs text-purple-800/80 leading-relaxed mb-3">
+            PRO プラン (¥980/月) にすると <b>ポートフォリオを無制限</b>に登録できます。
+            既存の作品を削除して枠を空ける方法も可能です。
+          </p>
+          <a
+            href="/pro/subscribe"
+            className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition"
+          >
+            PRO の詳細を見る →
+          </a>
+        </div>
+      )}
+
+      {/* 上限近い警告 (残り 2 件以内) */}
+      {nearLimit && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-800 leading-relaxed">
+          あと <b>{freeLimit - portfolios.length}</b> 件で Free プランの上限です。
+          PRO なら無制限に登録できます。
+          <a href="/pro/subscribe" className="underline hover:text-amber-900 ml-1 font-semibold">
+            詳しく →
+          </a>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-gray-50 border rounded-xl p-6 mb-8 space-y-5">

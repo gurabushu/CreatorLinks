@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma'
 import { CreatePortfolioSchema, type CreatePortfolioInput } from '@creator-links/shared'
 import { revalidatePath } from 'next/cache'
 
+// Free ユーザーのポートフォリオ上限 (LP 比較表: Free 10 件, PRO 無制限)
+export const FREE_PORTFOLIO_LIMIT = 10
+
 export async function createPortfolioAction(data: CreatePortfolioInput) {
   const session = await auth()
   if (!session) return { success: false as const, error: '認証が必要です' }
@@ -12,6 +15,18 @@ export async function createPortfolioAction(data: CreatePortfolioInput) {
   const parsed = CreatePortfolioSchema.safeParse(data)
   if (!parsed.success) {
     return { success: false as const, error: '入力内容が正しくありません' }
+  }
+
+  // Free ユーザーは 10 件まで。PRO 以外はブロックして PRO 課金導線を出す。
+  if (session.user.role !== 'PRO') {
+    const count = await prisma.portfolio.count({ where: { userId: session.user.id } })
+    if (count >= FREE_PORTFOLIO_LIMIT) {
+      return {
+        success: false as const,
+        error: `Free プランのポートフォリオ上限 ${FREE_PORTFOLIO_LIMIT} 件に達しました。PRO プランにアップグレードすると無制限に登録できます。`,
+        code: 'PORTFOLIO_LIMIT' as const,
+      }
+    }
   }
 
   try {
