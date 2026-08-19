@@ -16,10 +16,12 @@ export async function Header() {
   }
 
   return (
-    <header className="border-b bg-white sticky top-0 z-50">
+    // overflow-x-clip: 子要素の -mx-3 (Row 2 subnav) や横スクロール要素がまれに
+    // viewport 幅を超えて body 横スクロールを誘発するのを止める。sticky は保持。
+    <header className="border-b bg-white sticky top-0 z-50 overflow-x-clip">
       <div className="max-w-6xl mx-auto px-3 sm:px-4">
         {/* Row 1: ロゴ + 右端 CTA。ロゴを大きめに残しつつ、右端に招待/通知/ユーザー/ログアウトを収める */}
-        <div className="h-14 sm:h-16 md:h-20 lg:h-24 flex items-center gap-2 sm:gap-4">
+        <div className="h-14 sm:h-16 md:h-20 lg:h-24 flex items-center gap-1.5 sm:gap-4 min-w-0">
           {/* ロゴは横長 (5.3:1)。モバイルで大きすぎるとナビ・認証ボタンを押し出すため段階的に拡大。
               max-w も安全網として噛ませ、極端に狭いビューポートで overflow しないようにする。 */}
           <Link href="/" className="shrink-0 min-w-0" aria-label={SITE_NAME}>
@@ -29,7 +31,7 @@ export async function Header() {
               width={1032}
               height={193}
               priority
-              className="h-9 sm:h-11 md:h-14 lg:h-16 w-auto max-w-[45vw] sm:max-w-none"
+              className="h-9 sm:h-11 md:h-14 lg:h-16 w-auto max-w-[40vw] sm:max-w-none"
             />
           </Link>
 
@@ -99,13 +101,13 @@ export async function Header() {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0 ml-auto min-w-0">
             {session ? (
               <>
                 {/* 招待ボタン: SP はアイコンのみ (幅節約)、sm 以上はテキスト付き */}
                 <Link
                   href="/onboarding"
-                  className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/70 p-2 sm:px-3 sm:py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                  className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/70 p-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors whitespace-nowrap shrink-0"
                   aria-label="仲間を招待"
                   title="仲間を招待"
                 >
@@ -146,7 +148,7 @@ export async function Header() {
                 >
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-1 text-[11px] sm:text-sm border border-gray-300 p-2 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-50 transition whitespace-nowrap"
+                    className="inline-flex items-center gap-1 text-[11px] sm:text-sm border border-gray-300 p-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-50 transition whitespace-nowrap shrink-0"
                     aria-label="ログアウト"
                     title="ログアウト"
                   >
