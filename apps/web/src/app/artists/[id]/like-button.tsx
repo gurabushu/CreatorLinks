@@ -5,9 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toggleLikeAction } from '@/server/actions/like'
 
-// アーティスト詳細画面用の大きめ LikeButton
-// - ラベル付き
-// - 相互マッチ成立時にインライン通知（チャットへのリンク）
+// アーティスト詳細画面のインライン Like ボタン（mono + purple-600）
 export function ArtistLikeButton({
   targetUserId,
   initialLiked,
@@ -29,18 +27,17 @@ export function ArtistLikeButton({
 
   const toggle = () => {
     if (!isLoggedIn) {
-      // ログイン後にこの詳細ページへ戻す
       router.push(`/auth?next=${encodeURIComponent(`/artists/${targetUserId}`)}`)
       return
     }
     setError(null)
     const next = !liked
-    setLiked(next) // optimistic
+    setLiked(next)
 
     startTransition(async () => {
       const result = await toggleLikeAction({ targetId: targetUserId })
       if (!result.success) {
-        setLiked(!next) // rollback
+        setLiked(!next)
         setError(result.error)
         return
       }
@@ -62,10 +59,10 @@ export function ArtistLikeButton({
         disabled={isPending}
         aria-pressed={liked}
         aria-label={liked ? 'いいねを取り消す' : 'いいねする'}
-        className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl border transition-colors shadow-sm disabled:opacity-60 ${
+        className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl border transition-colors disabled:opacity-60 ${
           liked
-            ? 'bg-pink-50 border-pink-300 text-pink-600 hover:bg-pink-100 shadow-pink-200/50'
-            : 'bg-white border-gray-200 text-gray-500 hover:border-pink-300 hover:text-pink-500 hover:bg-pink-50/60'
+            ? 'bg-purple-600 border-purple-600 text-white hover:bg-purple-700'
+            : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300'
         }`}
       >
         <svg
@@ -81,11 +78,11 @@ export function ArtistLikeButton({
       </button>
 
       {matchId && (
-        <div className="rounded-xl bg-gradient-to-r from-pink-50 via-purple-50 to-pink-50 border border-pink-200 px-3 py-2 text-sm max-w-xs">
-          <div className="font-semibold text-pink-700 mb-0.5 text-xs">🎉 マッチしました！</div>
+        <div className="rounded-xl bg-zinc-900 text-white px-3 py-2 text-sm max-w-xs">
+          <div className="font-semibold mb-0.5 text-xs">マッチしました</div>
           <Link
             href={`/dashboard/chat/${matchId}`}
-            className="text-purple-700 hover:underline text-xs"
+            className="text-purple-300 hover:text-white hover:underline text-xs"
           >
             チャットを開く →
           </Link>

@@ -1,6 +1,5 @@
 // アーティストの基本プロフィール情報（性別・身長・活動歴）を統一デザインで表示
-// - カラフルなピル型で視認性を上げる
-// - 一覧カード (size='sm') と詳細ページ (size='md') 両方で使う
+// mono + purple-600 の 2 トーン。カテゴリカラーは使わない。
 
 import { GENDER_LABELS } from '@creator-links/shared'
 
@@ -22,40 +21,27 @@ export function ProfileFacts({
 
   const isSm = size === 'sm'
   const pillClass = isSm
-    ? 'text-xs sm:text-[13px] px-2.5 py-1 gap-1.5 font-medium'
-    : 'text-sm sm:text-base px-3 py-1.5 gap-2 font-semibold'
-  const iconClass = isSm ? 'w-3.5 h-3.5' : 'w-4 h-4 sm:w-[18px] sm:h-[18px]'
-
-  const genderConfig =
-    gender === 'MALE'
-      ? {
-          className: 'bg-blue-50 text-blue-700 border-blue-200',
-          symbol: '♂',
-        }
-      : {
-          className: 'bg-pink-50 text-pink-700 border-pink-200',
-          symbol: '♀',
-        }
+    ? 'text-xs px-2.5 py-1 gap-1.5 font-medium'
+    : 'text-sm px-3 py-1 gap-1.5 font-medium'
+  const iconClass = isSm ? 'w-3.5 h-3.5' : 'w-4 h-4'
+  const base =
+    'inline-flex items-center rounded-full border border-zinc-200 bg-white text-zinc-700'
 
   return (
     <div className="flex flex-wrap gap-1.5">
       {showGender && (
-        <span
-          className={`inline-flex items-center rounded-full border ${pillClass} ${genderConfig.className}`}
-        >
-          <span className="font-bold" aria-hidden>
-            {genderConfig.symbol}
+        <span className={`${base} ${pillClass}`}>
+          <span className="text-zinc-500 font-bold" aria-hidden>
+            {gender === 'MALE' ? '♂' : '♀'}
           </span>
           {GENDER_LABELS[gender]}
         </span>
       )}
       {heightCm != null && (
-        <span
-          className={`inline-flex items-center rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200 ${pillClass}`}
-        >
+        <span className={`${base} ${pillClass}`}>
           <svg
             viewBox="0 0 24 24"
-            className={iconClass}
+            className={`${iconClass} text-zinc-500`}
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -73,12 +59,10 @@ export function ProfileFacts({
         </span>
       )}
       {activityYears != null && (
-        <span
-          className={`inline-flex items-center rounded-full border bg-amber-50 text-amber-800 border-amber-200 ${pillClass}`}
-        >
+        <span className={`${base} ${pillClass}`}>
           <svg
             viewBox="0 0 24 24"
-            className={iconClass}
+            className={`${iconClass} text-zinc-500`}
             fill="none"
             stroke="currentColor"
             strokeWidth="2"

@@ -56,7 +56,7 @@ export function ScoutButton({ artistId, artistName, myProjects }: Props) {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 px-4 py-2 rounded-xl transition-opacity shadow-sm"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-xl transition-colors"
         title={`${artistName} にオファーを送る`}
       >
         <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -94,7 +94,7 @@ export function ScoutButton({ artistId, artistName, myProjects }: Props) {
                     id="scout-project"
                     value={selectedProjectId}
                     onChange={(e) => setSelectedProjectId(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   >
                     {myProjects.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -116,7 +116,7 @@ export function ScoutButton({ artistId, artistName, myProjects }: Props) {
                     rows={4}
                     maxLength={1000}
                     placeholder="ぜひあなたにお願いしたいです、等"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                 </div>
 

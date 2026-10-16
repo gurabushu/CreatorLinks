@@ -9,7 +9,7 @@ export function PortfolioGallery({ portfolios }: { portfolios: LightboxPortfolio
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   if (portfolios.length === 0) {
-    return <p className="text-gray-500">まだポートフォリオはありません</p>
+    return <p className="text-zinc-500 text-sm">まだ作品はありません</p>
   }
 
   return (
@@ -60,7 +60,7 @@ function PortfolioTile({
     <button
       type="button"
       onClick={onClick}
-      className="relative aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100 group focus:outline-none focus:ring-2 focus:ring-purple-500"
+      className="relative aspect-square rounded-xl overflow-hidden bg-zinc-100 group focus:outline-none focus:ring-2 focus:ring-purple-600"
       title={portfolio.title}
     >
       {thumb && (
@@ -75,7 +75,7 @@ function PortfolioTile({
       {showPlay && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition">
           <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 ml-1 text-purple-700 fill-current">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 ml-1 text-purple-600 fill-current">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>

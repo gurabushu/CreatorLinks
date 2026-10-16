@@ -1,5 +1,5 @@
 // app/artists/[id]/page.tsx — アーティスト詳細 (SSR)
-// OGP動的生成 / ポートフォリオギャラリー / レビュー
+// OGP動的生成 / 活動記録 / レビュー
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ import { getDisplayName } from '@/lib/user'
 import { PortfolioGallery } from './portfolio-gallery'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
 import { ProfileFacts } from '@/components/artist/profile-facts'
-import { FollowButton, FollowerCountBadge } from './follow-button'
+import { FollowButton } from './follow-button'
 import { ArtistLikeButton } from './like-button'
 import {
   EVENT_TYPE_LABELS,
@@ -73,7 +73,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const displayName = getDisplayName(user)
     return {
       title: `${displayName} | アーティストプロフィール`,
-      description: user.bio ?? `${displayName} のポートフォリオ・実績をチェック`,
+      description: user.bio ?? `${displayName} の活動記録・実績をチェック`,
       alternates: { canonical: `/artists/${id}` },
       openGraph: {
         images: user.avatarUrl ? [{ url: user.avatarUrl }] : [],
@@ -116,29 +116,31 @@ export default async function ArtistDetailPage({ params }: Props) {
       viewerIp: ip,
     }).catch(() => null)
   }
-  const [followerCount, initialIsFollowing, initialLiked, mutualEncoreRows] = await Promise.all([
-    prisma.follow.count({ where: { followingId: id } }),
-    viewerId && !isSelf
-      ? prisma.follow
-          .findUnique({
-            where: {
-              followerId_followingId: { followerId: viewerId, followingId: id },
-            },
-            select: { id: true },
-          })
-          .then((f) => !!f)
-      : Promise.resolve(false),
-    viewerId && !isSelf
-      ? prisma.like
-          .findUnique({
-            where: { likerId_likedId: { likerId: viewerId, likedId: id } },
-            select: { id: true },
-          })
-          .then((l) => !!l)
-      : Promise.resolve(false),
-    // Encore 相性: 本人が wantAgain=true でレビューし、かつ相手も同一 match で wantAgain=true でレビューした match 数
-    // 案件相手が変わっても match 単位で 1 カウント（＝実質「Encore 成立案件数」）
-    prisma.$queryRaw<{ c: bigint }[]>`
+  const [followerCount, likeCount, initialIsFollowing, initialLiked, mutualEncoreRows] =
+    await Promise.all([
+      prisma.follow.count({ where: { followingId: id } }),
+      prisma.like.count({ where: { likedId: id } }),
+      viewerId && !isSelf
+        ? prisma.follow
+            .findUnique({
+              where: {
+                followerId_followingId: { followerId: viewerId, followingId: id },
+              },
+              select: { id: true },
+            })
+            .then((f) => !!f)
+        : Promise.resolve(false),
+      viewerId && !isSelf
+        ? prisma.like
+            .findUnique({
+              where: { likerId_likedId: { likerId: viewerId, likedId: id } },
+              select: { id: true },
+            })
+            .then((l) => !!l)
+        : Promise.resolve(false),
+      // Encore 相性: 本人が wantAgain=true でレビューし、かつ相手も同一 match で wantAgain=true でレビューした match 数
+      // 案件相手が変わっても match 単位で 1 カウント（＝実質「Encore 成立案件数」）
+      prisma.$queryRaw<{ c: bigint }[]>`
       SELECT COUNT(DISTINCT r1.match_id)::bigint AS c
       FROM reviews r1
       JOIN reviews r2 ON r1.match_id = r2.match_id AND r1.reviewer_id <> r2.reviewer_id
@@ -146,7 +148,7 @@ export default async function ArtistDetailPage({ params }: Props) {
         AND r1.want_again = true
         AND r2.want_again = true
     `.catch(() => [] as { c: bigint }[]),
-  ])
+    ])
   const isFollower = initialIsFollowing
   const mutualEncoreCount = Number(mutualEncoreRows[0]?.c ?? 0)
 
@@ -166,34 +168,49 @@ export default async function ArtistDetailPage({ params }: Props) {
   }
   if (isSelf) eventVisibilityOr.push({ visibility: 'PRIVATE' })
 
-  const upcomingEvents = await prisma.event.findMany({
-    where: {
-      AND: [
-        {
-          OR: [
-            { creatorId: id },
-            {
-              participants: {
-                some: {
-                  userId: id,
-                  status: { in: ['INVITED', 'CONFIRMED'] } as const,
-                },
+  const eventWhere = {
+    AND: [
+      {
+        OR: [
+          { creatorId: id },
+          {
+            participants: {
+              some: {
+                userId: id,
+                status: { in: ['INVITED', 'CONFIRMED'] } as const,
               },
             },
-          ],
-        },
-        { status: 'PUBLISHED' },
-        { startAt: { gte: new Date() } },
-        { OR: eventVisibilityOr },
-      ],
-    },
-    take: 5,
-    orderBy: { startAt: 'asc' },
-    select: {
-      id: true, title: true, startAt: true, type: true, visibility: true,
-      venueName: true,
-    },
-  })
+          },
+        ],
+      },
+      { status: 'PUBLISHED' as const },
+      { OR: eventVisibilityOr },
+    ],
+  }
+
+  const eventSelect = {
+    id: true,
+    title: true,
+    startAt: true,
+    type: true,
+    visibility: true,
+    venueName: true,
+  }
+
+  const [upcomingEvents, pastEvents] = await Promise.all([
+    prisma.event.findMany({
+      where: { AND: [...eventWhere.AND, { startAt: { gte: new Date() } }] },
+      take: 5,
+      orderBy: { startAt: 'asc' },
+      select: eventSelect,
+    }),
+    prisma.event.findMany({
+      where: { AND: [...eventWhere.AND, { startAt: { lt: new Date() } }] },
+      take: 10,
+      orderBy: { startAt: 'desc' },
+      select: eventSelect,
+    }),
+  ])
 
   const isFeatured =
     !!user.featuredEntry &&
@@ -232,55 +249,55 @@ export default async function ArtistDetailPage({ params }: Props) {
       {artistLd && <JsonLd data={artistLd} />}
       <Link
         href="/artists"
-        className="inline-flex items-center gap-2 mb-6 text-base sm:text-lg font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 -mx-3 px-4 py-2.5 rounded-xl transition-colors"
+        className="inline-flex items-center gap-2 mb-6 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
       >
-        <span aria-hidden className="text-xl leading-none">←</span>
-        <span>アーティスト一覧に戻る</span>
+        <span aria-hidden>←</span>
+        <span>一覧に戻る</span>
       </Link>
       {isFeatured && (
-        <div className="mb-4 flex items-center gap-2 text-xs sm:text-sm bg-purple-50 border border-purple-200 text-purple-800 rounded-lg px-3 py-2">
-          <span className="font-bold text-[10px] sm:text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full shrink-0">
-            公式ピックアップ中
+        <div className="mb-4 inline-flex items-center gap-2 text-xs bg-zinc-900 text-white rounded-full pl-2 pr-3 py-1">
+          <span className="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+            公式ピックアップ
           </span>
           {user.featuredEntry?.note && (
-            <span className="italic truncate">「{user.featuredEntry.note}」</span>
+            <span className="italic opacity-80 truncate max-w-[20rem]">「{user.featuredEntry.note}」</span>
           )}
         </div>
       )}
       {/* プロフィールヘッダー */}
-      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-purple-200 overflow-hidden shrink-0">
+      <div className="flex flex-col sm:flex-row items-start gap-5 sm:gap-6 mb-8">
+        <div className="w-24 h-24 rounded-full bg-zinc-100 ring-1 ring-zinc-200 overflow-hidden shrink-0">
           {user.avatarUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={user.avatarUrl} alt={getDisplayName(user)} className="w-full h-full object-cover" />
           )}
         </div>
         <div className="min-w-0 flex-1">
+          {/* 名前 + バッジ */}
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-bold break-words">{getDisplayName(user)}</h1>
+            <h1 className="text-2xl font-bold text-zinc-900 break-words">
+              {getDisplayName(user)}
+            </h1>
             {user.role === 'PRO' && (
-              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full font-bold shrink-0">
+              <span className="bg-purple-600 text-white text-xs px-2 py-0.5 rounded-full font-bold shrink-0">
                 PRO
               </span>
             )}
             <FoundingMemberBadge slot={user.earlyBirdSlot} size="md" />
-            {mutualEncoreCount > 0 && (
-              <span
-                className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border border-purple-200 text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full shrink-0"
-                title="双方が「また一緒にやりたい」を付けた案件数"
-              >
-                <span aria-hidden>★</span>
-                Encore 相性 {mutualEncoreCount}
-              </span>
-            )}
           </div>
-          <div className="flex gap-1.5 mt-1 flex-wrap">
-            {user.genres.map((g: string) => (
-              <span key={g} className="bg-gray-100 text-gray-600 text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded">
-                {g}
-              </span>
-            ))}
-          </div>
+
+          {/* ジャンル */}
+          {user.genres.length > 0 && (
+            <div className="flex gap-1.5 mt-2 flex-wrap">
+              {user.genres.map((g: string) => (
+                <span key={g} className="bg-zinc-100 text-zinc-600 text-xs px-2 py-0.5 rounded">
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* プロフィール詳細 */}
           {(user.gender != null || user.heightCm != null || user.activityYears != null) && (
             <div className="mt-3">
               <ProfileFacts
@@ -291,36 +308,62 @@ export default async function ArtistDetailPage({ params }: Props) {
               />
             </div>
           )}
-          {user.bio && <p className="text-sm sm:text-base text-gray-600 mt-3 whitespace-pre-wrap">{user.bio}</p>}
-          <p className="text-xs sm:text-sm text-gray-500 mt-2">
-            評価 {Number(user.averageRating).toFixed(1)}
-          </p>
 
-          {/* いいね（大きめ、目立つ位置） */}
-          {!isSelf && (
-            <div className="mt-5">
+          {/* Stat strip — 社会的証明 */}
+          <div className="mt-4 flex items-center flex-wrap gap-x-4 gap-y-1.5 text-sm">
+            <span className="inline-flex items-baseline gap-1">
+              <span className="font-bold tabular-nums text-zinc-900">{followerCount.toLocaleString()}</span>
+              <span className="text-zinc-500">フォロワー</span>
+            </span>
+            <span className="text-zinc-300" aria-hidden>·</span>
+            <span className="inline-flex items-baseline gap-1">
+              <span className="font-bold tabular-nums text-zinc-900">{likeCount.toLocaleString()}</span>
+              <span className="text-zinc-500">いいね</span>
+            </span>
+            <span className="text-zinc-300" aria-hidden>·</span>
+            <span className="inline-flex items-baseline gap-1" title="レビュー平均">
+              <span className="text-zinc-500" aria-hidden>★</span>
+              <span className="font-bold tabular-nums text-zinc-900">
+                {Number(user.averageRating).toFixed(1)}
+              </span>
+            </span>
+            {mutualEncoreCount > 0 && (
+              <>
+                <span className="text-zinc-300" aria-hidden>·</span>
+                <span
+                  className="inline-flex items-baseline gap-1"
+                  title="双方が「また一緒にやりたい」を付けた案件数"
+                >
+                  <span className="font-bold tabular-nums text-zinc-900">{mutualEncoreCount}</span>
+                  <span className="text-zinc-500">Encore</span>
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Bio */}
+          {user.bio && (
+            <p className="text-sm text-zinc-700 mt-4 whitespace-pre-wrap leading-relaxed">
+              {user.bio}
+            </p>
+          )}
+
+          {/* アクション — Primary 行 (CTA) */}
+          <div className="mt-5 flex items-center gap-2 flex-wrap">
+            {viewerId && !isSelf && (
+              <FollowButton
+                targetUserId={id}
+                initialIsFollowing={initialIsFollowing}
+              />
+            )}
+            {!isSelf && (
               <ArtistLikeButton
                 targetUserId={id}
                 initialLiked={initialLiked}
                 isSelf={isSelf}
                 isLoggedIn={!!viewerId}
               />
-            </div>
-          )}
-
-          {/* Phase A.6: フォローボタン・フォロワー数 / イベント・カレンダー動線 */}
-          <div className="mt-4 flex items-center gap-2.5 flex-wrap">
-            {viewerId && !isSelf ? (
-              <FollowButton
-                targetUserId={id}
-                initialIsFollowing={initialIsFollowing}
-                initialFollowerCount={followerCount}
-              />
-            ) : (
-              <FollowerCountBadge count={followerCount} />
             )}
-
-            {/* PRO アーティストへのスカウト (依頼主 → 受注者) */}
             {canShowScout && (
               <ScoutButton
                 artistId={id}
@@ -328,10 +371,13 @@ export default async function ArtistDetailPage({ params }: Props) {
                 myProjects={myScoutableProjects}
               />
             )}
+          </div>
 
+          {/* アクション — Secondary 行 (遷移リンク) */}
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
             <Link
               href={`/artists/${id}/events`}
-              className="inline-flex items-center gap-2 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/70 px-4 py-2 rounded-xl transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 px-3 py-1.5 rounded-lg transition-colors"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 11l18-8-6 18-2-8-10-2z" />
@@ -340,7 +386,7 @@ export default async function ArtistDetailPage({ params }: Props) {
             </Link>
             <Link
               href={`/artists/${id}/calendar`}
-              className="inline-flex items-center gap-2 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/70 px-4 py-2 rounded-xl transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 px-3 py-1.5 rounded-lg transition-colors"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="17" rx="2" />
@@ -353,15 +399,10 @@ export default async function ArtistDetailPage({ params }: Props) {
                 href={officialWebsite.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-4 py-2 rounded-xl transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 text-sm text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 px-3 py-1.5 rounded-lg transition-colors"
               >
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                </svg>
                 <span>公式サイト</span>
-                <svg viewBox="0 0 24 24" className="w-3 h-3 opacity-80" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <svg viewBox="0 0 24 24" className="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                   <polyline points="15 3 21 3 21 9" />
                   <line x1="10" y1="14" x2="21" y2="3" />
@@ -375,8 +416,10 @@ export default async function ArtistDetailPage({ params }: Props) {
       {/* Linktree 型 外部リンク集約 (他プラットフォームで見る)
           公式サイトはヒーローに専用ボタンがあるため除外 */}
       {otherExternalLinks.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-500 mb-2">他で見る</h2>
+        <section className="mb-10">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">
+            他で見る
+          </h2>
           <ul className="flex flex-wrap gap-2">
             {otherExternalLinks.map((l) => (
               <li key={l.id}>
@@ -384,11 +427,11 @@ export default async function ArtistDetailPage({ params }: Props) {
                   href={l.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs bg-white border border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-700 px-3 py-1.5 rounded-full transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 text-zinc-700 px-3 py-1.5 rounded-full transition-colors"
                 >
                   <span>{EXTERNAL_LINK_PLATFORM_LABELS[l.platform].label}</span>
-                  {l.label && <span className="text-gray-400">— {l.label}</span>}
-                  <svg viewBox="0 0 24 24" className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  {l.label && <span className="text-zinc-400">— {l.label}</span>}
+                  <svg viewBox="0 0 24 24" className="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                     <polyline points="15 3 21 3 21 9" />
                     <line x1="10" y1="14" x2="21" y2="3" />
@@ -400,82 +443,138 @@ export default async function ArtistDetailPage({ params }: Props) {
         </section>
       )}
 
-      {/* Phase A.6: 今後のイベント（掲示板役割・常時表示） */}
-      <section className="mb-8">
-        <div className="flex items-baseline justify-between mb-3">
-          <h2 className="text-xl font-bold">今後のイベント</h2>
-          {upcomingEvents.length > 0 && (
-            <Link
-              href={`/artists/${id}/events`}
-              className="text-sm text-purple-700 hover:underline"
-            >
-              全部見る →
-            </Link>
-          )}
-        </div>
-        {upcomingEvents.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-purple-200 bg-purple-50/40 p-5 text-center text-sm text-gray-600">
-            {isSelf ? (
-              <>
-                告知中のイベントはまだありません。
-                <p className="mt-2">
-                  <Link href="/events/new" className="text-purple-700 hover:underline">
-                    + 新しいイベントを告知する
-                  </Link>
-                </p>
-              </>
-            ) : (
-              <>現在告知中のイベントはありません。</>
+      {/* 活動記録: 開催予定 → 作品 → 開催済みイベント */}
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-zinc-900 mb-5">活動記録</h2>
+
+        {/* 開催予定 */}
+        <div className="mb-8">
+          <div className="flex items-baseline justify-between mb-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              開催予定
+            </h3>
+            {upcomingEvents.length > 0 && (
+              <Link
+                href={`/artists/${id}/events`}
+                className="text-sm text-purple-700 hover:underline"
+              >
+                全部見る →
+              </Link>
             )}
           </div>
-        ) : (
-          <ul className="space-y-2">
-            {upcomingEvents.map((e) => (
-              <li key={e.id}>
-                <Link
-                  href={`/events/${e.id}`}
-                  className="block rounded-xl border border-gray-200 bg-white hover:shadow-sm transition p-3"
-                >
-                  <div className="flex items-center gap-2 text-xs text-purple-700 mb-1 flex-wrap">
-                    <span>{EVENT_TYPE_LABELS[e.type as EventType]}</span>
-                    <span>·</span>
-                    <span>
-                      {String(e.startAt.getMonth() + 1).padStart(2, '0')}/
-                      {String(e.startAt.getDate()).padStart(2, '0')}{' '}
-                      {String(e.startAt.getHours()).padStart(2, '0')}:
-                      {String(e.startAt.getMinutes()).padStart(2, '0')}
-                    </span>
-                    {e.venueName && (
-                      <>
-                        <span>·</span>
-                        <span>{e.venueName}</span>
-                      </>
-                    )}
-                    <span className="ml-auto text-gray-500">
-                      {EVENT_VISIBILITY_ICONS[e.visibility as EventVisibility]}
-                    </span>
-                  </div>
-                  <div className="font-medium text-gray-900 line-clamp-1">{e.title}</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+          {upcomingEvents.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 p-5 text-center text-sm text-zinc-600">
+              {isSelf ? (
+                <>
+                  告知中のイベントはまだありません。
+                  <p className="mt-2">
+                    <Link href="/events/new" className="text-purple-700 hover:underline">
+                      + 新しいイベントを告知する
+                    </Link>
+                  </p>
+                </>
+              ) : (
+                <>現在告知中のイベントはありません。</>
+              )}
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {upcomingEvents.map((e) => (
+                <li key={e.id}>
+                  <Link
+                    href={`/events/${e.id}`}
+                    className="block rounded-xl border border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-sm transition p-3"
+                  >
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 mb-1 flex-wrap">
+                      <span className="text-zinc-700 font-medium">
+                        {EVENT_TYPE_LABELS[e.type as EventType]}
+                      </span>
+                      <span aria-hidden>·</span>
+                      <span>
+                        {String(e.startAt.getMonth() + 1).padStart(2, '0')}/
+                        {String(e.startAt.getDate()).padStart(2, '0')}{' '}
+                        {String(e.startAt.getHours()).padStart(2, '0')}:
+                        {String(e.startAt.getMinutes()).padStart(2, '0')}
+                      </span>
+                      {e.venueName && (
+                        <>
+                          <span aria-hidden>·</span>
+                          <span>{e.venueName}</span>
+                        </>
+                      )}
+                      <span className="ml-auto">
+                        {EVENT_VISIBILITY_ICONS[e.visibility as EventVisibility]}
+                      </span>
+                    </div>
+                    <div className="font-medium text-zinc-900 line-clamp-1">{e.title}</div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      {/* ポートフォリオ */}
-      <section className="mb-8">
-        <h2 className="text-xl font-bold mb-4">ポートフォリオ</h2>
-        <PortfolioGallery
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          portfolios={user.portfolios.map((p: any) => ({
-            id: p.id,
-            title: p.title,
-            description: p.description,
-            mediaType: p.mediaType,
-            fileKey: p.fileKey,
-          }))}
-        />
+        {/* 作品 */}
+        <div className="mb-8">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">
+            作品
+          </h3>
+          <PortfolioGallery
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            portfolios={user.portfolios.map((p: any) => ({
+              id: p.id,
+              title: p.title,
+              description: p.description,
+              mediaType: p.mediaType,
+              fileKey: p.fileKey,
+            }))}
+          />
+          {isSelf && user.portfolios.length === 0 && (
+            <p className="mt-2 text-sm">
+              <Link href="/dashboard/portfolio" className="text-purple-700 hover:underline">
+                + 作品を追加する
+              </Link>
+            </p>
+          )}
+        </div>
+
+        {/* 開催済みイベント */}
+        {pastEvents.length > 0 && (
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">
+              開催済みイベント
+            </h3>
+            <ul className="space-y-2">
+              {pastEvents.map((e) => (
+                <li key={e.id}>
+                  <Link
+                    href={`/events/${e.id}`}
+                    className="block rounded-xl border border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-sm transition p-3"
+                  >
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 mb-1 flex-wrap">
+                      <span className="text-zinc-700 font-medium">
+                        {EVENT_TYPE_LABELS[e.type as EventType]}
+                      </span>
+                      <span aria-hidden>·</span>
+                      <span>
+                        {e.startAt.getFullYear()}/
+                        {String(e.startAt.getMonth() + 1).padStart(2, '0')}/
+                        {String(e.startAt.getDate()).padStart(2, '0')}
+                      </span>
+                      {e.venueName && (
+                        <>
+                          <span aria-hidden>·</span>
+                          <span>{e.venueName}</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="font-medium text-zinc-900 line-clamp-1">{e.title}</div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
     </div>
   )
