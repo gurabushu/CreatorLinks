@@ -16,8 +16,8 @@ dist/
 .env.development
 .env.vercel
 
-# Prisma
-apps/api/prisma/migrations/
+# Prisma — migration files は repo に含めて prisma migrate deploy で本番適用する
+# （以前は db push 運用で ignore していたが、baseline 化で tracked に戻した）
 
 # Logs
 *.log
