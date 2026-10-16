@@ -12,6 +12,9 @@ dist/
 .env
 .env.local
 .env.production
+.env.preview
+.env.development
+.env.vercel
 
 # Prisma
 apps/api/prisma/migrations/
