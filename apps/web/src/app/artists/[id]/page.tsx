@@ -206,6 +206,12 @@ export default async function ArtistDetailPage({ params }: Props) {
     ? null
     : personJsonLd({ ...user, sameAs: externalUrls })
 
+  // 公式サイトはヒーローに専用ボタンで出すため、「他で見る」からは除外する
+  const officialWebsite = user.externalLinks.find((l) => l.platform === 'WEBSITE')
+  const otherExternalLinks = officialWebsite
+    ? user.externalLinks.filter((l) => l.id !== officialWebsite.id)
+    : user.externalLinks
+
   // スカウトボタン用: 対象アーティストが PRO で、閲覧者がログイン済み・非本人 の場合のみ、
   // 閲覧者自身の OPEN/PRIVATE Project を取得してモーダルの選択肢に渡す
   const canShowScout = user.role === 'PRO' && viewerId && !isSelf
@@ -342,16 +348,37 @@ export default async function ArtistDetailPage({ params }: Props) {
               </svg>
               <span>カレンダー</span>
             </Link>
+            {officialWebsite && (
+              <a
+                href={officialWebsite.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-4 py-2 rounded-xl transition-colors shadow-sm"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+                <span>公式サイト</span>
+                <svg viewBox="0 0 24 24" className="w-3 h-3 opacity-80" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </a>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Linktree 型 外部リンク集約 (他プラットフォームで見る) */}
-      {user.externalLinks.length > 0 && (
+      {/* Linktree 型 外部リンク集約 (他プラットフォームで見る)
+          公式サイトはヒーローに専用ボタンがあるため除外 */}
+      {otherExternalLinks.length > 0 && (
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-gray-500 mb-2">他で見る</h2>
           <ul className="flex flex-wrap gap-2">
-            {user.externalLinks.map((l) => (
+            {otherExternalLinks.map((l) => (
               <li key={l.id}>
                 <a
                   href={l.url}
