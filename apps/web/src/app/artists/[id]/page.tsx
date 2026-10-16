@@ -140,13 +140,14 @@ export default async function ArtistDetailPage({ params }: Props) {
         : Promise.resolve(false),
       // Encore 相性: 本人が wantAgain=true でレビューし、かつ相手も同一 match で wantAgain=true でレビューした match 数
       // 案件相手が変わっても match 単位で 1 カウント（＝実質「Encore 成立案件数」）
+      // 列名は Prisma の camelCase そのまま（@map 無し）→ Postgres 側で double-quote 必須
       prisma.$queryRaw<{ c: bigint }[]>`
-      SELECT COUNT(DISTINCT r1.match_id)::bigint AS c
+      SELECT COUNT(DISTINCT r1."matchId")::bigint AS c
       FROM reviews r1
-      JOIN reviews r2 ON r1.match_id = r2.match_id AND r1.reviewer_id <> r2.reviewer_id
-      WHERE r1.reviewer_id = ${id}
-        AND r1.want_again = true
-        AND r2.want_again = true
+      JOIN reviews r2 ON r1."matchId" = r2."matchId" AND r1."reviewerId" <> r2."reviewerId"
+      WHERE r1."reviewerId" = ${id}
+        AND r1."wantAgain" = true
+        AND r2."wantAgain" = true
     `.catch(() => [] as { c: bigint }[]),
     ])
   const isFollower = initialIsFollowing
