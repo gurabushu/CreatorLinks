@@ -184,6 +184,10 @@ model User {
   //   - PRO サブスク: hasFreeProAccess が常に true を返し、失効 cron の対象外
   //   - UI: 本人にだけ「無償枠」バッジを表示、他ユーザーには非表示
   isFounderExempt             Boolean          @default(false)
+  // 認証バッジ Layer 2（¥3,000 買切・お布施モデル）。
+  // Stripe 単発決済成功時に webhook 経由で true になる。一度 true になったら永久有効。
+  // Founding Supporter には運営から無償付与する。
+  isVerified                  Boolean          @default(false)
   announcementsReadAt         DateTime? // 最後にお知らせ一覧を開いたタイムスタンプ。未読件数の判定基準
   deletedAt                   DateTime? // 退会（アカウント削除）実行時刻。PII は匿名化済み。FK 整合のため row は残す
   createdAt                   DateTime         @default(now())
