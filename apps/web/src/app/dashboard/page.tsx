@@ -8,7 +8,6 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDisplayName } from '@/lib/user'
-import { PLATFORM_FEE_RATE_PRO } from '@/lib/stripe'
 
 export const metadata: Metadata = { title: 'マイページ' }
 export const dynamic = 'force-dynamic'
@@ -82,10 +81,6 @@ export default async function DashboardPage() {
   let unreadCount = 0
   // 今月の帳票ウィジェット用: 受注アーティスト側で今月支払い/送金が発生した件数
   let thisMonthDocCount = 0
-  // S4: 直近 90 日の手数料実績と PRO 換算差額 (Free のみ表示)
-  let feeWindowPaidYen = 0
-  let feeWindowProEquivYen = 0
-  let feeWindowMatchCount = 0
 
   try {
     const me = await prisma.user.findUnique({
@@ -99,10 +94,8 @@ export default async function DashboardPage() {
 
     // 今月の帳票発行対象件数: Payment 支払い (paidAt) が今月に入った受注案件
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    // S4: 直近 90 日の手数料 uplift ウィンドウ
-    const feeWindowStart = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
 
-    const [applied, scouted, active, projects, unread, myEvents, followRows, monthDocCount, feePayments] = await Promise.all([
+    const [applied, scouted, active, projects, unread, myEvents, followRows, monthDocCount] = await Promise.all([
       prisma.match.findMany({
         where: { artistId: userId, status: 'APPLIED' },
         take: 5,
@@ -160,18 +153,6 @@ export default async function DashboardPage() {
           paidAt: { gte: monthStart },
         },
       }),
-      // S4: 直近 90 日で自分がアーティストとして受注 & 支払確定した Payment。
-      // Free だけに見せる帯なので session.user.role が PRO の時はクエリしない。
-      session.user.role === 'PRO'
-        ? Promise.resolve([] as { amountYen: number; platformFeeYen: number }[])
-        : prisma.payment.findMany({
-            where: {
-              match: { artistId: userId },
-              status: { in: ['HELD', 'RELEASED'] },
-              paidAt: { gte: feeWindowStart },
-            },
-            select: { amountYen: true, platformFeeYen: true },
-          }),
     ])
 
     appliedMatches = applied
@@ -181,13 +162,7 @@ export default async function DashboardPage() {
     unreadCount = unread
     thisMonthDocCount = monthDocCount
 
-    // S4 aggregate: 実際に支払った platformFee 合計 vs PRO (5%) 換算合計
-    for (const p of feePayments) {
-      feeWindowPaidYen += p.platformFeeYen
-      feeWindowProEquivYen += Math.round(p.amountYen * PLATFORM_FEE_RATE_PRO)
-      feeWindowMatchCount += 1
-    }
-
+    // S4 の集計ループは撤廃済み (fee-only pivot で PRO 差額の概念がなくなった)。
     const followingIds = followRows.map((f) => f.followingId)
     const followingEvents = followingIds.length === 0
       ? []
@@ -237,20 +212,8 @@ export default async function DashboardPage() {
           <h1 className="text-2xl sm:text-3xl font-bold">マイページ</h1>
           <p className="text-gray-500 mt-1 text-sm">
             こんにちは、{session.user.name} さん
-            {session.user.role === 'PRO' && (
-              <span className="ml-2 bg-zinc-100 text-zinc-700 text-xs px-2 py-1 rounded-full">PRO</span>
-            )}
           </p>
         </div>
-        {session.user.role !== 'PRO' && (
-          // PRO 新規受付は一時停止中。CTA は残しつつ操作不可 (準備中)
-          <span
-            aria-disabled="true"
-            className="bg-gray-200 text-gray-500 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed select-none"
-          >
-            準備中
-          </span>
-        )}
       </div>
 
       {/* ステータスサマリー */}
@@ -261,34 +224,7 @@ export default async function DashboardPage() {
         <StatusCard href="/dashboard/matches" label="応募中" value={appliedMatches.length} tone="gray" />
       </div>
 
-      {/* S4: 直近 90 日の手数料実績 → PRO 差額 (Free のみ / 実データがある時のみ) */}
-      {session.user.role !== 'PRO' && feeWindowMatchCount > 0 && feeWindowPaidYen > feeWindowProEquivYen && (
-        <Link
-          href="/pro/subscribe"
-          className="block mb-8 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-zinc-50/70 p-5 hover:shadow-md hover:border-purple-300 transition"
-        >
-          <div className="flex items-start gap-4 flex-wrap">
-            <div className="text-3xl leading-none shrink-0" aria-hidden>💸</div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-purple-700 font-medium mb-1">直近 90 日の手数料実績</p>
-              <p className="text-sm text-gray-800 leading-relaxed">
-                受注 <span className="font-bold text-purple-700">{feeWindowMatchCount} 件</span> で
-                <span className="font-bold text-gray-900"> ¥{feeWindowPaidYen.toLocaleString()}</span>
-                {' '}を手数料として支払いました。
-                <br />
-                PRO なら
-                <span className="font-bold text-purple-700"> ¥{feeWindowProEquivYen.toLocaleString()}</span>
-                {' '}で済み、
-                <span className="font-bold text-zinc-700"> ¥{(feeWindowPaidYen - feeWindowProEquivYen).toLocaleString()}</span>
-                {' '}が手元に残っていました。
-              </p>
-              <p className="text-[11px] text-purple-600 mt-2 underline">
-                PRO の詳細を見る →
-              </p>
-            </div>
-          </div>
-        </Link>
-      )}
+      {/* S4 PRO 差額バナーは 2026-10-17 fee-only pivot で撤廃 */}
 
       {/* オファー受信 (SCOUTED) — 発注者からのスカウトは承諾/辞退が必要なので目立たせる */}
       {scoutedMatches.length > 0 && (

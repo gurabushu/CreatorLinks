@@ -90,11 +90,6 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
                   {getDisplayName(u)}
                 </Link>
                 {u.isOfficial && <OfficialBadge />}
-                {u.role === 'PRO' && (
-                  <span className="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-semibold">
-                    PRO
-                  </span>
-                )}
                 {u.earlyBirdSlot !== null && (
                   <FoundingMemberBadge slot={u.earlyBirdSlot} showTotal={false} />
                 )}

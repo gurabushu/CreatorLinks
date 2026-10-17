@@ -64,12 +64,7 @@ export async function sendScoutAction(
   if (artist.isGuest) {
     return { success: false, error: 'ゲストアカウントにはオファーを送れません' }
   }
-  if (artist.role !== 'PRO') {
-    return {
-      success: false,
-      error: 'このアーティストは PRO 会員ではないためオファーを受け取れません',
-    }
-  }
+  // 2026-10-17 fee-only pivot: PRO 限定の受領ガードを撤廃、全アーティストにオファー可。
   if (artistId === session.user.id) {
     return { success: false, error: '自分自身にはオファーを送れません' }
   }

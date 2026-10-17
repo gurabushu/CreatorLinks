@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Prisma / auth / revalidatePath を mock。Server Action の role guard だけを
-// 検証したいので DB アクセスは全てスタブ化する。
+// 2026-10-17 fee-only pivot: PRO 限定の上限ガードが撤廃された。
+// 認証ガードと全ユーザー無制限であることを担保する。
+
 const {
   mockAuth,
   mockPortfolioCount,
@@ -36,7 +37,7 @@ async function importAction() {
   return (await import('../portfolio')).createPortfolioAction
 }
 
-describe('createPortfolioAction — role guard', () => {
+describe('createPortfolioAction', () => {
   beforeEach(() => {
     mockAuth.mockReset()
     mockPortfolioCount.mockReset()
@@ -49,43 +50,30 @@ describe('createPortfolioAction — role guard', () => {
     const createPortfolioAction = await importAction()
     const result = await createPortfolioAction(validInput)
     expect(result).toEqual({ success: false, error: '認証が必要です' })
-    expect(mockPortfolioCount).not.toHaveBeenCalled()
     expect(mockPortfolioCreate).not.toHaveBeenCalled()
   })
 
-  it('Free ユーザーが上限未満ならそのまま作成に進む', async () => {
+  it('GENERAL ユーザーでも count を呼ばず作成に進む（上限ガード撤廃）', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'GENERAL' } })
-    mockPortfolioCount.mockResolvedValue(5)
     mockPortfolioCreate.mockResolvedValue({ id: 'p1' })
     const createPortfolioAction = await importAction()
     const result = await createPortfolioAction(validInput)
     expect(result).toEqual({ success: true })
-    expect(mockPortfolioCount).toHaveBeenCalledWith({ where: { userId: 'u1' } })
+    expect(mockPortfolioCount).not.toHaveBeenCalled()
     expect(mockPortfolioCreate).toHaveBeenCalled()
   })
 
-  it('Free ユーザーが上限に達していたら PORTFOLIO_LIMIT で拒否', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'GENERAL' } })
-    mockPortfolioCount.mockResolvedValue(10) // 既定 FREE_PORTFOLIO_LIMIT = 10
-    const createPortfolioAction = await importAction()
-    const result = await createPortfolioAction(validInput)
-    expect(result.success).toBe(false)
-    expect(result).toMatchObject({ code: 'PORTFOLIO_LIMIT' })
-    expect(mockPortfolioCreate).not.toHaveBeenCalled()
-  })
-
-  it('PRO ユーザーは上限 check 自体スキップする（count を呼ばない）', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PRO' } })
+  it('ADMIN も作成に進む', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } })
     mockPortfolioCreate.mockResolvedValue({ id: 'p1' })
     const createPortfolioAction = await importAction()
     const result = await createPortfolioAction(validInput)
     expect(result).toEqual({ success: true })
-    expect(mockPortfolioCount).not.toHaveBeenCalled()
     expect(mockPortfolioCreate).toHaveBeenCalled()
   })
 
   it('無効な入力はバリデーションエラー', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PRO' } })
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'GENERAL' } })
     const createPortfolioAction = await importAction()
     const result = await createPortfolioAction({
       ...validInput,

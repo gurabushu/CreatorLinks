@@ -158,9 +158,6 @@ export default async function HomePage() {
                   </div>
                   <p className="font-bold text-sm">{getDisplayName(f.user)}</p>
                   <div className="flex items-center justify-center gap-1 flex-wrap">
-                    {f.user.role === 'PRO' && (
-                      <span className="text-xs bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-full">PRO</span>
-                    )}
                     <FoundingMemberBadge slot={f.user.earlyBirdSlot} showTotal={false} />
                   </div>
                   {f.note && (
@@ -209,9 +206,6 @@ export default async function HomePage() {
                 </div>
                 <p className="font-bold text-sm">{getDisplayName(artist)}</p>
                 <div className="flex items-center justify-center gap-1 flex-wrap">
-                  {artist.role === 'PRO' && (
-                    <span className="text-xs bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-full">PRO</span>
-                  )}
                   <FoundingMemberBadge slot={artist.earlyBirdSlot} showTotal={false} />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">評価 {Number(artist.averageRating).toFixed(1)}</p>

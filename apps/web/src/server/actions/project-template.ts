@@ -30,14 +30,7 @@ export async function createProjectTemplateAction(input: {
   const session = await auth()
   if (!session) return { success: false, error: '認証が必要です' }
 
-  // PRO 限定
-  if (session.user.role !== 'PRO') {
-    return {
-      success: false,
-      error: '案件テンプレート保存は PRO プランの特典です',
-      code: 'PRO_REQUIRED',
-    }
-  }
+  // 2026-10-17 fee-only pivot: PRO 限定ガードを撤廃、全員利用可能に。
 
   const label = input.label.trim()
   const title = input.title.trim()
@@ -120,5 +113,6 @@ export async function listMyProjectTemplatesAction(): Promise<MyTemplatesBootstr
       commitmentLevel: true,
     },
   })
-  return { isPro: session.user.role === 'PRO', templates }
+  // 2026-10-17 fee-only pivot: PRO 概念廃止。全ユーザー解放のため isPro は常に true 返却
+  return { isPro: true, templates }
 }

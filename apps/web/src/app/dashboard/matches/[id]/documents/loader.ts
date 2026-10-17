@@ -69,13 +69,13 @@ export async function loadDocumentMatch(matchId: string) {
 
   // Payment が未作成でも帳票は budget ベースで表示できるようフォールバック
   const budget = match.project.budget ?? 0
-  const isProArtist = match.artist.role === 'PRO'
+  // 2026-10-17 fee-only pivot: PRO 判定は撤廃。手数料は 7% 固定 (Founding Supporter のみ 0%)。
   const isFounderExempt =
     match.artist.isFounderExempt || match.project.client.isFounderExempt
   const platformFeeYen =
-    match.payment?.platformFeeYen ?? calcPlatformFee(budget, { isProArtist, isFounderExempt })
+    match.payment?.platformFeeYen ?? calcPlatformFee(budget, { isFounderExempt })
   const artistPayoutYen =
-    match.payment?.artistPayoutYen ?? calcArtistPayout(budget, { isProArtist, isFounderExempt })
+    match.payment?.artistPayoutYen ?? calcArtistPayout(budget, { isFounderExempt })
 
   return {
     ok: true as const,
@@ -87,7 +87,7 @@ export async function loadDocumentMatch(matchId: string) {
       artistPayoutYen,
       currency: CURRENCY,
       isFounderExempt, // 帳票側で「手数料 0 の理由」を条件分岐して表示するため
-      isProArtist,
+      isProArtist: false, // 2026-10-17 fee-only pivot で廃止、帳票 UI 互換のため false 固定
     },
   }
 }

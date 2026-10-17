@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { UserRole } from '@creator-links/shared'
 
-type User = { name: string; role: UserRole }
+type User = { name: string; role: UserRole; isVerified: boolean }
 
 type NavItem = {
   href: string
@@ -148,14 +148,9 @@ function SidebarNav({
 
   return (
     <>
-      <div className={`px-4 pt-4 pb-3 border-b border-purple-100/60 ${hideWhenCollapsed}`}>
-        <p className="text-[10px] text-purple-400/80 uppercase tracking-wider">Signed in as</p>
-        <p className="font-semibold text-gray-800 truncate">{user.name}</p>
-        {user.role === 'PRO' && (
-          <span className="mt-1 inline-block bg-zinc-50 text-zinc-600 text-[10px] px-2 py-0.5 rounded-full font-semibold ring-1 ring-zinc-200/60">
-            PRO
-          </span>
-        )}
+      <div className={`px-4 pt-4 pb-3 border-b border-zinc-200 ${hideWhenCollapsed}`}>
+        <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Signed in as</p>
+        <p className="font-semibold text-zinc-800 truncate">{user.name}</p>
       </div>
 
       <nav className="p-2 flex-1">
@@ -184,13 +179,13 @@ function SidebarNav({
         ))}
       </nav>
 
-      {user.role !== 'PRO' && (
+      {!user.isVerified && (
         <div className={`p-3 border-t border-zinc-200 ${hideWhenCollapsed}`}>
           <Link
-            href="/pro/subscribe"
+            href="/verify"
             className="block text-center bg-purple-600 text-white text-sm font-semibold px-3 py-2.5 rounded-xl hover:bg-purple-700 transition-colors"
           >
-            PRO にアップグレード
+            認証バッジを取得
           </Link>
         </div>
       )}
@@ -219,13 +214,9 @@ export function SidebarShell({
     { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },
     { href: '/projects/manage', label: '案件管理', icon: <ClipboardIcon /> },
     { href: '/dashboard/payouts', label: '入金設定', icon: <WalletIcon /> },
-    // CRM 顧客一覧 — Free でも 3 件見せる (残りは PRO で解放)
+    // 2026-10-17 fee-only pivot: CRM と分析は全ユーザー解放
     { href: '/dashboard/crm', label: '顧客一覧 (CRM)', icon: <UsersIcon /> },
-    // PRO 特典: プロフィール分析 (PV / フォロー / 成約率)。GENERAL ユーザーには表示しない。
-    // ロール判定は user.role のみ (Early Bird / hasLifetimeFreePro / isFounderExempt も全て role='PRO' に集約されている)
-    ...(user.role === 'PRO'
-      ? [{ href: '/dashboard/analytics', label: 'プロフィール分析', icon: <ChartIcon /> } as NavItem]
-      : []),
+    { href: '/dashboard/analytics', label: 'プロフィール分析', icon: <ChartIcon /> },
     { href: '/events', label: 'イベント', icon: <MicIcon /> },
     { href: '/dashboard/following', label: 'フォロー中', icon: <UsersIcon /> },
     { href: '/dashboard/calendar', label: 'カレンダー', icon: <CalendarIcon /> },

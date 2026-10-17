@@ -127,14 +127,14 @@ export default async function ChatPage({ params, searchParams }: Props) {
   const myPrivateProjects = isP2P ? await listMyPrivateProjectsAction() : []
 
   const budget = isP2P ? null : match.project!.budget
-  const isProArtist = match.artist.role === 'PRO'
+  // 2026-10-17 fee-only pivot: PRO 判定は撤廃。手数料は 7% 固定 (Founding Supporter のみ 0%)。
   const isFounderExempt =
     match.artist.isFounderExempt || (match.project?.client.isFounderExempt ?? false)
   const feeBreakdown =
     budget && budget > 0
       ? {
-          platformFeeYen: calcPlatformFee(budget, { isProArtist, isFounderExempt }),
-          artistPayoutYen: calcArtistPayout(budget, { isProArtist, isFounderExempt }),
+          platformFeeYen: calcPlatformFee(budget, { isFounderExempt }),
+          artistPayoutYen: calcArtistPayout(budget, { isFounderExempt }),
         }
       : null
 

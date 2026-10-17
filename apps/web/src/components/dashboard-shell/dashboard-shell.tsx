@@ -18,6 +18,7 @@ export async function DashboardShell({
 
   let unreadCount = 0
   let announcementUnread = 0
+  let isVerified = false
   try {
     const [msgs, annBase] = await Promise.all([
       prisma.message.count({
@@ -29,10 +30,11 @@ export async function DashboardShell({
       }),
       prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { announcementsReadAt: true },
+        select: { announcementsReadAt: true, isVerified: true },
       }),
     ])
     unreadCount = msgs
+    isVerified = annBase?.isVerified ?? false
     const now = new Date()
     announcementUnread = await prisma.announcement.count({
       where: {
@@ -49,7 +51,7 @@ export async function DashboardShell({
 
   return (
     <SidebarShell
-      user={{ name: session.user.name, role: session.user.role }}
+      user={{ name: session.user.name, role: session.user.role, isVerified }}
       unreadCount={unreadCount}
       announcementUnread={announcementUnread}
     >

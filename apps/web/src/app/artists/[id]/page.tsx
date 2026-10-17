@@ -230,9 +230,9 @@ export default async function ArtistDetailPage({ params }: Props) {
     ? user.externalLinks.filter((l) => l.id !== officialWebsite.id)
     : user.externalLinks
 
-  // スカウトボタン用: 対象アーティストが PRO で、閲覧者がログイン済み・非本人 の場合のみ、
-  // 閲覧者自身の OPEN/PRIVATE Project を取得してモーダルの選択肢に渡す
-  const canShowScout = user.role === 'PRO' && viewerId && !isSelf
+  // 2026-10-17 fee-only pivot: PRO 限定の受領ガードを撤廃、全アーティストにスカウト可。
+  // 閲覧者がログイン済み・非本人の場合のみ、OPEN/PRIVATE Project を取得してモーダルに渡す。
+  const canShowScout = !!viewerId && !isSelf
   const myScoutableProjects: ScoutableProject[] = canShowScout
     ? await prisma.project.findMany({
         where: {
@@ -279,11 +279,6 @@ export default async function ArtistDetailPage({ params }: Props) {
             <h1 className="text-2xl font-bold text-zinc-900 break-words">
               {getDisplayName(user)}
             </h1>
-            {user.role === 'PRO' && (
-              <span className="bg-purple-600 text-white text-xs px-2 py-0.5 rounded-full font-bold shrink-0">
-                PRO
-              </span>
-            )}
             <FoundingMemberBadge slot={user.earlyBirdSlot} size="md" />
           </div>
 

@@ -7,10 +7,11 @@
 import Stripe from 'stripe'
 
 // プラットフォーム手数料率（LP・案件詳細ページ・利用規約と一致させる）
-// 通常 7%。受注アーティストが PRO の場合は 5% に減額（PRO 特典）。
-// 依頼主の支払総額は変わらず、差 2% がそのままアーティスト受取に上乗せされる。
+// 2026-10-17 fee-only pivot 以降: 全員 7%。Founding Supporter (isFounderExempt)
+// のみ 0%（永年無償）。PRO サブスク廃止に伴い PRO 用の 5% 減額は撤廃。
 export const PLATFORM_FEE_RATE = 0.07
-export const PLATFORM_FEE_RATE_PRO = 0.05
+/** @deprecated 2026-10-17 fee-only pivot で廃止。PLATFORM_FEE_RATE (7%) を使うこと。 */
+export const PLATFORM_FEE_RATE_PRO = 0.07
 
 // アーティスト完了報告後、自動で Transfer をリリースするまでの日数
 // この期間中はクライアントが手動で「送金確認」ボタンを押すこともできる
@@ -42,17 +43,17 @@ export function getStripe(): Stripe {
 }
 
 export type FeeOpts = {
-  /** true なら PRO 用の 5% 率を適用（未指定 = 7%）。判定はアーティスト側の役割で行う。 */
+  /** @deprecated 2026-10-17 fee-only pivot で未使用。残しているのは既存 call site の互換のためのみ。 */
   isProArtist?: boolean
   /** 発注側・受注側いずれか一方でも User.isFounderExempt=true のとき true。手数料を 0 にする。 */
   isFounderExempt?: boolean
 }
 
-/** 依頼金額から Platform 側の手数料（円・整数）を算出 */
+/** 依頼金額から Platform 側の手数料（円・整数）を算出。
+ *  Founding Supporter は 0%、それ以外は PLATFORM_FEE_RATE (7%)。 */
 export function calcPlatformFee(amountYen: number, opts?: FeeOpts): number {
   if (opts?.isFounderExempt) return 0
-  const rate = opts?.isProArtist ? PLATFORM_FEE_RATE_PRO : PLATFORM_FEE_RATE
-  return Math.round(amountYen * rate)
+  return Math.round(amountYen * PLATFORM_FEE_RATE)
 }
 
 /** 依頼金額からアーティスト受取額（円・整数）を算出 */

@@ -83,10 +83,10 @@ export async function createCheckoutSessionAction(matchId: string): Promise<neve
     throw new Error('この案件は既に支払い済みです')
   }
 
-  const isProArtist = match.artist.role === 'PRO'
+  // 2026-10-17 fee-only pivot: PRO 判定を撤廃、全員 7%。Founding Supporter のみ 0%。
   const isFounderExempt = match.artist.isFounderExempt || match.project.client.isFounderExempt
-  const platformFeeYen = calcPlatformFee(budget, { isProArtist, isFounderExempt })
-  const artistPayoutYen = calcArtistPayout(budget, { isProArtist, isFounderExempt })
+  const platformFeeYen = calcPlatformFee(budget, { isFounderExempt })
+  const artistPayoutYen = calcArtistPayout(budget, { isFounderExempt })
 
   // Payment upsert: 同 matchId で複数回叩かれても 1 レコード。FAILED からの再挑戦にも対応
   const payment = await prisma.payment.upsert({

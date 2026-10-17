@@ -13,7 +13,7 @@ export default async function MatchesPage() {
   const session = await auth()
   if (!session) redirect('/auth')
 
-  const isFree = session.user.role !== 'PRO'
+  // 2026-10-17 fee-only pivot: PRO 差額 upsell 行 (S3) を撤廃。
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let matches: any[] = []
@@ -34,7 +34,7 @@ export default async function MatchesPage() {
         },
         artist: { select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true } },
         partner: { select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true } },
-        payment: { select: { status: true, artistPayoutYen: true, amountYen: true, platformFeeYen: true } },
+        payment: { select: { status: true, artistPayoutYen: true } },
       },
     })
   } catch {
@@ -143,28 +143,6 @@ export default async function MatchesPage() {
                         )}
                       </div>
                     )}
-                    {/* S3: Free × artist 側にだけ表示する PRO uplift 行 */}
-                    {isFree && match.artistId === session.user.id && (() => {
-                      // 実支払済み Payment があれば実額ベース、なければ project.budget で試算
-                      const pay = match.payment
-                      const base = pay ? pay.amountYen : (match.project?.budget ?? 0)
-                      if (!base) return null
-                      const proFee = Math.round(base * 0.05)
-                      const currentFee = pay ? pay.platformFeeYen : Math.round(base * 0.07)
-                      const uplift = currentFee - proFee
-                      if (uplift <= 0) return null
-                      const isReleased = pay?.status === 'RELEASED'
-                      return (
-                        <Link
-                          href="/pro/subscribe"
-                          className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-purple-700 hover:text-purple-900 hover:underline"
-                        >
-                          💡 PRO なら
-                          {isReleased ? '手取り' : '手取り予定'}
-                          <span className="font-bold">+¥{uplift.toLocaleString()}</span>
-                        </Link>
-                      )
-                    })()}
                     {match.message && (
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                         「{match.message}」

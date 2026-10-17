@@ -23,8 +23,6 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = { title: 'CRM 顧客一覧' }
 export const dynamic = 'force-dynamic'
 
-const FREE_TIER_LIMIT = 3
-
 function relTime(d: Date | null): string {
   if (!d) return '—'
   const diffMs = Date.now() - new Date(d).getTime()
@@ -56,7 +54,6 @@ export default async function CrmPage() {
   if (!session) redirect('/auth')
 
   const meId = session.user.id
-  const isPro = session.user.role === 'PRO'
 
   // 自分が関わる全 Match を取得
   const matches = await prisma.match.findMany({
@@ -147,8 +144,8 @@ export default async function CrmPage() {
     return b.lastMatchAt.getTime() - a.lastMatchAt.getTime()
   })
 
-  const visible = isPro ? stats : stats.slice(0, FREE_TIER_LIMIT)
-  const hiddenCount = isPro ? 0 : Math.max(0, stats.length - FREE_TIER_LIMIT)
+  // 2026-10-17 fee-only pivot: Free/PRO 分岐撤廃、全員全件表示。
+  const visible = stats
   const totalYen = stats.reduce((s, c) => s + c.totalYen, 0)
 
   return (
@@ -188,26 +185,6 @@ export default async function CrmPage() {
             ))}
           </ul>
 
-          {/* Free ユーザー向け PRO upsell */}
-          {!isPro && hiddenCount > 0 && (
-            <div className="mt-6 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/70 p-6 sm:p-8 text-center">
-              <p className="text-2xl mb-2">🔒</p>
-              <h2 className="text-lg sm:text-xl font-bold text-purple-900 mb-2">
-                残り <span className="text-purple-700">{hiddenCount}</span> 名の顧客カードは PRO で解放
-              </h2>
-              <p className="text-sm text-purple-800/80 leading-relaxed mb-5">
-                PRO プラン（¥980/月）にすると、過去に取引した全相手の集計と再依頼ワンタップが使えます。
-                <br className="hidden sm:block" />
-                手数料も 5% に減額。月に案件が動く方はすぐ元が取れます。
-              </p>
-              <Link
-                href="/pro/subscribe"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
-              >
-                PRO の詳細を見る →
-              </Link>
-            </div>
-          )}
         </>
       )}
     </div>

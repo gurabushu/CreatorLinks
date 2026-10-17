@@ -6,13 +6,15 @@ import {
   calcPlatformFee,
 } from '../stripe'
 
+// 2026-10-17 fee-only pivot: PRO 手数料減額は廃止。全員 7%、Founding Supporter のみ 0%。
+
 describe('PLATFORM_FEE_RATE', () => {
   it('README と一致する 7%', () => {
     expect(PLATFORM_FEE_RATE).toBe(0.07)
   })
 
-  it('PRO 用は 5%', () => {
-    expect(PLATFORM_FEE_RATE_PRO).toBe(0.05)
+  it('PLATFORM_FEE_RATE_PRO は deprecated、PLATFORM_FEE_RATE と同じ 7% を返す', () => {
+    expect(PLATFORM_FEE_RATE_PRO).toBe(0.07)
   })
 })
 
@@ -46,42 +48,21 @@ describe('calcArtistPayout', () => {
   })
 })
 
-describe('PRO 手数料減額 (isProArtist: true)', () => {
-  it('5% を Math.round で丸める', () => {
-    expect(calcPlatformFee(10000, { isProArtist: true })).toBe(500)
-    expect(calcPlatformFee(10009, { isProArtist: true })).toBe(500) // 500.45 → 500
-    expect(calcPlatformFee(10010, { isProArtist: true })).toBe(501) // 500.50 → 501
+describe('isProArtist opt は後方互換のため受け取るが無視される', () => {
+  it('isProArtist=true でも 7% のまま', () => {
+    expect(calcPlatformFee(10000, { isProArtist: true })).toBe(700)
+    expect(calcArtistPayout(10000, { isProArtist: true })).toBe(9300)
   })
 
-  it('payout は 95% 相当', () => {
-    expect(calcArtistPayout(10000, { isProArtist: true })).toBe(9500)
-    expect(calcArtistPayout(30000, { isProArtist: true })).toBe(28500)
-  })
-
-  it('総額 30,000 円で 7% → 5% にすると受取が 600 円増える', () => {
-    const budget = 30000
-    const generalPayout = calcArtistPayout(budget)
-    const proPayout = calcArtistPayout(budget, { isProArtist: true })
-    expect(proPayout - generalPayout).toBe(600)
-  })
-
-  it('opts なし = 従来 7% と同じ (既存挙動を壊さない)', () => {
+  it('isProArtist の有無で結果は変わらない', () => {
     for (const amount of [1000, 10000, 100000]) {
-      expect(calcPlatformFee(amount)).toBe(calcPlatformFee(amount, { isProArtist: false }))
-      expect(calcArtistPayout(amount)).toBe(calcArtistPayout(amount, { isProArtist: false }))
-    }
-  })
-
-  it('PRO 版でも fee + payout === amount', () => {
-    for (const amount of [1, 100, 999, 1000, 12345, 99999, 1_000_000, 1_234_567]) {
-      const fee = calcPlatformFee(amount, { isProArtist: true })
-      const payout = calcArtistPayout(amount, { isProArtist: true })
-      expect(fee + payout).toBe(amount)
+      expect(calcPlatformFee(amount)).toBe(calcPlatformFee(amount, { isProArtist: true }))
+      expect(calcArtistPayout(amount)).toBe(calcArtistPayout(amount, { isProArtist: true }))
     }
   })
 })
 
-describe('恩人枠 (isFounderExempt: true)', () => {
+describe('Founding Supporter 枠 (isFounderExempt: true)', () => {
   it('金額に関わらず fee は 0', () => {
     for (const amount of [1, 999, 10000, 1_234_567]) {
       expect(calcPlatformFee(amount, { isFounderExempt: true })).toBe(0)

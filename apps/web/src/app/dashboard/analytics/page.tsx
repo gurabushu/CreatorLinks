@@ -1,16 +1,14 @@
-// プロフィール分析 (PRO 特典) ページ。
+// プロフィール分析ページ。
 // PV / フォロワー / 応募成約率 / 完了件数 を過去 30 日で集計表示。
-// PRO 会員 (課金 / Early Bird / hasLifetimeFreePro / isFounderExempt) のみアクセス可。
+// 2026-10-17 fee-only pivot で PRO 限定ゲートを撤廃、全ユーザーに解放。
 
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
-import { prisma } from '@/lib/prisma'
 import { getAnalyticsSummary } from '@/lib/profile-analytics'
 import { getRevenueAnalytics } from '@/lib/revenue-analytics'
-import { hasFreeProAccess } from '@/lib/early-bird'
 
 export const metadata: Metadata = { title: 'プロフィール分析' }
 export const dynamic = 'force-dynamic'
@@ -21,39 +19,6 @@ export default async function AnalyticsPage() {
   const session = await auth()
   if (!session) redirect('/auth?next=' + encodeURIComponent('/dashboard/analytics'))
 
-  // PRO ゲート: 課金 / Early Bird / 永年無料 / 恩人枠 のいずれか
-  const me = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      role: true,
-      earlyBirdSlot: true,
-      earlyBirdExpiresAt: true,
-      hasLifetimeFreePro: true,
-      isFounderExempt: true,
-    },
-  })
-  if (!me) redirect('/auth')
-
-  const isPro = me.role === 'PRO' || hasFreeProAccess(me)
-  if (!isPro) {
-    return (
-      <div className="max-w-2xl mx-auto py-16 px-4 text-center">
-        <h1 className="text-xl font-bold mb-2">プロフィール分析 (PRO 特典)</h1>
-        <p className="text-gray-500 mb-8">
-          このページは PRO 会員限定の特典です。
-          <br />
-          プロフィールの閲覧数・フォロワー増加・応募成約率が可視化できます。
-        </p>
-        <Link
-          href="/pro/subscribe"
-          className="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 transition"
-        >
-          PRO プランを見る →
-        </Link>
-      </div>
-    )
-  }
-
   const [summary, revenue] = await Promise.all([
     getAnalyticsSummary(session.user.id, WINDOW_DAYS),
     getRevenueAnalytics(session.user.id, 12),
@@ -62,7 +27,6 @@ export default async function AnalyticsPage() {
   return (
     <div className="max-w-5xl mx-auto py-8 sm:py-10 px-4">
       <div className="mb-6">
-        <p className="text-xs text-purple-700 font-semibold mb-1">PRO 特典</p>
         <h1 className="text-2xl font-bold">プロフィール分析</h1>
         <p className="text-sm text-gray-500 mt-1">直近 {summary.windowDays} 日間の指標</p>
       </div>

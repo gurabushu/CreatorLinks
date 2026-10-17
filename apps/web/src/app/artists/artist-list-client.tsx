@@ -580,8 +580,8 @@ function ArtistCard({
             >
               {getDisplayName(artist)}
             </p>
-            {/* 名前下段: skillLevel + PRO + founding バッジ。名前スペースを奪わない配置 */}
-            {(artist.skillLevel || artist.role === 'PRO' || artist.earlyBirdSlot != null) && (
+            {/* 名前下段: skillLevel + founding バッジ。名前スペースを奪わない配置 */}
+            {(artist.skillLevel || artist.earlyBirdSlot != null) && (
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 {artist.skillLevel && (
                   <span
@@ -589,11 +589,6 @@ function ArtistCard({
                     className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${SKILL_BADGE_CLASS[artist.skillLevel]}`}
                   >
                     {COMMITMENT_LEVEL_LABELS[artist.skillLevel].label}
-                  </span>
-                )}
-                {artist.role === 'PRO' && (
-                  <span className="bg-zinc-100 text-zinc-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                    PRO
                   </span>
                 )}
                 <FoundingMemberBadge slot={artist.earlyBirdSlot} />

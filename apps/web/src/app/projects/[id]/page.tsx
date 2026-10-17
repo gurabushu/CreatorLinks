@@ -1,7 +1,6 @@
 // app/projects/[id]/page.tsx — 案件詳細 (SSR)
 
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -72,10 +71,7 @@ export default async function ProjectDetailPage({ params }: Props) {
   }
 
   const isOwner = session?.user.id === project.clientId
-  // 応募検討者に手取り差額を見せて PRO への転換を促す（S2）
-  const viewerRole = session?.user.role
-  const isProViewer = viewerRole === 'PRO'
-  const showApplicantView = !!session && !isOwner
+  // 2026-10-17 fee-only pivot: S2 PRO 手数料 upsell は撤廃。手取りは全員 7% 固定で算出。
   const budgetYen: number | null = project.budget ?? null
 
   return (
@@ -147,55 +143,12 @@ export default async function ProjectDetailPage({ params }: Props) {
                 <p className="text-xs text-gray-400">予算</p>
                 <p className="text-2xl font-bold text-purple-600">{formatCurrency(budgetYen)}</p>
                 {(() => {
-                  const payoutFree = calcArtistPayout(budgetYen, { isProArtist: false })
-                  const payoutPro = calcArtistPayout(budgetYen, { isProArtist: true })
-                  const uplift = payoutPro - payoutFree
-
-                  if (!showApplicantView) {
-                    // 未ログイン / オーナー閲覧: 従来通り控えめな 7% ラインのみ表示
-                    return (
-                      <p className="text-xs text-gray-400 mt-1">
-                        （手数料 7% 差引き後の手取り: {formatCurrency(payoutFree)}）
-                      </p>
-                    )
-                  }
-
-                  if (isProViewer) {
-                    return (
-                      <div className="mt-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
-                        <p className="text-xs text-zinc-800">
-                          🎉 <span className="font-bold">PRO 特典 (5%)</span> 適用中
-                        </p>
-                        <p className="text-sm font-bold text-zinc-900 mt-0.5">
-                          あなたの手取り: {formatCurrency(payoutPro)}
-                        </p>
-                        <p className="text-[11px] text-zinc-700 mt-0.5">
-                          Free 比 +{formatCurrency(uplift)}
-                        </p>
-                      </div>
-                    )
-                  }
-
+                  const payout = calcArtistPayout(budgetYen)
                   return (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs text-gray-500">
-                        手数料 7% 差引き後の手取り: <span className="font-medium text-gray-700">{formatCurrency(payoutFree)}</span>
-                      </p>
-                      <Link
-                        href="/pro/subscribe"
-                        className="block rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/60 px-3 py-2 hover:border-purple-300 transition"
-                      >
-                        <p className="text-[11px] text-purple-700 font-medium">
-                          💡 PRO なら手数料 5%
-                        </p>
-                        <p className="text-sm font-bold text-purple-900 mt-0.5">
-                          手取り +{formatCurrency(uplift)} = {formatCurrency(payoutPro)}
-                        </p>
-                        <p className="text-[10px] text-purple-600 mt-0.5 underline">
-                          PRO の詳細を見る →
-                        </p>
-                      </Link>
-                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      手数料 7% 差引き後の手取り:{' '}
+                      <span className="font-medium text-gray-700">{formatCurrency(payout)}</span>
+                    </p>
                   )
                 })()}
               </div>

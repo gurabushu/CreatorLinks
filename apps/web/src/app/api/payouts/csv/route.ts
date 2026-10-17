@@ -25,8 +25,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'invalid year' }, { status: 400 })
   }
 
-  // PRO 判定: PRO は源泉徴収税列 + 月次集計行を追加、Free は基本 CSV のみ
-  const isPro = session.user.role === 'PRO'
+  // 2026-10-17 fee-only pivot: 源泉徴収税列・月次集計行は全ユーザー解放。
+  // 既存の `isPro` 変数は列構成の分岐で使われているため、定数 true として残置する。
+  const isPro = true
 
   const from = new Date(Date.UTC(year, 0, 1))
   const to = new Date(Date.UTC(year + 1, 0, 1))

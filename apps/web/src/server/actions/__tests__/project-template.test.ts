@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+// 2026-10-17 fee-only pivot: PRO 限定ガードが撤廃された。
+// 認証ガードと、入力バリデーションのみを担保する。
+
 const {
   mockAuth,
   mockTemplateCreate,
@@ -32,7 +35,7 @@ async function importAction() {
   return (await import('../project-template')).createProjectTemplateAction
 }
 
-describe('createProjectTemplateAction — role guard', () => {
+describe('createProjectTemplateAction', () => {
   beforeEach(() => {
     mockAuth.mockReset()
     mockTemplateCreate.mockReset()
@@ -47,25 +50,8 @@ describe('createProjectTemplateAction — role guard', () => {
     expect(mockTemplateCreate).not.toHaveBeenCalled()
   })
 
-  it('GENERAL (Free) は PRO_REQUIRED で拒否', async () => {
+  it('GENERAL ユーザーでも作成に進む（PRO ガード撤廃）', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'GENERAL' } })
-    const createProjectTemplateAction = await importAction()
-    const result = await createProjectTemplateAction(validInput)
-    expect(result.success).toBe(false)
-    expect(result).toMatchObject({ code: 'PRO_REQUIRED' })
-    expect(mockTemplateCreate).not.toHaveBeenCalled()
-  })
-
-  it('ADMIN は PRO ではないので拒否される（role === PRO が厳密）', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } })
-    const createProjectTemplateAction = await importAction()
-    const result = await createProjectTemplateAction(validInput)
-    expect(result).toMatchObject({ code: 'PRO_REQUIRED' })
-    expect(mockTemplateCreate).not.toHaveBeenCalled()
-  })
-
-  it('PRO は作成に進む', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PRO' } })
     mockTemplateCreate.mockResolvedValue({ id: 't1' })
     const createProjectTemplateAction = await importAction()
     const result = await createProjectTemplateAction(validInput)
@@ -73,8 +59,17 @@ describe('createProjectTemplateAction — role guard', () => {
     expect(mockTemplateCreate).toHaveBeenCalled()
   })
 
-  it('空のテンプレ名ならバリデーションエラー（role は PRO）', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PRO' } })
+  it('ADMIN も作成に進む', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } })
+    mockTemplateCreate.mockResolvedValue({ id: 't1' })
+    const createProjectTemplateAction = await importAction()
+    const result = await createProjectTemplateAction(validInput)
+    expect(result).toEqual({ success: true, id: 't1' })
+    expect(mockTemplateCreate).toHaveBeenCalled()
+  })
+
+  it('空のテンプレ名ならバリデーションエラー', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'GENERAL' } })
     const createProjectTemplateAction = await importAction()
     const result = await createProjectTemplateAction({ ...validInput, label: '' })
     expect(result).toEqual({ success: false, error: 'テンプレ名を入力してください' })
