@@ -16,7 +16,6 @@ import {
   type MyTemplate,
 } from '@/server/actions/project-template'
 import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/shared'
-import Link from 'next/link'
 
 const GENRES = ['音楽', 'イラスト', '動画', 'デザイン', '写真', '文章', '声優', 'その他']
 
@@ -86,9 +85,8 @@ export default function NewProjectPage() {
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null)
   const [prefillLoaded, setPrefillLoaded] = useState(false)
   const [assignArtistName, setAssignArtistName] = useState<string | null>(null)
-  // F6: マイテンプレ (PRO 特典)
+  // F6: マイテンプレ（2026-10-17 fee-only pivot で全ユーザー解放）
   const [myTemplates, setMyTemplates] = useState<MyTemplate[]>([])
-  const [isPro, setIsPro] = useState(false)
   const [templatesLoaded, setTemplatesLoaded] = useState(false)
   const [budget, setBudget] = useState<string>('')
   const [saveAsTemplate, setSaveAsTemplate] = useState(false)
@@ -128,7 +126,6 @@ export default function NewProjectPage() {
       const result = await listMyProjectTemplatesAction()
       if (cancelled) return
       setMyTemplates(result.templates)
-      setIsPro(result.isPro)
       setTemplatesLoaded(true)
     })()
     return () => {
@@ -193,9 +190,9 @@ export default function NewProjectPage() {
 
       const result = await createProjectAction(null, formData)
 
-      // F6: 「テンプレとして保存」 (PRO)。案件作成に成功した後に別途保存。
+      // F6: 「テンプレとして保存」。案件作成に成功した後に別途保存。
       // 保存失敗は案件公開の成功を妨げないため銀のエラー扱い。
-      if (result.success && saveAsTemplate && isPro && templateLabel.trim()) {
+      if (result.success && saveAsTemplate && templateLabel.trim()) {
         const parsedBudget = budget ? Number(budget) : null
         const saveResult = await createProjectTemplateAction({
           label: templateLabel.trim(),
@@ -306,29 +303,16 @@ export default function NewProjectPage() {
               </p>
             </div>
 
-            {/* F6: マイテンプレ (PRO 特典) — 過去に作った案件をワンタップで再利用 */}
+            {/* F6: マイテンプレ — 過去に作った案件をワンタップで再利用 */}
             {templatesLoaded && (
               <div>
                 <div className="flex items-baseline justify-between mb-2">
-                  <label className="block font-medium">
-                    マイテンプレ
-                    <span className="text-[10px] font-bold bg-gradient-to-r from-purple-600 to-zinc-600 text-white px-1.5 py-0.5 rounded ml-2 align-middle">
-                      PRO
-                    </span>
-                  </label>
-                  {isPro && myTemplates.length > 0 && (
+                  <label className="block font-medium">マイテンプレ</label>
+                  {myTemplates.length > 0 && (
                     <span className="text-xs text-gray-400">{myTemplates.length} 件</span>
                   )}
                 </div>
-                {!isPro ? (
-                  <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/60 p-4 text-xs text-purple-800 leading-relaxed">
-                    自分の案件をテンプレ化し、次回以降ワンタップで呼び出せます（
-                    <Link href="/pro/subscribe" className="font-bold underline hover:text-purple-900">
-                      PRO 詳細
-                    </Link>
-                    ）。
-                  </div>
-                ) : myTemplates.length === 0 ? (
+                {myTemplates.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-xs text-gray-500 leading-relaxed">
                     まだ保存済みテンプレはありません。この画面下部の「テンプレとして保存」で登録できます。
                   </div>
@@ -609,59 +593,44 @@ export default function NewProjectPage() {
               </div>
             </label>
 
-            {/* F6: テンプレとして保存 (PRO 特典) */}
+            {/* F6: テンプレとして保存 */}
             {templatesLoaded && (
-              isPro ? (
-                <div className="rounded-xl border border-purple-200 bg-white p-4">
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={saveAsTemplate}
-                      onChange={(e) => setSaveAsTemplate(e.target.checked)}
-                      className="mt-1 accent-purple-600"
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">
-                        テンプレとして保存
-                        <span className="text-[10px] font-bold bg-gradient-to-r from-purple-600 to-zinc-600 text-white px-1.5 py-0.5 rounded ml-2 align-middle">
-                          PRO
-                        </span>
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        次回以降、この案件の内容をワンタップで呼び出せます。
-                      </p>
-                    </div>
-                  </label>
-                  {saveAsTemplate && (
-                    <div className="mt-3 pl-7">
-                      <input
-                        type="text"
-                        value={templateLabel}
-                        onChange={(e) => setTemplateLabel(e.target.value)}
-                        maxLength={50}
-                        placeholder="テンプレ名（例: 定期 YouTube BGM 依頼）"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      />
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        50 文字以内。マイテンプレ一覧に表示されます。
-                      </p>
-                    </div>
-                  )}
-                  {templateSaveError && (
-                    <p className="text-xs text-red-600 mt-2 pl-7">
-                      テンプレ保存に失敗しました: {templateSaveError}
+              <div className="rounded-xl border border-purple-200 bg-white p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={saveAsTemplate}
+                    onChange={(e) => setSaveAsTemplate(e.target.checked)}
+                    className="mt-1 accent-purple-600"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800">テンプレとして保存</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      次回以降、この案件の内容をワンタップで呼び出せます。
                     </p>
-                  )}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/60 p-4 text-xs text-purple-800 leading-relaxed">
-                  💡 PRO なら、この案件を「テンプレとして保存」して次回ワンタップで呼び出せます（
-                  <Link href="/pro/subscribe" className="font-bold underline hover:text-purple-900">
-                    PRO 詳細
-                  </Link>
-                  ）。
-                </div>
-              )
+                  </div>
+                </label>
+                {saveAsTemplate && (
+                  <div className="mt-3 pl-7">
+                    <input
+                      type="text"
+                      value={templateLabel}
+                      onChange={(e) => setTemplateLabel(e.target.value)}
+                      maxLength={50}
+                      placeholder="テンプレ名（例: 定期 YouTube BGM 依頼）"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      50 文字以内。マイテンプレ一覧に表示されます。
+                    </p>
+                  </div>
+                )}
+                {templateSaveError && (
+                  <p className="text-xs text-red-600 mt-2 pl-7">
+                    テンプレ保存に失敗しました: {templateSaveError}
+                  </p>
+                )}
+              </div>
             )}
 
             {/* 確認サマリー */}

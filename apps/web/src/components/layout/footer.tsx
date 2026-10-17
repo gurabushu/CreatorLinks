@@ -11,7 +11,7 @@ import { SITE_NAME } from '@/lib/brand'
 // サイドバーが付かないのは / と /auth 系のみ。
 const SIDEBAR_ROUTES = [
   '/dashboard', '/projects', '/artists', '/events', '/admin', '/announcements',
-  '/support', '/pro', '/onboarding',
+  '/support', '/onboarding',
 ]
 
 export function Footer() {
@@ -41,7 +41,7 @@ export function Footer() {
               <li><Link href="/artists" className="hover:text-purple-600">アーティストを探す</Link></li>
               <li><Link href="/projects" className="hover:text-purple-600">案件を探す</Link></li>
               <li><Link href="/events" className="hover:text-purple-600">イベント掲示板</Link></li>
-              <li><Link href="/pro/subscribe" className="hover:text-purple-600">PRO プラン</Link></li>
+              <li><Link href="/verify" className="hover:text-purple-600">認証バッジ</Link></li>
             </ul>
           </div>
           <div>
