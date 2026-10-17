@@ -50,7 +50,7 @@ PRO サブスク全廃 → Platform fee のみ + 認証バッジ買切 + Foundin
 
 ---
 
-## 2. 完了済み（6 Phase / 8）
+## 2. 完了済み（7 Phase / 8）
 
 | Phase | 内容 | commit |
 |---|---|---|
@@ -60,6 +60,7 @@ PRO サブスク全廃 → Platform fee のみ + 認証バッジ買切 + Foundin
 | **F** | 既存 PRO → Founding Supporter migration script | `ad117eb` |
 | **A2** | UserRole enum から `PRO` 削除、Early Bird cron 撤去 | `5e61978` |
 | **D** | Supporter 管理 Admin UI (`/admin/supporters`) | `38e830b` |
+| **C** | 認証バッジ買切 ¥3,000 Stripe Checkout + webhook 分岐 | `9ddb6ee` |
 
 ### 完了内容の要点
 
@@ -80,35 +81,7 @@ PRO サブスク全廃 → Platform fee のみ + 認証バッジ買切 + Foundin
 
 ---
 
-## 3. 残作業（2 Phase）
-
-### 🔴 Phase C: 認証バッジ買切 Stripe フロー（最重要）
-
-**内容:**
-- `/verify` ページ新設（任意、¥3,000 で認証バッジ買切）
-- Stripe PaymentIntent 単発決済フロー
-- Webhook で `payment_intent.succeeded` を受けて `User.isVerified=true`
-- フロントの CTA は既に Phase B で設置済み（sidebar-shell の「認証バッジを取得」リンク）
-
-**実装ファイル:**
-- 新規: `apps/web/src/app/verify/page.tsx` (ランディング)
-- 新規: `apps/web/src/app/verify/checkout-client.tsx` (Stripe Checkout セッション作成)
-- 新規: `apps/web/src/app/api/stripe/verify-checkout/route.ts` (Checkout Session 作成 API)
-- 修正: `apps/web/src/app/api/stripe/webhook/route.ts`（`verify_badge` metadata の分岐追加）
-
-**使う既存リソース:**
-- `lib/stripe.ts` の `getStripe()` ヘルパ（Node runtime）
-- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`（既存の webhook と同じ鍵）
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`（Checkout 用）
-
-**設計メモ:**
-- Checkout Session の metadata に `{ purpose: 'verify_badge', userId: '<id>' }` を入れる
-- Webhook 側で `event.data.object.metadata?.purpose === 'verify_badge'` の時だけ User.update
-- 既存の案件決済 (`payment_intent.succeeded` → Payment テーブル更新) と衝突しないよう分岐
-
-**概算工数:** 3-5h
-
----
+## 3. 残作業（1 Phase）
 
 ### 🟠 Phase E: LP / Pricing ページを fee-only モデルに書き換え
 
