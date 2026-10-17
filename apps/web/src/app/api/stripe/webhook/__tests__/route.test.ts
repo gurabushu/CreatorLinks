@@ -5,6 +5,7 @@ const {
   mockPaymentUpdateMany,
   mockUserFindUnique,
   mockUserUpdate,
+  mockUserUpdateMany,
   mockCheckRateLimit,
   mockProcessedEventCreate,
   mockProcessedEventDelete,
@@ -13,6 +14,7 @@ const {
   mockPaymentUpdateMany: vi.fn(),
   mockUserFindUnique: vi.fn(),
   mockUserUpdate: vi.fn(),
+  mockUserUpdateMany: vi.fn(),
   mockCheckRateLimit: vi.fn(),
   mockProcessedEventCreate: vi.fn(),
   mockProcessedEventDelete: vi.fn(),
@@ -21,7 +23,11 @@ const {
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     payment: { updateMany: mockPaymentUpdateMany },
-    user: { findUnique: mockUserFindUnique, update: mockUserUpdate },
+    user: {
+      findUnique: mockUserFindUnique,
+      update: mockUserUpdate,
+      updateMany: mockUserUpdateMany,
+    },
     // 冪等性ガード用の ProcessedStripeEvent。route.ts 側で create → 失敗時に delete でロールバック。
     processedStripeEvent: {
       create: mockProcessedEventCreate,
@@ -54,6 +60,7 @@ describe('stripe webhook', () => {
     mockPaymentUpdateMany.mockReset()
     mockUserFindUnique.mockReset()
     mockUserUpdate.mockReset()
+    mockUserUpdateMany.mockReset()
     mockCheckRateLimit.mockReset()
     mockProcessedEventCreate.mockReset()
     mockProcessedEventDelete.mockReset()
@@ -125,6 +132,42 @@ describe('stripe webhook', () => {
 
     const res = await POST(makeRequest('{}') as never)
     expect(res.status).toBe(200)
+    expect(mockPaymentUpdateMany).not.toHaveBeenCalled()
+  })
+
+  it('payment_intent.succeeded: purpose=verify_badge で User.isVerified=true に遷移', async () => {
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_verify_1',
+      type: 'payment_intent.succeeded',
+      data: {
+        object: {
+          id: 'pi_verify_1',
+          metadata: { purpose: 'verify_badge', userId: 'u_123' },
+        },
+      },
+    })
+    mockUserUpdateMany.mockResolvedValue({ count: 1 })
+
+    const res = await POST(makeRequest('{}') as never)
+    expect(res.status).toBe(200)
+    // 冪等性: isVerified=false の行のみ更新する where 条件になっていること
+    expect(mockUserUpdateMany).toHaveBeenCalledWith({
+      where: { id: 'u_123', isVerified: false },
+      data: { isVerified: true },
+    })
+    // 認証バッジ分岐では案件決済側 (payment.updateMany) を叩かない
+    expect(mockPaymentUpdateMany).not.toHaveBeenCalled()
+  })
+
+  it('payment_intent.succeeded: verify_badge でも userId 欠落は no-op', async () => {
+    mockConstructEvent.mockReturnValue({
+      type: 'payment_intent.succeeded',
+      data: { object: { metadata: { purpose: 'verify_badge' } } },
+    })
+
+    const res = await POST(makeRequest('{}') as never)
+    expect(res.status).toBe(200)
+    expect(mockUserUpdateMany).not.toHaveBeenCalled()
     expect(mockPaymentUpdateMany).not.toHaveBeenCalled()
   })
 
