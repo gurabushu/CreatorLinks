@@ -50,7 +50,7 @@ PRO サブスク全廃 → Platform fee のみ + 認証バッジ買切 + Foundin
 
 ---
 
-## 2. 完了済み（7 Phase / 8）
+## 2. 完了済み（8 Phase / 8 — fee-only pivot 実装完了）
 
 | Phase | 内容 | commit |
 |---|---|---|
@@ -61,6 +61,7 @@ PRO サブスク全廃 → Platform fee のみ + 認証バッジ買切 + Foundin
 | **A2** | UserRole enum から `PRO` 削除、Early Bird cron 撤去 | `5e61978` |
 | **D** | Supporter 管理 Admin UI (`/admin/supporters`) | `38e830b` |
 | **C** | 認証バッジ買切 ¥3,000 Stripe Checkout + webhook 分岐 | `9ddb6ee` |
+| **E** | LP / FAQ / footer / terms / tokutei の PRO 条項全削除 | `572f80a` / `c699620` / `6ecaffa` |
 
 ### 完了内容の要点
 
@@ -75,28 +76,15 @@ PRO サブスク全廃 → Platform fee のみ + 認証バッジ買切 + Foundin
 
 ### テスト状態
 
-- Vitest: **8 ファイル / 76 tests pass**
+- Vitest: **8 ファイル / 78 tests pass**（Phase C で webhook verify_badge 分岐 2 ケース追加）
 - 既存 `stripe.test.ts`、`portfolio.test.ts`、`project-template.test.ts` は fee-only 向けに書き換え済み
 - `tsc --noEmit`: green
 
 ---
 
-## 3. 残作業（1 Phase）
+## 3. 残作業（なし — ドキュメント化と本番適用のみ）
 
-### 🟠 Phase E: LP / Pricing ページを fee-only モデルに書き換え
-
-**内容:**
-- `/pro/subscribe` ページを全書き換え（既存の月額説明・RevenueCat 文言を削除、認証バッジ案内に差替）
-- または `/pro/subscribe` → `/verify` にリダイレクト（recommended）
-- `/` (トップページ LP) の pricing セクション・PRO バッジ説明を削除
-- `components/landing/pricing-comparison.tsx` を認証バッジ案内に書き換え or 削除
-- 利用規約・特商法ページ (`terms` / `tokutei`) の PRO サブスク条項を削除
-
-**関連既存メモ:**
-- `feedback_encorecue_positioning.md` → "便利さ全振り" で訴求、リスク軸は NG
-- `project_encorecue_lp_implementation_gap.md` → LP と実装のズレを再度精査
-
-**概算工数:** 2-3h
+fee-only pivot の実装は全 Phase 完了。残っているのはユーザー側の本番適用作業（§5）のみ。
 
 ---
 
