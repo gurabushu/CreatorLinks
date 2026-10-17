@@ -186,8 +186,8 @@ export default async function YearlyDocumentsPage({ params }: Params) {
                       <td className="px-3 py-2 text-right font-mono">¥{r.amount.toLocaleString()}</td>
                       <td className="px-3 py-2 text-right font-mono text-purple-700">¥{r.payout.toLocaleString()}</td>
                       <td className="px-3 py-2 text-right font-mono text-gray-500">¥{r.fee.toLocaleString()}</td>
-                      <td className="px-3 py-2 text-right font-mono text-orange-700">¥{r.withholding.toLocaleString()}</td>
-                      <td className="px-3 py-2 text-right font-mono font-bold text-emerald-700">
+                      <td className="px-3 py-2 text-right font-mono text-zinc-700">¥{r.withholding.toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right font-mono font-bold text-zinc-700">
                         ¥{(r.payout - r.withholding).toLocaleString()}
                       </td>
                     </tr>
@@ -205,7 +205,7 @@ export default async function YearlyDocumentsPage({ params }: Params) {
 
       {/* Free 用: PRO upsell */}
       {!isPro && payments.length > 0 && (
-        <div className="mb-6 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/70 p-5 sm:p-6">
+        <div className="mb-6 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/70 p-5 sm:p-6">
           <div className="flex items-start gap-3 flex-wrap">
             <div className="flex-1 min-w-0">
               <p className="text-sm sm:text-base font-bold text-purple-900 mb-1">

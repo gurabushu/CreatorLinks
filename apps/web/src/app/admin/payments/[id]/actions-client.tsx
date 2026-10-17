@@ -60,8 +60,8 @@ export function PaymentAdminActions({ paymentId, currentStatus }: Props) {
             }
             className={`text-sm px-4 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed ${
               confirmingAction === 'release'
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                : 'bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50'
+                ? 'bg-zinc-600 text-white hover:bg-zinc-700'
+                : 'bg-white text-zinc-700 border border-zinc-300 hover:bg-zinc-50'
             }`}
           >
             {confirmingAction === 'release' ? '✅ 確定: 送金する' : '💸 手動 release'}
@@ -103,7 +103,7 @@ export function PaymentAdminActions({ paymentId, currentStatus }: Props) {
         <div
           className={`text-sm px-4 py-3 rounded-xl border ${
             result.success
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              ? 'bg-zinc-50 border-zinc-200 text-zinc-800'
               : 'bg-red-50 border-red-200 text-red-800'
           }`}
         >

@@ -120,7 +120,7 @@ export function NewPromoCodeForm() {
         <div
           className={`text-sm px-4 py-2 rounded-lg border ${
             result.success
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              ? 'bg-zinc-50 border-zinc-200 text-zinc-800'
               : 'bg-red-50 border-red-200 text-red-800'
           }`}
         >

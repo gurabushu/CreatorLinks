@@ -49,7 +49,7 @@ export default async function AdminSupportPage() {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4">
         <h1 className="text-2xl font-bold mb-4">サポート受信箱</h1>
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-6 text-sm">
+        <div className="bg-zinc-50 border border-zinc-200 text-zinc-800 rounded-xl p-6 text-sm">
           公式アカウントがシード未実行です。`apps/api/scripts/seed-official-account.ts` を実行してください。
         </div>
       </div>

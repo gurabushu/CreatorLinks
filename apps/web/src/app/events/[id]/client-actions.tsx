@@ -49,8 +49,8 @@ export function EventInterestButton({
         disabled={isPending}
         className={`text-sm px-4 py-2 rounded-lg border transition disabled:opacity-50 ${
           state === false
-            ? 'bg-pink-100 border-pink-300 text-pink-700'
-            : 'bg-white border-gray-300 text-gray-700 hover:border-pink-300'
+            ? 'bg-zinc-100 border-zinc-300 text-zinc-700'
+            : 'bg-white border-gray-300 text-gray-700 hover:border-zinc-300'
         }`}
       >
         興味あり
@@ -95,7 +95,7 @@ export function ApplyToRoleButton({ openRoleId }: { openRoleId: string }) {
           <button
             onClick={apply}
             disabled={isPending}
-            className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+            className="text-xs bg-zinc-600 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-lg transition disabled:opacity-50"
           >
             {isPending ? '送信中...' : '送信'}
           </button>
@@ -115,11 +115,11 @@ export function ApplyToRoleButton({ openRoleId }: { openRoleId: string }) {
     <div>
       <button
         onClick={() => setShowForm(true)}
-        className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg transition whitespace-nowrap"
+        className="text-xs bg-zinc-600 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-lg transition whitespace-nowrap"
       >
         応募する
       </button>
-      {msg && <p className="mt-1 text-[11px] text-emerald-700">{msg}</p>}
+      {msg && <p className="mt-1 text-[11px] text-zinc-700">{msg}</p>}
     </div>
   )
 }

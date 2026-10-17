@@ -16,9 +16,9 @@ interface Props {
 }
 
 const STATUS_BADGE: Record<MatchStatus, { label: string; className: string }> = {
-  APPLIED: { label: '応募中', className: 'bg-yellow-100 text-yellow-700' },
-  ACCEPTED: { label: '承認済み', className: 'bg-green-100 text-green-700' },
-  COMPLETED: { label: '完了', className: 'bg-blue-100 text-blue-700' },
+  APPLIED: { label: '応募中', className: 'bg-zinc-100 text-zinc-700' },
+  ACCEPTED: { label: '承認済み', className: 'bg-zinc-100 text-zinc-700' },
+  COMPLETED: { label: '完了', className: 'bg-zinc-100 text-zinc-700' },
   REJECTED: { label: '却下済み', className: 'bg-red-100 text-red-600' },
 }
 
@@ -54,7 +54,7 @@ export function ManageMatchButtons({ match }: Props) {
         <button
           onClick={() => handleUpdate('ACCEPTED')}
           disabled={isPending}
-          className="text-sm bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+          className="text-sm bg-zinc-600 text-white px-4 py-1.5 rounded-lg hover:bg-zinc-700 transition disabled:opacity-50"
         >
           {isPending ? '処理中...' : '承認'}
         </button>

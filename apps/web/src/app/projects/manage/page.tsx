@@ -11,9 +11,9 @@ import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/sh
 import { PaymentBadge, type PaymentStatus } from '@/components/payments/payment-badge'
 
 const LEVEL_BADGE_CLASS: Record<CommitmentLevel, string> = {
-  HOBBY: 'bg-emerald-100 text-emerald-700',
+  HOBBY: 'bg-zinc-100 text-zinc-700',
   SEMI_PRO: 'bg-sky-100 text-sky-700',
-  PRO: 'bg-amber-100 text-amber-800',
+  PRO: 'bg-zinc-100 text-zinc-800',
 }
 
 export default async function ProjectManagePage() {
@@ -86,21 +86,21 @@ export default async function ProjectManagePage() {
       {/* 送信済みスカウト（応答待ち）: プロジェクト横断で 1 箇所に集約 */}
       {sentScouts.length > 0 && (
         <section className="mb-8">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-2xl p-4 sm:p-5">
+          <div className="bg-gradient-to-r from-zinc-50 to-zinc-50 border border-zinc-300 rounded-2xl p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               <span aria-hidden className="text-lg">📤</span>
-              <h2 className="font-bold text-amber-900 text-sm sm:text-base">
-                送信済みスカウト <span className="text-amber-700">({sentScouts.length}件)</span>
+              <h2 className="font-bold text-zinc-900 text-sm sm:text-base">
+                送信済みスカウト <span className="text-zinc-700">({sentScouts.length}件)</span>
               </h2>
-              <span className="text-xs text-amber-700 ml-auto">アーティストの応答待ち</span>
+              <span className="text-xs text-zinc-700 ml-auto">アーティストの応答待ち</span>
             </div>
             <ul className="space-y-2">
               {sentScouts.map((s) => (
                 <li key={s.matchId}>
-                  <div className="bg-white border border-amber-200 rounded-lg p-3 flex items-center justify-between gap-3">
+                  <div className="bg-white border border-zinc-200 rounded-lg p-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <Link href={`/artists/${s.artist.id}`}>
-                        <div className="w-9 h-9 rounded-full bg-amber-100 overflow-hidden shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-zinc-100 overflow-hidden shrink-0">
                           {s.artist.avatarUrl && (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
@@ -125,7 +125,7 @@ export default async function ProjectManagePage() {
                     </div>
                     <Link
                       href={`/dashboard/chat/${s.matchId}`}
-                      className="shrink-0 text-xs bg-amber-100 text-amber-800 hover:bg-amber-200 px-3 py-1.5 rounded-lg font-medium transition"
+                      className="shrink-0 text-xs bg-zinc-100 text-zinc-800 hover:bg-zinc-200 px-3 py-1.5 rounded-lg font-medium transition"
                     >
                       チャットを開く
                     </Link>
@@ -155,11 +155,11 @@ export default async function ProjectManagePage() {
                     <span
                       className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                         project.status === 'OPEN'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-zinc-100 text-zinc-700'
                           : project.status === 'MATCHING'
-                          ? 'bg-blue-100 text-blue-700'
+                          ? 'bg-zinc-100 text-zinc-700'
                           : project.status === 'PRIVATE'
-                          ? 'bg-pink-100 text-pink-700'
+                          ? 'bg-zinc-100 text-zinc-700'
                           : 'bg-gray-100 text-gray-500'
                       }`}
                     >
@@ -233,7 +233,7 @@ export default async function ProjectManagePage() {
                           <div className="mt-1 flex items-center gap-2 flex-wrap">
                             {/* Match direction/status バッジ: 応募 vs スカウト送信 で色分け */}
                             {match.status === 'SCOUTED' && (
-                              <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full font-semibold">
+                              <span className="text-[10px] bg-zinc-100 text-zinc-800 px-1.5 py-0.5 rounded-full font-semibold">
                                 📤 送信スカウト (応答待ち)
                               </span>
                             )}

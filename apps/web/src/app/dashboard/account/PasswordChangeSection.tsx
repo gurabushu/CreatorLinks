@@ -134,7 +134,7 @@ export default function PasswordChangeSection({ passwordSet }: Props) {
         <p
           className={`mt-3 text-sm px-3 py-2 rounded-lg ${
             message.kind === 'success'
-              ? 'bg-green-50 border border-green-200 text-green-700'
+              ? 'bg-zinc-50 border border-zinc-200 text-zinc-700'
               : 'bg-red-50 border border-red-200 text-red-700'
           }`}
         >

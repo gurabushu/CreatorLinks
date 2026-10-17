@@ -12,9 +12,9 @@ import { calcArtistPayout } from '@/lib/stripe'
 import { COMMITMENT_LEVEL_LABELS, type CommitmentLevel } from '@creator-links/shared'
 
 const LEVEL_BADGE_CLASS: Record<CommitmentLevel, string> = {
-  HOBBY: 'bg-emerald-100 text-emerald-700',
+  HOBBY: 'bg-zinc-100 text-zinc-700',
   SEMI_PRO: 'bg-sky-100 text-sky-700',
-  PRO: 'bg-amber-100 text-amber-800',
+  PRO: 'bg-zinc-100 text-zinc-800',
 }
 
 interface Props {
@@ -104,7 +104,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               <span
                 className={`text-xs px-3 py-1 rounded-full font-medium ${
                   project.status === 'OPEN'
-                    ? 'bg-green-100 text-green-700'
+                    ? 'bg-zinc-100 text-zinc-700'
                     : 'bg-gray-100 text-gray-500'
                 }`}
               >
@@ -162,14 +162,14 @@ export default async function ProjectDetailPage({ params }: Props) {
 
                   if (isProViewer) {
                     return (
-                      <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-                        <p className="text-xs text-amber-800">
+                      <div className="mt-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
+                        <p className="text-xs text-zinc-800">
                           🎉 <span className="font-bold">PRO 特典 (5%)</span> 適用中
                         </p>
-                        <p className="text-sm font-bold text-amber-900 mt-0.5">
+                        <p className="text-sm font-bold text-zinc-900 mt-0.5">
                           あなたの手取り: {formatCurrency(payoutPro)}
                         </p>
-                        <p className="text-[11px] text-amber-700 mt-0.5">
+                        <p className="text-[11px] text-zinc-700 mt-0.5">
                           Free 比 +{formatCurrency(uplift)}
                         </p>
                       </div>
@@ -183,7 +183,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                       </p>
                       <Link
                         href="/pro/subscribe"
-                        className="block rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/60 px-3 py-2 hover:border-purple-300 transition"
+                        className="block rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/60 px-3 py-2 hover:border-purple-300 transition"
                       >
                         <p className="text-[11px] text-purple-700 font-medium">
                           💡 PRO なら手数料 5%

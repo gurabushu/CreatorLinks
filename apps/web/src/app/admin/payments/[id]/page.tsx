@@ -70,9 +70,9 @@ export default async function AdminPaymentDetailPage({
             <code className="text-sm font-mono">{payment.id}</code>
           </div>
           <span className={`text-sm font-bold px-3 py-1 rounded-full ${
-            payment.status === 'HELD' ? 'bg-amber-100 text-amber-800' :
-            payment.status === 'RELEASED' ? 'bg-emerald-100 text-emerald-700' :
-            payment.status === 'REFUNDED' ? 'bg-blue-100 text-blue-700' :
+            payment.status === 'HELD' ? 'bg-zinc-100 text-zinc-800' :
+            payment.status === 'RELEASED' ? 'bg-zinc-100 text-zinc-700' :
+            payment.status === 'REFUNDED' ? 'bg-zinc-100 text-zinc-700' :
             payment.status === 'FAILED' ? 'bg-red-100 text-red-700' :
             'bg-gray-100 text-gray-700'
           }`}>
@@ -91,7 +91,7 @@ export default async function AdminPaymentDetailPage({
           </div>
           <div>
             <dt className="text-xs text-gray-500">アーティスト受取</dt>
-            <dd className="font-mono font-bold text-emerald-700">{fmtYen(payment.artistPayoutYen)}</dd>
+            <dd className="font-mono font-bold text-zinc-700">{fmtYen(payment.artistPayoutYen)}</dd>
           </div>
           <div>
             <dt className="text-xs text-gray-500">作成日時</dt>
@@ -135,7 +135,7 @@ export default async function AdminPaymentDetailPage({
               {' '}
               <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded ${
                 payment.match.artist.stripePayoutsEnabled
-                  ? 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-zinc-100 text-zinc-700'
                   : 'bg-red-100 text-red-700'
               }`}>
                 Stripe Connect {payment.match.artist.stripePayoutsEnabled ? '有効' : '未有効'}

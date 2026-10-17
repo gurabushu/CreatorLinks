@@ -20,9 +20,9 @@ type Search = { status?: string }
 
 const STATUS_META: Record<PaymentStatus, { label: string; className: string; hint: string }> = {
   AWAITING: { label: '支払い待ち', className: 'bg-gray-100 text-gray-700', hint: 'Checkout 未完了。長時間残るなら cancel 候補' },
-  HELD: { label: 'エスクロー保管中', className: 'bg-amber-100 text-amber-800', hint: '検収待ち。7日後 auto release' },
-  RELEASED: { label: '送金済', className: 'bg-emerald-100 text-emerald-700', hint: 'アーティスト着金完了' },
-  REFUNDED: { label: '返金済', className: 'bg-blue-100 text-blue-700', hint: '依頼者へ返金完了' },
+  HELD: { label: 'エスクロー保管中', className: 'bg-zinc-100 text-zinc-800', hint: '検収待ち。7日後 auto release' },
+  RELEASED: { label: '送金済', className: 'bg-zinc-100 text-zinc-700', hint: 'アーティスト着金完了' },
+  REFUNDED: { label: '返金済', className: 'bg-zinc-100 text-zinc-700', hint: '依頼者へ返金完了' },
   FAILED: { label: '失敗', className: 'bg-red-100 text-red-700', hint: 'Payment Intent 失敗。再挑戦を促す' },
 }
 

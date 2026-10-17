@@ -248,7 +248,7 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
           <div
             key={w}
             className={`py-2 font-semibold ${
-              i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-gray-600'
+              i === 0 ? 'text-red-500' : i === 6 ? 'text-zinc-500' : 'text-gray-600'
             }`}
           >
             {w}
@@ -287,7 +287,7 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
                         : dow === 0
                           ? 'text-red-500'
                           : dow === 6
-                            ? 'text-blue-500'
+                            ? 'text-zinc-500'
                             : 'text-gray-700'
                   }`}
                 >
@@ -296,7 +296,7 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
                 {isFreeSlot && (
                   <span
                     aria-hidden
-                    className="text-[9px] text-emerald-600 font-medium leading-none px-1 py-0.5 rounded bg-emerald-50 border border-emerald-100"
+                    className="text-[9px] text-zinc-600 font-medium leading-none px-1 py-0.5 rounded bg-zinc-50 border border-zinc-100"
                   >
                     ＋案件
                   </span>
@@ -334,7 +334,7 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
                 key={k}
                 href={`/projects/new?assignArtist=${id}&date=${k}`}
                 aria-label={`${d.getMonth() + 1}月${d.getDate()}日にこのアーティスト宛の案件を作成`}
-                className={`${baseClassName} hover:bg-emerald-50 transition-colors cursor-pointer`}
+                className={`${baseClassName} hover:bg-zinc-50 transition-colors cursor-pointer`}
               >
                 {cellInner}
               </Link>

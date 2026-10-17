@@ -77,10 +77,10 @@ export default async function MatchesPage() {
               return (
                 <div
                   key={match.id}
-                  className="bg-white border border-pink-100 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
+                  className="bg-white border border-zinc-100 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-300 to-purple-400 overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
                       {partner?.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={partner.avatarUrl} alt={partner ? getDisplayName(partner) : ''} className="w-full h-full object-cover" />
@@ -102,7 +102,7 @@ export default async function MatchesPage() {
                   </div>
                   <Link
                     href={`/dashboard/chat/${match.id}`}
-                    className="text-sm bg-pink-100 text-pink-700 px-3 py-1.5 rounded-lg hover:bg-pink-200 transition shrink-0 text-center w-full sm:w-auto"
+                    className="text-sm bg-zinc-100 text-zinc-700 px-3 py-1.5 rounded-lg hover:bg-zinc-200 transition shrink-0 text-center w-full sm:w-auto"
                   >
                     チャットへ
                   </Link>
@@ -196,7 +196,7 @@ export default async function MatchesPage() {
             <Link href="/projects" className="text-purple-600 hover:underline">
               案件を探す →
             </Link>
-            <Link href="/artists" className="text-pink-600 hover:underline">
+            <Link href="/artists" className="text-zinc-600 hover:underline">
               アーティストを探す →
             </Link>
           </div>

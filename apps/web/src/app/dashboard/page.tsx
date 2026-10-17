@@ -46,9 +46,9 @@ const STATUS_LABEL: Record<string, string> = {
 }
 const STATUS_CLASS: Record<string, string> = {
   APPLIED: 'bg-gray-100 text-gray-700',
-  SCOUTED: 'bg-amber-100 text-amber-700',
-  ACCEPTED: 'bg-emerald-100 text-emerald-700',
-  COMPLETED: 'bg-blue-100 text-blue-700',
+  SCOUTED: 'bg-zinc-100 text-zinc-700',
+  ACCEPTED: 'bg-zinc-100 text-zinc-700',
+  COMPLETED: 'bg-zinc-100 text-zinc-700',
   REJECTED: 'bg-red-100 text-red-700',
 }
 const PROJECT_STATUS_LABEL: Record<string, string> = {
@@ -219,11 +219,11 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-6xl mx-auto py-8 sm:py-10 px-4">
       {isGuest && (
-        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="mb-6 rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm text-zinc-800">
           <span className="font-bold">ゲストモード</span>
           <span className="ml-2">
             このアカウントは{guestExpiresAt ? ` ${guestExpiresAt.toLocaleString('ja-JP')} ` : 'まもなく'}に自動削除されます。引き続き利用するには
-            <Link href="/auth" className="ml-1 underline font-medium hover:text-amber-900">
+            <Link href="/auth" className="ml-1 underline font-medium hover:text-zinc-900">
               正式登録
             </Link>
             をお願いします。
@@ -238,7 +238,7 @@ export default async function DashboardPage() {
           <p className="text-gray-500 mt-1 text-sm">
             こんにちは、{session.user.name} さん
             {session.user.role === 'PRO' && (
-              <span className="ml-2 bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full">PRO</span>
+              <span className="ml-2 bg-zinc-100 text-zinc-700 text-xs px-2 py-1 rounded-full">PRO</span>
             )}
           </p>
         </div>
@@ -265,7 +265,7 @@ export default async function DashboardPage() {
       {session.user.role !== 'PRO' && feeWindowMatchCount > 0 && feeWindowPaidYen > feeWindowProEquivYen && (
         <Link
           href="/pro/subscribe"
-          className="block mb-8 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-indigo-50/70 p-5 hover:shadow-md hover:border-purple-300 transition"
+          className="block mb-8 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-zinc-50/70 p-5 hover:shadow-md hover:border-purple-300 transition"
         >
           <div className="flex items-start gap-4 flex-wrap">
             <div className="text-3xl leading-none shrink-0" aria-hidden>💸</div>
@@ -279,7 +279,7 @@ export default async function DashboardPage() {
                 PRO なら
                 <span className="font-bold text-purple-700"> ¥{feeWindowProEquivYen.toLocaleString()}</span>
                 {' '}で済み、
-                <span className="font-bold text-emerald-700"> ¥{(feeWindowPaidYen - feeWindowProEquivYen).toLocaleString()}</span>
+                <span className="font-bold text-zinc-700"> ¥{(feeWindowPaidYen - feeWindowProEquivYen).toLocaleString()}</span>
                 {' '}が手元に残っていました。
               </p>
               <p className="text-[11px] text-purple-600 mt-2 underline">
@@ -293,13 +293,13 @@ export default async function DashboardPage() {
       {/* オファー受信 (SCOUTED) — 発注者からのスカウトは承諾/辞退が必要なので目立たせる */}
       {scoutedMatches.length > 0 && (
         <section className="mb-8">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl p-4 sm:p-5">
+          <div className="bg-gradient-to-r from-zinc-50 to-zinc-50 border border-zinc-300 rounded-xl p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-lg" aria-hidden>📩</span>
-              <h2 className="font-bold text-amber-900 text-sm sm:text-base">
-                オファー受信 <span className="text-amber-700">({scoutedMatches.length}件)</span>
+              <h2 className="font-bold text-zinc-900 text-sm sm:text-base">
+                オファー受信 <span className="text-zinc-700">({scoutedMatches.length}件)</span>
               </h2>
-              <span className="text-xs text-amber-700 ml-auto">承諾/辞退の返信をお願いします</span>
+              <span className="text-xs text-zinc-700 ml-auto">承諾/辞退の返信をお願いします</span>
             </div>
             <ul className="space-y-2">
               {scoutedMatches.map((m) => {
@@ -308,7 +308,7 @@ export default async function DashboardPage() {
                   <li key={m.id}>
                     <Link
                       href="/dashboard/matches"
-                      className="block bg-white border border-amber-200 rounded-lg p-3 hover:shadow-sm transition"
+                      className="block bg-white border border-zinc-200 rounded-lg p-3 hover:shadow-sm transition"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
@@ -317,7 +317,7 @@ export default async function DashboardPage() {
                             <p className="text-xs text-gray-500 mt-0.5">¥{m.project.budget.toLocaleString()}</p>
                           )}
                         </div>
-                        <span className="shrink-0 text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium">
+                        <span className="shrink-0 text-xs bg-zinc-100 text-zinc-800 px-2.5 py-1 rounded-full font-medium">
                           応答する →
                         </span>
                       </div>
@@ -391,7 +391,7 @@ export default async function DashboardPage() {
                   >
                     <div className="flex items-center gap-2 text-xs mb-1 flex-wrap">
                       <span className={`px-2 py-0.5 rounded-full font-medium ${
-                        e.role === 'MINE' ? 'bg-purple-100 text-purple-700' : 'bg-indigo-100 text-indigo-700'
+                        e.role === 'MINE' ? 'bg-purple-100 text-purple-700' : 'bg-zinc-100 text-zinc-700'
                       }`}>
                         {e.role === 'MINE' ? '自分' : 'フォロー中'}
                       </span>
@@ -405,7 +405,7 @@ export default async function DashboardPage() {
                     </div>
                     <p className="font-medium text-gray-900 truncate">{e.title}</p>
                     {e.role === 'FOLLOWING' && (
-                      <p className="text-xs text-indigo-700 mt-0.5">
+                      <p className="text-xs text-zinc-700 mt-0.5">
                         by {getDisplayName(e.creator)}
                       </p>
                     )}
@@ -460,7 +460,7 @@ export default async function DashboardPage() {
         <section className="mb-8">
           <Link
             href="/dashboard/payouts"
-            className="block bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 hover:shadow-sm transition"
+            className="block bg-gradient-to-r from-purple-50 to-zinc-50 border border-purple-200 rounded-xl p-4 hover:shadow-sm transition"
           >
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -496,7 +496,7 @@ function StatusCard({
   href, label, value, tone,
 }: { href: string; label: string; value: number; tone: 'emerald' | 'purple' | 'red' | 'gray' }) {
   const toneClass = {
-    emerald: 'text-emerald-600',
+    emerald: 'text-zinc-600',
     purple: 'text-purple-600',
     red: 'text-red-500',
     gray: 'text-gray-600',

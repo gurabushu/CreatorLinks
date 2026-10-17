@@ -245,11 +245,11 @@ export default function NewProjectPage() {
       )}
 
       {assignArtist && (
-        <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs sm:text-sm text-emerald-800">
+        <div className="mb-6 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-xs sm:text-sm text-zinc-800">
           <span className="font-bold">
             {assignArtistName ? `${assignArtistName} の空き日から作成中` : 'アーティストの空き日から作成中'}
           </span>
-          <span className="block text-[11px] text-emerald-700 mt-0.5">
+          <span className="block text-[11px] text-zinc-700 mt-0.5">
             {assignDate && `日程: ${assignDate} `}
             作成後、案件ページから「応募・スカウトを送る」でアーティストに直接お渡しできます。
           </span>
@@ -312,7 +312,7 @@ export default function NewProjectPage() {
                 <div className="flex items-baseline justify-between mb-2">
                   <label className="block font-medium">
                     マイテンプレ
-                    <span className="text-[10px] font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-1.5 py-0.5 rounded ml-2 align-middle">
+                    <span className="text-[10px] font-bold bg-gradient-to-r from-purple-600 to-zinc-600 text-white px-1.5 py-0.5 rounded ml-2 align-middle">
                       PRO
                     </span>
                   </label>
@@ -321,7 +321,7 @@ export default function NewProjectPage() {
                   )}
                 </div>
                 {!isPro ? (
-                  <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/60 p-4 text-xs text-purple-800 leading-relaxed">
+                  <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/60 p-4 text-xs text-purple-800 leading-relaxed">
                     自分の案件をテンプレ化し、次回以降ワンタップで呼び出せます（
                     <Link href="/pro/subscribe" className="font-bold underline hover:text-purple-900">
                       PRO 詳細
@@ -592,7 +592,7 @@ export default function NewProjectPage() {
             </div>
 
             {/* 公開範囲 */}
-            <label className="flex items-start gap-3 bg-pink-50 border border-pink-200 rounded-xl p-4 cursor-pointer">
+            <label className="flex items-start gap-3 bg-zinc-50 border border-zinc-200 rounded-xl p-4 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isPrivate}
@@ -600,10 +600,10 @@ export default function NewProjectPage() {
                 className="mt-1 accent-pink-600"
               />
               <div>
-                <p className="text-sm font-medium text-pink-800">
+                <p className="text-sm font-medium text-zinc-800">
                   非公開案件として作成（相互紹介ボード用）
                 </p>
-                <p className="text-xs text-pink-700 mt-1">
+                <p className="text-xs text-zinc-700 mt-1">
                   チェックすると一覧には載らず、マッチング済みの相手にチャットから紹介できます。
                 </p>
               </div>
@@ -623,7 +623,7 @@ export default function NewProjectPage() {
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-800">
                         テンプレとして保存
-                        <span className="text-[10px] font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-1.5 py-0.5 rounded ml-2 align-middle">
+                        <span className="text-[10px] font-bold bg-gradient-to-r from-purple-600 to-zinc-600 text-white px-1.5 py-0.5 rounded ml-2 align-middle">
                           PRO
                         </span>
                       </p>
@@ -654,7 +654,7 @@ export default function NewProjectPage() {
                   )}
                 </div>
               ) : (
-                <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/60 p-4 text-xs text-purple-800 leading-relaxed">
+                <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/60 p-4 text-xs text-purple-800 leading-relaxed">
                   💡 PRO なら、この案件を「テンプレとして保存」して次回ワンタップで呼び出せます（
                   <Link href="/pro/subscribe" className="font-bold underline hover:text-purple-900">
                     PRO 詳細

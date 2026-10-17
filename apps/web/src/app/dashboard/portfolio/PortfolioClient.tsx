@@ -274,7 +274,7 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId, 
 
       {/* 上限到達バナー (Free ユーザー) */}
       {atLimit && (
-        <div className="mb-6 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/70 p-5">
+        <div className="mb-6 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/70 p-5">
           <p className="text-sm sm:text-base font-bold text-purple-900 mb-1">
             🔒 Free プランの上限 {freeLimit} 件に達しました
           </p>
@@ -293,10 +293,10 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId, 
 
       {/* 上限近い警告 (残り 2 件以内) */}
       {nearLimit && (
-        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-800 leading-relaxed">
+        <div className="mb-6 rounded-xl border border-zinc-200 bg-zinc-50/70 px-4 py-3 text-xs text-zinc-800 leading-relaxed">
           あと <b>{freeLimit - portfolios.length}</b> 件で Free プランの上限です。
           PRO なら無制限に登録できます。
-          <a href="/pro/subscribe" className="underline hover:text-amber-900 ml-1 font-semibold">
+          <a href="/pro/subscribe" className="underline hover:text-zinc-900 ml-1 font-semibold">
             詳しく →
           </a>
         </div>
@@ -462,7 +462,7 @@ function PortfolioCard({
   return (
     <div
       className={`bg-white border rounded-xl overflow-hidden relative group hover:shadow-md transition ${
-        isFeatured ? 'border-amber-400 ring-2 ring-amber-200' : ''
+        isFeatured ? 'border-zinc-400 ring-2 ring-zinc-200' : ''
       }`}
     >
       {/* 星ボタン（メイン作品トグル）— モバイル省スペース化のためバッジは星の右に bundle */}
@@ -473,8 +473,8 @@ function PortfolioCard({
         aria-pressed={isFeatured}
         className={`absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full transition shadow-sm ${
           isFeatured
-            ? 'bg-amber-400 text-white hover:bg-amber-500 px-2 py-1'
-            : 'bg-white/90 text-gray-400 hover:text-amber-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 w-8 h-8 justify-center'
+            ? 'bg-zinc-400 text-white hover:bg-zinc-500 px-2 py-1'
+            : 'bg-white/90 text-gray-400 hover:text-zinc-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 w-8 h-8 justify-center'
         }`}
       >
         <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill={isFeatured ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">

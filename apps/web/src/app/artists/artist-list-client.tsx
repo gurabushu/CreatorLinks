@@ -69,9 +69,9 @@ type ArtistItem = {
 }
 
 const SKILL_BADGE_CLASS: Record<CommitmentLevel, string> = {
-  HOBBY: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  HOBBY: 'bg-zinc-50 text-zinc-700 border-zinc-200',
   SEMI_PRO: 'bg-sky-50 text-sky-700 border-sky-200',
-  PRO: 'bg-amber-50 text-amber-800 border-amber-200',
+  PRO: 'bg-zinc-50 text-zinc-800 border-zinc-200',
 }
 
 // ---- メインメディア（ホバー時のみ再生：TikTok 風） ----
@@ -376,7 +376,7 @@ function ThumbnailStrip({ works }: { works: Portfolio[] }) {
         return (
           <div
             key={p.id}
-            className="relative aspect-square rounded-md overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100"
+            className="relative aspect-square rounded-md overflow-hidden bg-gradient-to-br from-purple-100 to-zinc-100"
             title={p.title}
           >
             {previewUrl && (
@@ -458,8 +458,8 @@ function LikeButton({
       aria-label={liked ? 'いいねを取り消す' : 'いいねする'}
       className={`shrink-0 w-12 h-12 rounded-full border-2 flex items-center justify-center transition shadow-sm ${
         liked
-          ? 'bg-pink-50 border-pink-400 text-pink-600 hover:bg-pink-100 shadow-pink-200/60'
-          : 'bg-white border-gray-200 text-gray-400 hover:border-pink-400 hover:text-pink-500 hover:shadow-pink-100'
+          ? 'bg-zinc-50 border-zinc-400 text-zinc-600 hover:bg-zinc-100 shadow-zinc-200/60'
+          : 'bg-white border-gray-200 text-gray-400 hover:border-zinc-400 hover:text-zinc-500 hover:shadow-zinc-100'
       } ${busy ? 'opacity-60' : ''}`}
     >
       <svg viewBox="0 0 24 24" className="w-6 h-6" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
@@ -545,7 +545,7 @@ function ArtistCard({
       className="bg-white border rounded-2xl overflow-hidden hover:shadow-md hover:border-purple-300 transition group block"
     >
       {/* メインメディア */}
-      <div className="relative aspect-[16/10] bg-gradient-to-br from-purple-100 to-indigo-100 overflow-hidden">
+      <div className="relative aspect-[16/10] bg-gradient-to-br from-purple-100 to-zinc-100 overflow-hidden">
         <MediaHero
           artist={artist}
           lead={lead}
@@ -592,7 +592,7 @@ function ArtistCard({
                   </span>
                 )}
                 {artist.role === 'PRO' && (
-                  <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  <span className="bg-zinc-100 text-zinc-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
                     PRO
                   </span>
                 )}
@@ -657,7 +657,7 @@ function ArtistCard({
         <div className="flex items-center gap-3 text-xs text-gray-400">
           {artist.averageRating > 0 && (
             <span className="flex items-center gap-1">
-              <svg className="w-3.5 h-3.5 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2l2.9 6.9L22 9.7l-5.5 4.8L18 22l-6-3.6L6 22l1.5-7.5L2 9.7l7.1-.8L12 2z" />
               </svg>
               {artist.averageRating.toFixed(1)}
@@ -899,10 +899,10 @@ export function ArtistListClient({
     <div>
       {/* マッチ成立バナー */}
       {matchBanner && (
-        <div className="mb-6 rounded-xl border border-pink-200 bg-gradient-to-r from-pink-50 to-purple-50 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <div className="mb-6 rounded-xl border border-zinc-200 bg-gradient-to-r from-zinc-50 to-purple-50 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-pink-700 text-sm sm:text-base">マッチング成立！</p>
+              <p className="font-bold text-zinc-700 text-sm sm:text-base">マッチング成立！</p>
               <p className="text-xs sm:text-sm text-gray-600">{matchBanner.name} さんとマッチしました。チャットで案件を相互紹介できます。</p>
             </div>
             <button
@@ -916,7 +916,7 @@ export function ArtistListClient({
           </div>
           <Link
             href={`/dashboard/chat/${matchBanner.matchId}`}
-            className="bg-pink-600 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-lg hover:bg-pink-700 transition shrink-0 w-full sm:w-auto text-center"
+            className="bg-zinc-600 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-lg hover:bg-zinc-700 transition shrink-0 w-full sm:w-auto text-center"
           >
             チャットを開く
           </Link>

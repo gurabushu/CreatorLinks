@@ -55,7 +55,7 @@ export function StoriesBar({ myGroup, followingGroups }: Props) {
               <div
                 className={`relative w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full ${
                   myGroup && myGroup.stories.length > 0
-                    ? 'bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-400 p-[2px]'
+                    ? 'bg-gradient-to-tr from-purple-500 via-zinc-500 to-zinc-400 p-[2px]'
                     : 'bg-gray-200 p-[2px]'
                 }`}
               >
@@ -96,7 +96,7 @@ export function StoriesBar({ myGroup, followingGroups }: Props) {
                   <div
                     className={`w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full p-[2px] ${
                       g.hasUnviewed
-                        ? 'bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-400'
+                        ? 'bg-gradient-to-tr from-purple-500 via-zinc-500 to-zinc-400'
                         : 'bg-gray-300'
                     }`}
                   >

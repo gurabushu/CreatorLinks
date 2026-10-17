@@ -107,7 +107,7 @@ export default async function EventsPage() {
                     </p>
                     <div className="flex items-center gap-4 mt-2 text-[11px] text-gray-500">
                       {e._count.openRoles > 0 && (
-                        <span className="text-emerald-700">
+                        <span className="text-zinc-700">
                           出演・スタッフ募集 {e._count.openRoles}件
                         </span>
                       )}

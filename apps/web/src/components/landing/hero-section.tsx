@@ -11,7 +11,7 @@ export function HeroSection() {
             イベント掲示板 × 仕事 DX × マッチング
           </span>
           <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.2] tracking-tight text-gray-900 break-keep">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-zinc-600">
               「また一緒に」
             </span>
             が
@@ -44,7 +44,7 @@ export function HeroSection() {
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start items-stretch sm:items-center max-w-sm mx-auto md:max-w-none md:mx-0">
             <Link
               href="/auth"
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
+              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
             >
               無料で始める <span aria-hidden>→</span>
             </Link>
@@ -57,7 +57,7 @@ export function HeroSection() {
           </div>
 
           <p className="mt-6 text-sm text-gray-600 text-center md:text-left">
-            <span className="inline-block bg-amber-50 text-amber-700 border border-amber-200/70 px-2 py-0.5 rounded-full text-xs font-semibold mr-2">
+            <span className="inline-block bg-zinc-50 text-zinc-700 border border-zinc-200/70 px-2 py-0.5 rounded-full text-xs font-semibold mr-2">
               創設メンバー枠
             </span>
             先着 100 名に PRO 6ヶ月無料 + 永久バッジを進呈中

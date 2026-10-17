@@ -190,7 +190,7 @@ export default async function CrmPage() {
 
           {/* Free ユーザー向け PRO upsell */}
           {!isPro && hiddenCount > 0 && (
-            <div className="mt-6 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/70 p-6 sm:p-8 text-center">
+            <div className="mt-6 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/70 p-6 sm:p-8 text-center">
               <p className="text-2xl mb-2">🔒</p>
               <h2 className="text-lg sm:text-xl font-bold text-purple-900 mb-2">
                 残り <span className="text-purple-700">{hiddenCount}</span> 名の顧客カードは PRO で解放
@@ -202,7 +202,7 @@ export default async function CrmPage() {
               </p>
               <Link
                 href="/pro/subscribe"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
               >
                 PRO の詳細を見る →
               </Link>
@@ -239,7 +239,7 @@ function CounterpartyCard({ c, meId: _meId }: { c: CounterpartyStats; meId: stri
               {displayName}
             </p>
             {c.mutualEncore && (
-              <span className="text-[10px] font-bold bg-pink-100 text-pink-700 border border-pink-200 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200 px-2 py-0.5 rounded-full">
                 🎵 Encore 相性
               </span>
             )}

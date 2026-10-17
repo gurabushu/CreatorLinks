@@ -238,7 +238,7 @@ export function AnnouncementForm({ initial }: { initial?: AnnouncementInitial })
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             {pending ? '保存中…' : isEdit ? '更新する' : '作成する'}
           </button>

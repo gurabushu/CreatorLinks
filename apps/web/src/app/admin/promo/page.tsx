@@ -88,7 +88,7 @@ export default async function AdminPromoPage() {
                         </td>
                         <td className="px-3 py-3 text-center">
                           {status === 'active' && (
-                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">
+                            <span className="text-[10px] font-bold bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded">
                               有効
                             </span>
                           )}
@@ -98,7 +98,7 @@ export default async function AdminPromoPage() {
                             </span>
                           )}
                           {status === 'maxed' && (
-                            <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded">
+                            <span className="text-[10px] font-bold bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded">
                               上限到達
                             </span>
                           )}

@@ -34,7 +34,7 @@ export function HowItWorks() {
         <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
           {STEPS.map((s) => (
             <li key={s.no} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
+              <div className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-zinc-600">
                 STEP {s.no}
               </div>
               <div className="mt-2 font-bold text-lg text-gray-900">{s.title}</div>

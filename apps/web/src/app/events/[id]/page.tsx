@@ -335,7 +335,7 @@ export default async function EventDetailPage({ params }: Params) {
               <li key={role.id} className="rounded-xl border border-gray-200 bg-white p-4">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <div className="text-xs text-emerald-700 mb-1">
+                    <div className="text-xs text-zinc-700 mb-1">
                       {EVENT_PARTICIPANT_ROLE_LABELS[role.roleType as EventParticipantRole]}
                     </div>
                     <div className="font-medium text-gray-900">{role.title}</div>

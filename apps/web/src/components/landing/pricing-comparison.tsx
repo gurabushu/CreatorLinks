@@ -94,7 +94,7 @@ export function PricingComparison() {
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
             月に案件が動く人ほど、
             <br className="sm:hidden" />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-zinc-600">
               PRO が元を取れる。
             </span>
           </h2>
@@ -105,7 +105,7 @@ export function PricingComparison() {
         </div>
 
         {/* 損益分岐計算 */}
-        <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50/70 border border-purple-200/60 p-6 sm:p-8 mb-10">
+        <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-zinc-50/70 border border-purple-200/60 p-6 sm:p-8 mb-10">
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
             あなたの月間受注額なら…
           </h3>
@@ -187,7 +187,7 @@ export function PricingComparison() {
                     </td>
                     <td className="text-center px-3 sm:px-6 py-3 text-xs sm:text-sm">
                       {f.free === true ? (
-                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span className="text-zinc-600 font-bold">✓</span>
                       ) : f.free === false ? (
                         <span className="text-gray-300">—</span>
                       ) : (
@@ -224,7 +224,7 @@ export function PricingComparison() {
           </Link>
           <Link
             href="/pro/subscribe"
-            className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-7 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
+            className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-7 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
           >
             PRO の詳細を見る <span aria-hidden>→</span>
           </Link>

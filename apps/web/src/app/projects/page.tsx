@@ -16,9 +16,9 @@ export const metadata: Metadata = {
 }
 
 const LEVEL_BADGE_CLASS: Record<CommitmentLevel, string> = {
-  HOBBY: 'bg-emerald-100 text-emerald-700',
+  HOBBY: 'bg-zinc-100 text-zinc-700',
   SEMI_PRO: 'bg-sky-100 text-sky-700',
-  PRO: 'bg-amber-100 text-amber-800',
+  PRO: 'bg-zinc-100 text-zinc-800',
 }
 
 interface Props {

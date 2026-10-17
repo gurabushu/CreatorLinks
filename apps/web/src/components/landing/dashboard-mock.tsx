@@ -40,7 +40,7 @@ export function DashboardMock() {
           {/* サイドバー */}
           <aside className="w-[28%] bg-gray-50 p-3 border-r">
             <div className="flex items-center gap-1.5 mb-4">
-              <div className="w-4 h-4 rounded bg-gradient-to-br from-purple-500 to-indigo-600" />
+              <div className="w-4 h-4 rounded bg-gradient-to-br from-purple-500 to-zinc-600" />
               <span className="text-[10px] font-bold text-gray-800">{SITE_NAME}</span>
             </div>
             <ul className="space-y-1.5 text-[9px]">
@@ -65,7 +65,7 @@ export function DashboardMock() {
             <div className="grid grid-cols-3 gap-1.5 mb-3">
               {['LPデザイン制作', 'Webアプリ開発', '動画編集'].map((title, i) => (
                 <div key={title} className="rounded-md ring-1 ring-gray-200 p-1.5">
-                  <span className="inline-block text-[7px] bg-emerald-100 text-emerald-700 px-1 rounded">
+                  <span className="inline-block text-[7px] bg-zinc-100 text-zinc-700 px-1 rounded">
                     募集中
                   </span>
                   <div className="text-[9px] font-semibold text-gray-800 mt-0.5 truncate">{title}</div>
@@ -85,7 +85,7 @@ export function DashboardMock() {
             <div className="grid grid-cols-3 gap-1.5">
               {['Yuki', 'Keita', 'Mana'].map((name) => (
                 <div key={name} className="rounded-md ring-1 ring-gray-200 p-1.5 text-center">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-200 to-indigo-300 mx-auto mb-1" />
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-200 to-zinc-300 mx-auto mb-1" />
                   <div className="text-[9px] font-semibold text-gray-800">{name}</div>
                   <div className="text-[7px] text-gray-500">Webデザイナー</div>
                 </div>
@@ -99,7 +99,7 @@ export function DashboardMock() {
       <div className="absolute right-[2%] bottom-[2%] w-[28%] rounded-[18px] bg-white shadow-2xl ring-1 ring-gray-200 p-2">
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1">
-            <div className="w-2.5 h-2.5 rounded bg-gradient-to-br from-purple-500 to-indigo-600" />
+            <div className="w-2.5 h-2.5 rounded bg-gradient-to-br from-purple-500 to-zinc-600" />
             <span className="text-[8px] font-bold">{SITE_NAME}</span>
           </div>
           <div className="w-3 h-0.5 bg-gray-400 rounded" />
@@ -112,7 +112,7 @@ export function DashboardMock() {
         </div>
         <div className="text-[8px] font-semibold text-gray-800 mb-1">注目のクリエイター</div>
         <div className="rounded-md ring-1 ring-gray-200 p-1.5 flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-200 to-indigo-300" />
+          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-200 to-zinc-300" />
           <div className="flex-1">
             <div className="text-[8px] font-semibold text-gray-800">RYO</div>
             <div className="text-[7px] text-gray-500">グラフィックデザイナー</div>

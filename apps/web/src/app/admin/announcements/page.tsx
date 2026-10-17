@@ -27,8 +27,8 @@ const STATUS_LABEL: Record<Status, string> = {
 }
 const STATUS_CLASS: Record<Status, string> = {
   DRAFT: 'bg-gray-100 text-gray-700',
-  SCHEDULED: 'bg-amber-100 text-amber-700',
-  PUBLISHED: 'bg-emerald-100 text-emerald-700',
+  SCHEDULED: 'bg-zinc-100 text-zinc-700',
+  PUBLISHED: 'bg-zinc-100 text-zinc-700',
   EXPIRED: 'bg-red-100 text-red-700',
 }
 
@@ -74,7 +74,7 @@ export default async function AdminAnnouncementsPage() {
         </div>
         <Link
           href="/admin/announcements/new"
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md hover:opacity-95 transition"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md hover:opacity-95 transition"
         >
           + 新規作成
         </Link>

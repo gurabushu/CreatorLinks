@@ -112,7 +112,7 @@ export function ContactForm() {
         <button
           type="submit"
           disabled={sending || !subject.trim() || !body.trim()}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {sending ? '送信中…' : '公式アカウントに送信'}
         </button>

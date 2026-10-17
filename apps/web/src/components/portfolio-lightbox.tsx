@@ -115,7 +115,7 @@ export function PortfolioLightbox({
             href={source.watchUrl}
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-block mt-2 text-xs text-pink-300 hover:text-pink-200 underline"
+            className="inline-block mt-2 text-xs text-zinc-300 hover:text-zinc-200 underline"
           >
             元のページを開く →
           </a>

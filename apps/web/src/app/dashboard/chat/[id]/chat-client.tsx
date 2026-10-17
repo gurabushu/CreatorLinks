@@ -89,11 +89,11 @@ function SharedProjectCard({
   return (
     <div
       className={`max-w-[80%] rounded-2xl border p-3 ${
-        isMe ? 'bg-pink-50 border-pink-200' : 'bg-white border-pink-200 shadow-sm'
+        isMe ? 'bg-zinc-50 border-zinc-200' : 'bg-white border-zinc-200 shadow-sm'
       }`}
     >
       <div className="flex items-center gap-2 mb-1.5">
-        <span className="text-xs font-bold bg-pink-600 text-white px-2 py-0.5 rounded-full">非公開案件</span>
+        <span className="text-xs font-bold bg-zinc-600 text-white px-2 py-0.5 rounded-full">非公開案件</span>
         <span className="text-xs text-gray-500">
           {project.contractType === 'SPOT' ? 'スポット' : 'サブスク'}
         </span>
@@ -103,7 +103,7 @@ function SharedProjectCard({
         <p className="text-xs text-gray-600 mt-1 line-clamp-3 whitespace-pre-wrap">{project.description}</p>
       )}
       {project.budget !== null && (
-        <p className="text-pink-700 font-bold text-sm mt-2">
+        <p className="text-zinc-700 font-bold text-sm mt-2">
           ¥{project.budget.toLocaleString()}
         </p>
       )}
@@ -165,7 +165,7 @@ function ReviewModal({
                   onClick={() => setScore(s)}
                   aria-label={`${s}点`}
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
-                    score >= s ? 'text-yellow-400' : 'text-gray-200'
+                    score >= s ? 'text-zinc-400' : 'text-gray-200'
                   }`}
                 >
                   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
@@ -413,7 +413,7 @@ export function ChatClient({
             {match.partnerIsOfficial ? (
               <p className="text-xs text-purple-600">公式サポート・お知らせ窓口</p>
             ) : match.isP2P ? (
-              <p className="text-xs text-pink-500">アーティスト同士のマッチ</p>
+              <p className="text-xs text-zinc-500">アーティスト同士のマッチ</p>
             ) : (
               <Link
                 href={`/projects/${match.projectId}`}
@@ -450,7 +450,7 @@ export function ChatClient({
           <button
             onClick={handleComplete}
             disabled={isCompleting}
-            className="shrink-0 text-[11px] sm:text-xs bg-blue-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 whitespace-nowrap"
+            className="shrink-0 text-[11px] sm:text-xs bg-zinc-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-zinc-700 transition disabled:opacity-50 whitespace-nowrap"
           >
             {isCompleting ? '処理中' : '納品完了'}
           </button>
@@ -461,7 +461,7 @@ export function ChatClient({
           <button
             onClick={handleRelease}
             disabled={isReleasing}
-            className="shrink-0 text-[11px] sm:text-xs bg-emerald-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 whitespace-nowrap"
+            className="shrink-0 text-[11px] sm:text-xs bg-zinc-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-zinc-700 transition disabled:opacity-50 whitespace-nowrap"
             title={`アーティストに ¥${payment?.artistPayoutYen.toLocaleString() ?? ''} を送金します`}
           >
             {isReleasing ? '送金中' : '送金確認'}
@@ -470,7 +470,7 @@ export function ChatClient({
 
         {isCompleted && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+            <span className="text-xs bg-zinc-100 text-zinc-700 px-3 py-1 rounded-full font-medium">
               完了済み
             </span>
             <button
@@ -623,16 +623,16 @@ export function ChatClient({
               <button
                 type="button"
                 onClick={() => setShowShareMenu((v) => !v)}
-                className="text-xs px-3 py-1.5 rounded-full border border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 transition"
+                className="text-xs px-3 py-1.5 rounded-full border border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100 transition"
               >
                 自分の非公開案件を共有
               </button>
               {showShareMenu && (
-                <div className="absolute bottom-full left-0 right-0 sm:right-auto sm:w-72 mb-2 bg-white border border-pink-200 rounded-xl shadow-lg p-2 z-10 max-h-72 overflow-y-auto">
+                <div className="absolute bottom-full left-0 right-0 sm:right-auto sm:w-72 mb-2 bg-white border border-zinc-200 rounded-xl shadow-lg p-2 z-10 max-h-72 overflow-y-auto">
                   {myPrivateProjects.length === 0 ? (
                     <div className="p-3 text-xs text-gray-500">
                       非公開案件はまだありません。
-                      <Link href="/projects/new" className="text-pink-600 hover:underline ml-1">
+                      <Link href="/projects/new" className="text-zinc-600 hover:underline ml-1">
                         作成する →
                       </Link>
                     </div>
@@ -642,7 +642,7 @@ export function ChatClient({
                         key={p.id}
                         type="button"
                         onClick={() => handleShareProject(p)}
-                        className="w-full text-left p-2.5 rounded-lg hover:bg-pink-50 transition"
+                        className="w-full text-left p-2.5 rounded-lg hover:bg-zinc-50 transition"
                       >
                         <p className="font-medium text-sm truncate">{p.title}</p>
                         <p className="text-xs text-gray-500">

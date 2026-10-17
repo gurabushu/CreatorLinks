@@ -71,7 +71,7 @@ export default function AccountNameForm({ initialName }: { initialName: string }
       </button>
 
       {saveSuccess && (
-        <p className="text-center text-green-600 text-sm font-medium">保存しました</p>
+        <p className="text-center text-zinc-600 text-sm font-medium">保存しました</p>
       )}
     </form>
   )

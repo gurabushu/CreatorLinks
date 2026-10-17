@@ -171,7 +171,7 @@ export async function Header() {
                 </Link>
                 <Link
                   href="/auth"
-                  className="text-[11px] sm:text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-sm hover:opacity-95 transition whitespace-nowrap"
+                  className="text-[11px] sm:text-sm bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-sm hover:opacity-95 transition whitespace-nowrap"
                 >
                   <span className="sm:hidden">登録</span>
                   <span className="hidden sm:inline">無料で始める</span>

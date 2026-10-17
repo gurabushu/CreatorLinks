@@ -62,7 +62,7 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
               <div
                 className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] ${
                   u.hasActiveStory
-                    ? 'bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-400'
+                    ? 'bg-gradient-to-tr from-purple-500 via-zinc-500 to-zinc-400'
                     : 'bg-gray-200'
                 }`}
               >

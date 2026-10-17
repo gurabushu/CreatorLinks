@@ -117,14 +117,14 @@ export default async function AnalyticsPage() {
             </div>
             <div className="rounded-xl border bg-white p-4">
               <p className="text-xs text-gray-500 mb-1">顧客数</p>
-              <p className="text-xl sm:text-2xl font-bold text-indigo-700">
+              <p className="text-xl sm:text-2xl font-bold text-zinc-700">
                 {revenue.totalCustomers}
               </p>
               <p className="text-[10px] text-gray-400 mt-1">全期間ユニーク</p>
             </div>
             <div className="rounded-xl border bg-white p-4">
               <p className="text-xs text-gray-500 mb-1">リピート率</p>
-              <p className="text-xl sm:text-2xl font-bold text-pink-700">{revenue.repeatRatePct}%</p>
+              <p className="text-xl sm:text-2xl font-bold text-zinc-700">{revenue.repeatRatePct}%</p>
               <p className="text-[10px] text-gray-400 mt-1">
                 {revenue.repeatCustomers}/{revenue.totalCustomers} 名が 2 回以上
               </p>
@@ -145,7 +145,7 @@ export default async function AnalyticsPage() {
                         <div className="w-14 text-[11px] font-mono text-gray-500 shrink-0">{m.month}</div>
                         <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden relative">
                           <div
-                            className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all"
+                            className="h-full bg-gradient-to-r from-purple-500 to-zinc-500 transition-all"
                             style={{ width: `${pct}%` }}
                           />
                           {m.amountYen > 0 && (
@@ -213,11 +213,11 @@ export default async function AnalyticsPage() {
             </div>
             <div>
               <dt className="text-xs text-gray-500 mb-1">承認 (ACCEPTED+)</dt>
-              <dd className="text-2xl font-bold text-emerald-700">{summary.matches.accepted}</dd>
+              <dd className="text-2xl font-bold text-zinc-700">{summary.matches.accepted}</dd>
             </div>
             <div>
               <dt className="text-xs text-gray-500 mb-1">完了 (COMPLETED)</dt>
-              <dd className="text-2xl font-bold text-blue-700">{summary.matches.completed}</dd>
+              <dd className="text-2xl font-bold text-zinc-700">{summary.matches.completed}</dd>
             </div>
           </dl>
         </div>
@@ -255,9 +255,9 @@ function MetricCard({
 }) {
   const toneClass = {
     purple: 'text-purple-700 bg-purple-50/60 border-purple-200/60',
-    indigo: 'text-indigo-700 bg-indigo-50/60 border-indigo-200/60',
-    pink: 'text-pink-700 bg-pink-50/60 border-pink-200/60',
-    emerald: 'text-emerald-700 bg-emerald-50/60 border-emerald-200/60',
+    indigo: 'text-zinc-700 bg-zinc-50/60 border-zinc-200/60',
+    pink: 'text-zinc-700 bg-zinc-50/60 border-zinc-200/60',
+    emerald: 'text-zinc-700 bg-zinc-50/60 border-zinc-200/60',
   }[tone]
   return (
     <div className={`rounded-xl border p-4 ${toneClass}`}>

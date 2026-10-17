@@ -35,7 +35,7 @@ function ProSubscribeContent() {
   if (session?.user?.isFounderExempt) {
     return (
       <div className="max-w-md mx-auto py-20 px-4 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-400 to-orange-300 px-4 py-1.5 text-sm font-bold text-rose-900 mb-4">
+        <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-zinc-400 to-zinc-300 px-4 py-1.5 text-sm font-bold text-zinc-900 mb-4">
           無償枠 (Founding Supporter)
         </div>
         <h1 className="text-xl font-bold mb-2">月額料金・案件手数料ともに無償です</h1>
@@ -45,7 +45,7 @@ function ProSubscribeContent() {
         </p>
         <button
           onClick={() => router.push('/dashboard')}
-          className="bg-rose-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-rose-600 transition"
+          className="bg-zinc-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-zinc-600 transition"
         >
           ダッシュボードへ
         </button>
@@ -110,11 +110,11 @@ function ProSubscribeContent() {
         </p>
       </div>
 
-      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-6 mb-8">
+      <div className="bg-gradient-to-r from-zinc-50 to-zinc-50 border border-zinc-200 rounded-2xl p-6 mb-8">
         <div className="mb-2">
-          <h2 className="font-bold text-base text-amber-900">創設メンバー枠（先着 100 名）</h2>
+          <h2 className="font-bold text-base text-zinc-900">創設メンバー枠（先着 100 名）</h2>
         </div>
-        <p className="text-sm text-amber-900/80 leading-relaxed">
+        <p className="text-sm text-zinc-900/80 leading-relaxed">
           サインアップ時に自動付与。PRO プランを <strong>6ヶ月無料</strong>で利用できる上、
           <strong>「創設メンバー #001 / 100」</strong> のスロット番号入りバッジがプロフィール・一覧に永久表示されます。
           6ヶ月後は通常プランに自動で戻り、継続したい場合のみ有料課金に切り替わります。

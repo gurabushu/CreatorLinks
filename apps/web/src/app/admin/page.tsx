@@ -162,12 +162,12 @@ export default async function AdminPage() {
 
         const steps = [
           { label: '登録', value: total, color: 'bg-gray-500' },
-          { label: '触った', value: anyActivity, color: 'bg-emerald-500', hint: '編集/PF/案件/Match/msg いずれか' },
+          { label: '触った', value: anyActivity, color: 'bg-zinc-500', hint: '編集/PF/案件/Match/msg いずれか' },
           { label: 'プロフィール編集', value: editedProfile, color: 'bg-purple-500' },
-          { label: 'ポートフォリオ登録', value: withPortfolio, color: 'bg-indigo-500' },
-          { label: '案件作成', value: withProject, color: 'bg-blue-500' },
-          { label: 'Match 発生', value: withMatch, color: 'bg-teal-500' },
-          { label: 'メッセージ送信', value: withMessage, color: 'bg-pink-500' },
+          { label: 'ポートフォリオ登録', value: withPortfolio, color: 'bg-zinc-500' },
+          { label: '案件作成', value: withProject, color: 'bg-zinc-500' },
+          { label: 'Match 発生', value: withMatch, color: 'bg-zinc-500' },
+          { label: 'メッセージ送信', value: withMessage, color: 'bg-zinc-500' },
         ]
 
         return (
@@ -283,7 +283,7 @@ export default async function AdminPage() {
                       </td>
                       <td className="px-3 py-3 text-center">
                         {touched ? (
-                          <span className="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">✓ 触った</span>
+                          <span className="inline-flex items-center gap-1 text-xs bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-full font-semibold">✓ 触った</span>
                         ) : (
                           <span className="text-xs text-gray-400">未</span>
                         )}
@@ -320,7 +320,7 @@ export default async function AdminPage() {
                       <span
                         className={`px-2 py-0.5 rounded-full text-xs ${
                           u.role === 'PRO'
-                            ? 'bg-amber-100 text-amber-700'
+                            ? 'bg-zinc-100 text-zinc-700'
                             : u.role === 'ADMIN'
                               ? 'bg-red-100 text-red-700'
                               : 'bg-gray-100 text-gray-600'

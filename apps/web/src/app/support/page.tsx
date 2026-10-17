@@ -150,7 +150,7 @@ export default async function SupportPage() {
                 </p>
                 <Link
                   href="/auth"
-                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
                 >
                   正式登録する →
                 </Link>
@@ -164,7 +164,7 @@ export default async function SupportPage() {
                 </p>
                 <Link
                   href="/auth?callbackUrl=%2Fsupport"
-                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
                 >
                   ログインして問い合わせる →
                 </Link>

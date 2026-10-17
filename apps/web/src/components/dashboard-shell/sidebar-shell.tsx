@@ -152,7 +152,7 @@ function SidebarNav({
         <p className="text-[10px] text-purple-400/80 uppercase tracking-wider">Signed in as</p>
         <p className="font-semibold text-gray-800 truncate">{user.name}</p>
         {user.role === 'PRO' && (
-          <span className="mt-1 inline-block bg-amber-50 text-amber-600 text-[10px] px-2 py-0.5 rounded-full font-semibold ring-1 ring-amber-200/60">
+          <span className="mt-1 inline-block bg-zinc-50 text-zinc-600 text-[10px] px-2 py-0.5 rounded-full font-semibold ring-1 ring-zinc-200/60">
             PRO
           </span>
         )}
@@ -176,7 +176,7 @@ function SidebarNav({
               {item.label}
             </span>
             {item.badge != null && item.badge > 0 && (
-              <span className="bg-pink-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center shadow-sm shadow-pink-300/40">
+              <span className="bg-zinc-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center shadow-sm shadow-zinc-300/40">
                 {item.badge > 99 ? '99+' : item.badge}
               </span>
             )}

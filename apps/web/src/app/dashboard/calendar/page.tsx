@@ -64,23 +64,23 @@ const ROLE_LABELS: Record<Role, string> = {
 // カレンダーセル内 pill 用（軽め）
 const ROLE_PILL: Record<Role, string> = {
   ORGANIZER: 'bg-purple-100 text-purple-700 hover:bg-purple-200',
-  PERFORMER: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200',
-  STAFF: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
-  GUEST: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
-  AUDIENCE: 'bg-pink-100 text-pink-700 hover:bg-pink-200',
-  FOLLOWING: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200',
-  PROJECT: 'bg-amber-100 text-amber-700 hover:bg-amber-200',
+  PERFORMER: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
+  STAFF: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
+  GUEST: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
+  AUDIENCE: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
+  FOLLOWING: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
+  PROJECT: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
 }
 
 // アジェンダ用（濃さ調整）
 const ROLE_BADGE: Record<Role, string> = {
   ORGANIZER: 'bg-purple-100 text-purple-700',
-  PERFORMER: 'bg-emerald-100 text-emerald-700',
-  STAFF: 'bg-blue-100 text-blue-700',
-  GUEST: 'bg-yellow-100 text-yellow-700',
-  AUDIENCE: 'bg-pink-100 text-pink-700',
-  FOLLOWING: 'bg-indigo-100 text-indigo-700',
-  PROJECT: 'bg-amber-100 text-amber-700',
+  PERFORMER: 'bg-zinc-100 text-zinc-700',
+  STAFF: 'bg-zinc-100 text-zinc-700',
+  GUEST: 'bg-zinc-100 text-zinc-700',
+  AUDIENCE: 'bg-zinc-100 text-zinc-700',
+  FOLLOWING: 'bg-zinc-100 text-zinc-700',
+  PROJECT: 'bg-zinc-100 text-zinc-700',
 }
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'] as const
@@ -383,7 +383,7 @@ export default async function CalendarPage({
           <div
             key={w}
             className={`py-2 font-semibold ${
-              i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-gray-600'
+              i === 0 ? 'text-red-500' : i === 6 ? 'text-zinc-500' : 'text-gray-600'
             }`}
           >
             {w}
@@ -424,7 +424,7 @@ export default async function CalendarPage({
                         : dow === 0
                           ? 'text-red-500 hover:bg-purple-50'
                           : dow === 6
-                            ? 'text-blue-500 hover:bg-purple-50'
+                            ? 'text-zinc-500 hover:bg-purple-50'
                             : 'text-gray-700 hover:bg-purple-50'
                   }`}
                 >
@@ -532,7 +532,7 @@ export default async function CalendarPage({
                           )}
                         </div>
                         {artistName && (
-                          <div className="text-xs text-indigo-700 mb-0.5">
+                          <div className="text-xs text-zinc-700 mb-0.5">
                             {artistName}
                           </div>
                         )}

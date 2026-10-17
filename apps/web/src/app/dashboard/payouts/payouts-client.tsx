@@ -50,10 +50,10 @@ export function PayoutsClient({
         <>
           <StatusBadge state="incomplete" />
           <ul className="text-sm space-y-1">
-            <li className={chargesEnabled ? 'text-emerald-700' : 'text-amber-700'}>
+            <li className={chargesEnabled ? 'text-zinc-700' : 'text-zinc-700'}>
               {chargesEnabled ? '✓' : '⚠'} 支払い受付
             </li>
-            <li className={payoutsEnabled ? 'text-emerald-700' : 'text-amber-700'}>
+            <li className={payoutsEnabled ? 'text-zinc-700' : 'text-zinc-700'}>
               {payoutsEnabled ? '✓' : '⚠'} 銀行口座への出金
             </li>
           </ul>
@@ -97,9 +97,9 @@ export function PayoutsClient({
 function StatusBadge({ state }: { state: 'none' | 'incomplete' | 'ready' }) {
   const config =
     state === 'ready'
-      ? { label: '設定完了', className: 'bg-emerald-100 text-emerald-800' }
+      ? { label: '設定完了', className: 'bg-zinc-100 text-zinc-800' }
       : state === 'incomplete'
-        ? { label: '設定中', className: 'bg-amber-100 text-amber-800' }
+        ? { label: '設定中', className: 'bg-zinc-100 text-zinc-800' }
         : { label: '未設定', className: 'bg-gray-100 text-gray-600' }
   return (
     <span className={`inline-block text-xs font-bold px-3 py-1 rounded-full ${config.className}`}>

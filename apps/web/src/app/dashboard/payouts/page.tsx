@@ -113,7 +113,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
             累計受取 <span className="font-bold text-purple-700">¥{totalReceived.toLocaleString()}</span>
             {pendingCount > 0 && (
               <span className="ml-3">
-                保留中 <span className="font-bold text-emerald-700">{pendingCount}件</span>
+                保留中 <span className="font-bold text-zinc-700">{pendingCount}件</span>
               </span>
             )}
           </div>
@@ -148,7 +148,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
         </div>
         {/* Free ユーザーで RELEASED 案件があるなら、PRO への upsell バナーを表示 */}
         {isFree && proUpliftTotal > 0 && (
-          <div className="mb-4 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50/70 p-4 sm:p-5">
+          <div className="mb-4 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-zinc-50/70 p-4 sm:p-5">
             <div className="flex items-start gap-3 flex-wrap">
               <div className="flex-1 min-w-0">
                 <p className="text-sm sm:text-base font-bold text-purple-900 leading-snug">
@@ -168,7 +168,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
           </div>
         )}
         {!isFree && (
-          <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-xs text-emerald-800">
+          <div className="mb-4 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 text-xs text-zinc-800">
             🎉 PRO 特典で手数料 5% 適用中。全案件からアーティスト受取が最大化されています。
           </div>
         )}

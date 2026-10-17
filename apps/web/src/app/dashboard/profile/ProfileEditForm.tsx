@@ -399,7 +399,7 @@ export default function ProfileEditForm({ user }: Props) {
         </button>
 
         {saveSuccess && (
-          <p className="text-center text-green-600 font-medium">
+          <p className="text-center text-zinc-600 font-medium">
             プロフィールを更新しました
           </p>
         )}

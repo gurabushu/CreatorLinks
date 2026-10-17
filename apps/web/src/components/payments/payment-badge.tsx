@@ -4,8 +4,8 @@ export type PaymentStatus = 'AWAITING' | 'HELD' | 'RELEASED' | 'REFUNDED' | 'FAI
 
 const PAYMENT_BADGE: Record<PaymentStatus, { label: string; className: string }> = {
   AWAITING: { label: '支払い前', className: 'bg-gray-100 text-gray-600' },
-  HELD:     { label: '支払い済み（保管中）', className: 'bg-emerald-100 text-emerald-800' },
-  RELEASED: { label: '送金完了', className: 'bg-blue-100 text-blue-700' },
+  HELD:     { label: '支払い済み（保管中）', className: 'bg-zinc-100 text-zinc-800' },
+  RELEASED: { label: '送金完了', className: 'bg-zinc-100 text-zinc-700' },
   REFUNDED: { label: '返金済み', className: 'bg-gray-100 text-gray-600' },
   FAILED:   { label: '支払い失敗', className: 'bg-red-100 text-red-700' },
 }

@@ -74,7 +74,7 @@ export function CoverImageUpload({ currentUrl, onUploadComplete }: CoverImageUpl
         className="relative w-full h-48 rounded-xl overflow-hidden group block disabled:cursor-default"
         aria-label="カバー画像を変更"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-600">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-zinc-600">
           {previewUrl && (
             <Image
               src={previewUrl}

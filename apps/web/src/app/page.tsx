@@ -126,7 +126,7 @@ export default async function HomePage() {
 
       {/* 公式おすすめアーティスト（キュレーション） */}
       {featured.length > 0 && (
-        <section className="py-10 sm:py-16 px-4 bg-gradient-to-br from-purple-50 to-indigo-50/60">
+        <section className="py-10 sm:py-16 px-4 bg-gradient-to-br from-purple-50 to-zinc-50/60">
           <div className="max-w-6xl mx-auto">
             <div className="flex justify-between items-end mb-6 sm:mb-8 gap-3">
               <div>
@@ -159,7 +159,7 @@ export default async function HomePage() {
                   <p className="font-bold text-sm">{getDisplayName(f.user)}</p>
                   <div className="flex items-center justify-center gap-1 flex-wrap">
                     {f.user.role === 'PRO' && (
-                      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">PRO</span>
+                      <span className="text-xs bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-full">PRO</span>
                     )}
                     <FoundingMemberBadge slot={f.user.earlyBirdSlot} showTotal={false} />
                   </div>
@@ -210,7 +210,7 @@ export default async function HomePage() {
                 <p className="font-bold text-sm">{getDisplayName(artist)}</p>
                 <div className="flex items-center justify-center gap-1 flex-wrap">
                   {artist.role === 'PRO' && (
-                    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">PRO</span>
+                    <span className="text-xs bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-full">PRO</span>
                   )}
                   <FoundingMemberBadge slot={artist.earlyBirdSlot} showTotal={false} />
                 </div>
@@ -250,7 +250,7 @@ export default async function HomePage() {
               key={item.name}
               className={`rounded-2xl p-4 sm:p-6 min-w-0 ${
                 item.highlight
-                  ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-md'
+                  ? 'bg-gradient-to-br from-purple-600 to-zinc-600 text-white shadow-md'
                   : 'bg-gray-50 border border-gray-200'
               }`}
             >

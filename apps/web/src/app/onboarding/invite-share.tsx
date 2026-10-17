@@ -113,7 +113,7 @@ export function InviteShare({
             {sending ? '送信中…' : '招待を送信'}
           </button>
           {emailStatus && (
-            <span className={`text-sm ${emailOK ? 'text-emerald-600' : 'text-red-600'}`}>
+            <span className={`text-sm ${emailOK ? 'text-zinc-600' : 'text-red-600'}`}>
               {emailStatus}
             </span>
           )}

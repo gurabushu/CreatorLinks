@@ -35,7 +35,7 @@ export function WhyNotLine() {
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
             LINE で十分な仕事は、LINE で。
             <br className="sm:hidden" />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-zinc-600">
               残るのはこの 3 シーン。
             </span>
           </h2>
@@ -70,7 +70,7 @@ export function WhyNotLine() {
         </ol>
 
         {/* 手数料 7% の再フレーミング */}
-        <div className="mt-10 sm:mt-12 rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50/70 border border-purple-200/60 p-6 sm:p-8">
+        <div className="mt-10 sm:mt-12 rounded-2xl bg-gradient-to-br from-purple-50 to-zinc-50/70 border border-purple-200/60 p-6 sm:p-8">
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
             手数料 7% は「サービス料」ではなく「保険料 + 集客費」。
           </h3>

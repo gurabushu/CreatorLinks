@@ -52,7 +52,7 @@ export default async function OnboardingPage() {
         </Link>
         <Link
           href="/dashboard"
-          className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
+          className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
         >
           ダッシュボードへ <span aria-hidden>→</span>
         </Link>

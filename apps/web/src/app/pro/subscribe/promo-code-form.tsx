@@ -64,7 +64,7 @@ export function PromoCodeForm({ compact = false }: { compact?: boolean }) {
         </p>
       )}
       {success && (
-        <p className="text-xs text-emerald-700 mt-3 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+        <p className="text-xs text-zinc-700 mt-3 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
           ✓ {success}
         </p>
       )}

@@ -14,7 +14,7 @@ export async function EarlyBirdBanner() {
   const closed = remaining === 0
 
   return (
-    <div className="bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white">
+    <div className="bg-gradient-to-r from-purple-600 to-zinc-600 text-white">
       <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
         <div className="text-center sm:text-left">
           <div className="text-xs sm:text-sm font-semibold tracking-wider opacity-90">
