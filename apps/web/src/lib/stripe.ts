@@ -1,7 +1,8 @@
 // Stripe Connect (Express) 連携: サーバー側ユーティリティ
 // - 依頼主 → アーティスト間の報酬決済に使用（Separate Charges & Transfers 方式）
 // - クライアント決済は Platform (自社) が受領してエスクロー保管、完了確認後に Transfer で送金
-// - PRO サブスクリプション決済は RevenueCat 側 (lib/revenuecat.ts) を継続利用
+// - 2026-10-17 fee-only pivot で PRO サブスクリプション (RevenueCat) は廃止。認証バッジ Layer 2
+//   (¥3,000 買切) も同じ Stripe で PaymentIntent として扱う
 
 import Stripe from 'stripe'
 

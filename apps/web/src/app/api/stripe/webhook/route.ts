@@ -7,8 +7,8 @@
 // ローカル開発: `stripe listen --forward-to localhost:3000/api/stripe/webhook`
 //
 // 実装方針:
-// - Stripe SDK の webhooks.constructEvent で HMAC 検証（RevenueCat は自前検証だがこちらは SDK 任せ）
-// - rate-limit は RevenueCat webhook と同じ流儀（`checkRateLimit('webhook', ip)`）
+// - Stripe SDK の webhooks.constructEvent で HMAC 検証
+// - rate-limit: `checkRateLimit('webhook', ip)` で IP 単位の攻撃抑制
 // - 冪等性: updateMany + WHERE 条件で二重反映を防ぐ
 
 import { NextRequest, NextResponse } from 'next/server'

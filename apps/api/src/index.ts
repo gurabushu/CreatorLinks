@@ -33,7 +33,7 @@ app.use(
 // ヘルスチェック
 app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
 
-// 決済 Webhook は apps/web/src/app/api/revenuecat/webhook/route.ts で受ける
+// Stripe Webhook は apps/web/src/app/api/stripe/webhook/route.ts で受ける
 
 // サーバー起動
 const PORT = parseInt(process.env.PORT ?? '3001', 10)
