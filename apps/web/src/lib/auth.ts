@@ -59,20 +59,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // 退会検知 + 恩人枠フラグの最新値取得を同じクエリで済ませる。
         // JWT strategy のため mass invalidate 手段がなく、次アクセスで捕捉する方針。
         const id = token.id as string | undefined
-        if (id) {
-          const dbUser = await prisma.user
-            .findUnique({
-              where: { id },
-              select: { deletedAt: true, isFounderExempt: true },
-            })
-            .catch(() => null)
-          if (!dbUser || dbUser.deletedAt) {
-            // Auth.js は callback から null を返すとログアウト扱い
-            return null as unknown as typeof session
-          }
-          session.user.isFounderExempt = dbUser.isFounderExempt
+        // id が無い旧 JWT はログアウト扱い（下流の findUnique({ id: undefined }) を防ぐ）
+        if (!id) return null as unknown as typeof session
+        const dbUser = await prisma.user
+          .findUnique({
+            where: { id },
+            select: { deletedAt: true, isFounderExempt: true },
+          })
+          .catch(() => null)
+        if (!dbUser || dbUser.deletedAt) {
+          return null as unknown as typeof session
         }
-        session.user.id = token.id as string
+        session.user.isFounderExempt = dbUser.isFounderExempt
+        session.user.id = id
         session.user.role = token.role as UserRole
       }
       return session
