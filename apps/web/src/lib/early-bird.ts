@@ -25,12 +25,13 @@ export async function assignEarlyBirdIfAvailable(userId: string): Promise<number
 
     const nextSlot = count + 1
     try {
+      // 2026-10-17 fee-only pivot: Early Bird は "創設メンバー" バッジ付与のみ。
+      // PRO ロール付与は廃止 (role=GENERAL のまま、全機能無料)。
       await prisma.user.update({
         where: { id: userId },
         data: {
           earlyBirdSlot: nextSlot,
           earlyBirdExpiresAt: computeExpiresAt(),
-          role: 'PRO',
         },
       })
       return nextSlot

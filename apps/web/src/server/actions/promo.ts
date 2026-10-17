@@ -85,9 +85,10 @@ export async function redeemPromoCodeAction(rawCode: string): Promise<RedeemResu
         },
         data: { redemptionCount: { increment: 1 } },
       }),
+      // 2026-10-17 fee-only pivot: PRO 概念廃止。プロモコードは認証バッジ付与に変更。
       prisma.user.update({
         where: { id: session.user.id },
-        data: { hasLifetimeFreePro: true, role: 'PRO' },
+        data: { hasLifetimeFreePro: true, isVerified: true },
       }),
     ])
   } catch (e) {

@@ -63,7 +63,8 @@ export default async function AdminPage() {
       prisma.user.count(),
       prisma.project.count(),
       prisma.match.count(),
-      prisma.user.count({ where: { role: 'PRO' } }),
+      // 2026-10-17 fee-only pivot: PRO 廃止後は認証バッジ保有者を "本気度ユーザー" 指標として表示
+      prisma.user.count({ where: { isVerified: true } }),
       prisma.user.count({ where: { isGuest: true } }),
       prisma.user.count({ where: { isGuest: true, createdAt: { gte: dayAgo } } }),
       prisma.user.count({ where: { isGuest: true, createdAt: { gte: weekAgo } } }),

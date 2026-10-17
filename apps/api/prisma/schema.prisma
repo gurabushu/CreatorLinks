@@ -16,9 +16,10 @@ datasource db {
 // Enum 定義
 // =============================================
 
+// 2026-10-17 fee-only pivot: PRO サブスク廃止に伴い値 'PRO' を削除。
+// 残り: GENERAL (一般ユーザー) と ADMIN (運営) の 2 値のみ。
 enum UserRole {
   GENERAL
-  PRO
   ADMIN
 }
 
