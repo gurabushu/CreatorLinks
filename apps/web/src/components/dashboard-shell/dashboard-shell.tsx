@@ -18,9 +18,10 @@ export async function DashboardShell({
 
   let unreadCount = 0
   let announcementUnread = 0
+  let notificationUnread = 0
   let isVerified = false
   try {
-    const [msgs, annBase] = await Promise.all([
+    const [msgs, annBase, notifCount] = await Promise.all([
       prisma.message.count({
         where: {
           match: { artistId: session.user.id },
@@ -32,9 +33,11 @@ export async function DashboardShell({
         where: { id: session.user.id },
         select: { announcementsReadAt: true, isVerified: true },
       }),
+      prisma.notification.count({ where: { userId: session.user.id, readAt: null } }),
     ])
     unreadCount = msgs
     isVerified = annBase?.isVerified ?? false
+    notificationUnread = notifCount
     const now = new Date()
     announcementUnread = await prisma.announcement.count({
       where: {
@@ -54,6 +57,7 @@ export async function DashboardShell({
       user={{ name: session.user.name, role: session.user.role, isVerified }}
       unreadCount={unreadCount}
       announcementUnread={announcementUnread}
+      notificationUnread={notificationUnread}
     >
       {children}
     </SidebarShell>

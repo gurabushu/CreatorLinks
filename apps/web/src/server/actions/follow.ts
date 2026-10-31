@@ -6,6 +6,8 @@
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { createNotification } from '@/lib/notifications'
+import { getDisplayName } from '@/lib/user'
 
 export type FollowActionResult =
   | { success: true }
@@ -24,6 +26,17 @@ export async function followUserAction(userId: string): Promise<FollowActionResu
   })
   if (!target) return { success: false, error: 'ユーザーが見つかりません' }
 
+  // 既にフォロー済みなら通知を再発火しない (upsert の判定)
+  const existed = await prisma.follow.findUnique({
+    where: {
+      followerId_followingId: {
+        followerId: session.user.id,
+        followingId: userId,
+      },
+    },
+    select: { followerId: true },
+  })
+
   await prisma.follow.upsert({
     where: {
       followerId_followingId: {
@@ -34,6 +47,21 @@ export async function followUserAction(userId: string): Promise<FollowActionResu
     create: { followerId: session.user.id, followingId: userId },
     update: {},
   })
+
+  if (!existed) {
+    const follower = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, displayName: true },
+    })
+    const actorName = follower ? getDisplayName(follower) : '誰か'
+    await createNotification({
+      userId,
+      kind: 'FOLLOW',
+      actorId: session.user.id,
+      title: `${actorName} があなたをフォローしました`,
+      href: `/artists/${session.user.id}`,
+    })
+  }
 
   revalidatePath(`/artists/${userId}`)
   return { success: true }

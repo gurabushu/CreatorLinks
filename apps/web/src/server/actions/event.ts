@@ -7,6 +7,8 @@
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { createNotification } from '@/lib/notifications'
+import { getDisplayName } from '@/lib/user'
 import type { z } from 'zod'
 import { CreateEventSchema, UpdateEventSchema } from '@creator-links/shared'
 import type { EventMediaInput, EventParticipantRole, EventVisibility } from '@creator-links/shared'
@@ -233,11 +235,40 @@ export async function toggleInterestAction(
   const session = await auth()
   if (!session) return { success: false, error: 'ログインが必要です' }
 
+  // 初回「行く」反応の時だけ主催者に通知。既存反応の切り替えや取り消しは通知しない。
+  const existing = await prisma.eventInterest.findUnique({
+    where: { userId_eventId: { userId: session.user.id, eventId } },
+    select: { isAttending: true },
+  })
+
   await prisma.eventInterest.upsert({
     where: { userId_eventId: { userId: session.user.id, eventId } },
     create: { userId: session.user.id, eventId, isAttending },
     update: { isAttending },
   })
+
+  if (!existing && isAttending) {
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { creatorId: true, title: true },
+    })
+    const actor = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, displayName: true },
+    })
+    if (event && actor) {
+      const actorName = getDisplayName(actor)
+      await createNotification({
+        userId: event.creatorId,
+        kind: 'EVENT_RSVP',
+        actorId: session.user.id,
+        title: `${actorName} が「行く」と答えました`,
+        body: event.title,
+        href: `/events/${eventId}`,
+        metadata: { eventId },
+      })
+    }
+  }
 
   revalidatePath(`/events/${eventId}`)
   return { success: true, data: undefined }
@@ -289,6 +320,29 @@ export async function applyToOpenRoleAction(
       },
       select: { id: true },
     })
+
+    // 主催者に通知
+    const roleEvent = await prisma.eventOpenRole.findUnique({
+      where: { id: openRoleId },
+      select: { event: { select: { id: true, creatorId: true, title: true } } },
+    })
+    const actor = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, displayName: true },
+    })
+    if (roleEvent?.event && actor) {
+      const actorName = getDisplayName(actor)
+      await createNotification({
+        userId: roleEvent.event.creatorId,
+        kind: 'EVENT_APPLY',
+        actorId: session.user.id,
+        title: `${actorName} が公募枠に応募しました`,
+        body: roleEvent.event.title,
+        href: `/events/${roleEvent.event.id}`,
+        metadata: { eventId: roleEvent.event.id, matchId: match.id, openRoleId },
+      })
+    }
+
     revalidatePath(`/events`)
     return { success: true, data: { matchId: match.id } }
   } catch (e) {

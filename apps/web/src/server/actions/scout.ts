@@ -19,6 +19,7 @@ import {
 } from '@/lib/pusher-server'
 import { inngest } from '@/lib/inngest'
 import { getDisplayName } from '@/lib/user'
+import { createNotification } from '@/lib/notifications'
 
 export type ScoutActionResult =
   | { success: true; matchId: string }
@@ -113,16 +114,28 @@ export async function sendScoutAction(
     where: { id: session.user.id },
     select: { name: true, displayName: true },
   })
+  const clientName = client ? getDisplayName(client) : '発注者'
   const pusher = await getPusherServer()
   if (pusher) {
     await pusher.trigger(getUserChannel(artistId), MATCH_SCOUTED_EVENT, {
       matchId: match.id,
       projectId,
       projectTitle: project.title,
-      counterpartName: client ? getDisplayName(client) : '発注者',
+      counterpartName: clientName,
       createdAt: new Date().toISOString(),
     })
   }
+
+  // 永続化通知
+  await createNotification({
+    userId: artistId,
+    kind: 'SCOUT',
+    actorId: session.user.id,
+    title: `${clientName} からスカウトが届きました`,
+    body: project.title,
+    href: '/dashboard/matches',
+    metadata: { matchId: match.id, projectId },
+  })
 
   // Inngest: メール通知 (message/received と別イベントで扱う)
   await inngest

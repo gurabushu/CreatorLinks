@@ -15,6 +15,7 @@ import {
 } from '@/lib/pusher-server'
 import { inngest } from '@/lib/inngest'
 import { getDisplayName } from '@/lib/user'
+import { createNotification } from '@/lib/notifications'
 
 export type MatchActionResult = { success: boolean; error?: string }
 
@@ -76,20 +77,36 @@ export async function updateMatchStatusAction(
 
   // Pusher: アーティストのユーザーチャンネルへリアルタイム通知
   const pusher = await getPusherServer()
+  const clientForMsg = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, displayName: true },
+  })
+  const clientName = clientForMsg ? getDisplayName(clientForMsg) : '発注者'
+
   if (pusher) {
     const event = status === 'ACCEPTED' ? MATCH_ACCEPTED_EVENT : MATCH_REJECTED_EVENT
-    const client = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { name: true, displayName: true },
-    })
     await pusher.trigger(getUserChannel(match.artistId), event, {
       matchId,
       projectId: match.projectId,
       projectTitle: match.project.title,
-      counterpartName: client ? getDisplayName(client) : '発注者',
+      counterpartName: clientName,
       createdAt: new Date().toISOString(),
     })
   }
+
+  // 永続化通知
+  await createNotification({
+    userId: match.artistId,
+    kind: status === 'ACCEPTED' ? 'MATCH_ACCEPTED' : 'MATCH_REJECTED',
+    actorId: session.user.id,
+    title:
+      status === 'ACCEPTED'
+        ? `${clientName} があなたの応募を承認しました`
+        : `${clientName} があなたの応募を見送りました`,
+    body: match.project.title,
+    href: '/dashboard/matches',
+    metadata: { matchId, projectId: match.projectId },
+  })
 
   revalidatePath('/projects/manage')
   revalidatePath('/dashboard/matches')
@@ -130,22 +147,34 @@ export async function completeMatchAction(matchId: string): Promise<MatchActionR
     data: { status: 'CLOSED' },
   })
 
-  // Pusher: 発注者のユーザーチャンネルへ完了通知
+  // Pusher: 発注者のユーザーチャンネルへ完了通知 + 永続化通知
   if (match.project) {
+    const artist = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, displayName: true },
+    })
+    const artistName = artist ? getDisplayName(artist) : 'アーティスト'
+
     const pusher = await getPusherServer()
     if (pusher) {
-      const artist = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { name: true, displayName: true },
-      })
       await pusher.trigger(getUserChannel(match.project.clientId), MATCH_COMPLETED_EVENT, {
         matchId,
         projectId: match.projectId,
         projectTitle: match.project.title,
-        counterpartName: artist ? getDisplayName(artist) : 'アーティスト',
+        counterpartName: artistName,
         createdAt: new Date().toISOString(),
       })
     }
+
+    await createNotification({
+      userId: match.project.clientId,
+      kind: 'MATCH_COMPLETED',
+      actorId: session.user.id,
+      title: `${artistName} が納品を完了しました`,
+      body: match.project.title,
+      href: `/dashboard/chat/${matchId}`,
+      metadata: { matchId, projectId: match.projectId },
+    })
   }
 
   revalidatePath(`/dashboard/chat/${matchId}`)

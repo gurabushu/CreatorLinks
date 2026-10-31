@@ -104,6 +104,12 @@ const ShieldIcon = () => (
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 )
+const BellIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+)
 const ChartIcon = () => (
   <svg className={iconClass} {...iconProps}>
     <line x1="18" y1="20" x2="18" y2="10" />
@@ -197,11 +203,13 @@ export function SidebarShell({
   user,
   unreadCount,
   announcementUnread,
+  notificationUnread,
   children,
 }: {
   user: User
   unreadCount: number
   announcementUnread: number
+  notificationUnread: number
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -209,6 +217,7 @@ export function SidebarShell({
 
   const items: NavItem[] = [
     { href: '/dashboard', label: 'マイページ', icon: <HomeIcon />, matchExact: true },
+    { href: '/dashboard/notifications', label: '通知', icon: <BellIcon />, badge: notificationUnread },
     { href: '/dashboard/profile', label: 'プロフィール', icon: <UserIcon /> },
     { href: '/dashboard/portfolio', label: 'ポートフォリオ', icon: <GalleryIcon /> },
     { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },

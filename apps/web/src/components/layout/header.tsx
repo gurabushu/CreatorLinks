@@ -6,6 +6,7 @@ import type { Session } from 'next-auth'
 import { auth, signOut } from '@/lib/auth'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { SITE_NAME } from '@/lib/brand'
+import { prisma } from '@/lib/prisma'
 
 export async function Header() {
   let session: Session | null = null
@@ -13,6 +14,18 @@ export async function Header() {
     session = await auth()
   } catch {
     // auth unavailable — show logged-out state
+  }
+
+  // bell 用の初期未読数。失敗しても 0 で bell 自体は表示する。
+  let notificationUnread = 0
+  if (session?.user.id) {
+    try {
+      notificationUnread = await prisma.notification.count({
+        where: { userId: session.user.id, readAt: null },
+      })
+    } catch {
+      /* DB unreachable - fall back to 0 */
+    }
   }
 
   return (
@@ -118,7 +131,7 @@ export async function Header() {
                   </svg>
                   <span className="hidden sm:inline">仲間を招待</span>
                 </Link>
-                <NotificationBell userId={session.user.id} />
+                <NotificationBell userId={session.user.id} initialUnread={notificationUnread} />
                 {/* アカウント名 → /dashboard/profile への導線。
                     SP はイニシャル 1 文字だけの円アイコン、sm 以上は名前も表示。 */}
                 <Link

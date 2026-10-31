@@ -12,6 +12,7 @@ import {
   MATCH_APPLIED_EVENT,
 } from '@/lib/pusher-server'
 import { getDisplayName } from '@/lib/user'
+import { createNotification } from '@/lib/notifications'
 
 export type ProjectActionResult =
   | { success: true; projectId: string }
@@ -120,6 +121,17 @@ export async function applyToProjectAction(
       createdAt: match.createdAt.toISOString(),
     })
   }
+
+  // 永続化通知 (発注者に「応募ありました」)
+  await createNotification({
+    userId: projectInfo.clientId,
+    kind: 'MATCH_APPLIED',
+    actorId: session.user.id,
+    title: `${artistDisplayName} が応募しました`,
+    body: projectInfo.title,
+    href: '/projects/manage',
+    metadata: { matchId: match.id, projectId },
+  })
 
   revalidatePath(`/projects/${projectId}`)
   return { success: true }
