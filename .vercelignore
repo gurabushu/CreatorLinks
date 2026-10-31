@@ -1,0 +1,17 @@
+# Vercel deploy 時にアップロードから除外するもの。
+# gitignore されていても `vercel deploy` は .env.* 等をアップロードし、
+# ビルド中に process.env を汚染することがあるため明示的に除外する。
+# 2026-10-31: .env.production の [SENSITIVE] プレースホルダが NEXT_PUBLIC_APP_URL
+# として bundle されて `new URL("[SENSITIVE]")` でビルド失敗した事例あり。
+
+.env
+.env.local
+.env.production
+.env.preview
+.env.development
+.env.vercel
+.env*.local
+
+# vercel env pull のバックアップ・一時ファイル
+.env.backup
+.env.*.backup
