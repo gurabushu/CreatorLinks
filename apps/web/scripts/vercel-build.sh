@@ -10,10 +10,9 @@ cd ../api
 npx prisma generate
 
 if [ "$VERCEL_ENV" = "production" ]; then
-  # baseline 化後は migrate deploy のみで同期する。
-  # 以前の `db push --accept-data-loss` + enum 手打ち ALTER は廃止。
-  # 新しい migration を追加する場合はローカルで `pnpm db:migrate` して commit し、
-  # このビルドで自動適用される流れ。
+  # 既存 Prod DB は pre-baseline の db push 由来でスキーマ有。
+  # baseline migration を "適用済み" マークして P3005 を回避（冪等）。
+  npx prisma migrate resolve --applied 20261016235435_baseline || true
   npx prisma migrate deploy
 fi
 
