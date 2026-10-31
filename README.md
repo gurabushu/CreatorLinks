@@ -95,6 +95,37 @@
 
 ---
 
+## 直近の変更 (2026-10-31)
+
+### Preview 環境・検証インフラの一斉復旧 (2026-10-31)
+Fee-only pivot (2026-10-17) 以降、Preview 側で複数の障害が重なってログイン不能になっていた。切り分けと復旧を 1 セッションで実施：
+
+- **Upstash KV（レート制限用 Redis）の消滅を発見・新規 provision**
+  - 旧 `upstash-kv-aureolin-fence` が uninstalled → NXDOMAIN
+  - middleware の `checkRateLimit` が fail-closed で全ログインを 500 させていた
+  - Vercel Marketplace で `upstash-kv-citrine-yacht` (hnd1, Free) を再作成、env prefix `KV` で接続
+- **Preview Neon branch の空スキーマを reset + migrate で復旧**
+  - 原因: `vercel-build.sh` が Preview では `migrate deploy` を走らせていなかった
+  - 対策: `apps/web/scripts/vercel-build.sh` を Production と同じ `resolve + deploy` フローに統一（commit `dfaad18`）
+- **ローカル `.env.production` が `[SENSITIVE]` プレースホルダで汚染 → ビルド壊滅**
+  - `vercel env pull --environment=production` 由来。削除で復旧。gitignore 済なのでそのまま
+- **E2E ログインヘルパの selector drift を修正** (commit `3c8f510`)
+  - `getByRole('tab')` → plain button に、`getByLabel('パスワード')` → `exact: true` に
+  - `PasswordInput` の visibility toggle が strict mode violation の原因
+- **`prisma/seed.ts` の `role: 'PRO'` を GENERAL に差替** (commit `f58c816`)
+  - fee-only pivot で廃止された enum で seed が中断していた
+- Vercel CLI を 53.3.1 → 65.9.0 にアップデート（旧版は Sensitive env pull で空文字返す bug）
+
+**検証用 preview URL**: https://creator-links-2rcco2dgf-tonokyama-s-projects.vercel.app（Vercel SSO ゲート付）
+
+**自動テスト結果**: type-check / vitest api 51/51 / vitest web 78/78 / build すべて緑
+
+**既知の積み残し**:
+- dev server の Sentry vendor-chunks 読み込みエラー（`.next` キャッシュ破損）で、localhost 向け Playwright の login 系が 10s timeout する。`rm -rf apps/web/.next` + dev 再起動で解消見込み
+- Playwright E2E は helper 修正後 5/23 pass。残りは上記 Sentry 問題解消後に再測
+
+---
+
 ## 直近の変更 (2026-08-08 〜 2026-08-09)
 
 ### 品質ゲート復旧 (2026-08-08)
