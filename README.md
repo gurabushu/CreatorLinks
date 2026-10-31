@@ -124,6 +124,35 @@ Fee-only pivot (2026-10-17) 以降、Preview 側で複数の障害が重なっ�
 - dev server の Sentry vendor-chunks 読み込みエラー（`.next` キャッシュ破損）で、localhost 向け Playwright の login 系が 10s timeout する。`rm -rf apps/web/.next` + dev 再起動で解消見込み
 - Playwright E2E は helper 修正後 5/23 pass。残りは上記 Sentry 問題解消後に再測
 
+### 夕方セッション追加成果 (2026-10-31 19:00-)
+- **dev server 復旧**: `.next` キャッシュ消去 + 再起動で Sentry vendor-chunks エラー解消
+- **Playwright E2E 再測**: **12 pass / 10 fail / 1 skip** (前回 4/19)
+  - 残 10 fail はすべて `toBeVisible` 系 = spec selector drift（本番コードは健全、dogfood blocker ではない）
+- **認証・権限ガード棚卸し (#15)**: HIGH 0件 / MEDIUM 1件 / 24 ファイル健全 → **本番公開レベル**
+- **Neon 分離確認**: cyclamen-cave (Prod, ep-flat-wave) / claret-ball (Preview, ep-mute-heart) → **完全分離済**
+- **Production DB 現状**: admin ユーザ 1 名のみ（dogfood はクリーンな状態で開始可能）
+
+### ベータ配布 (M1) 残タスク — 2026-10-31 時点
+
+🔴 必須 (本番公開 blocker):
+- [ ] Vercel Pro upgrade (5分、Hobby ToS §2.3 違反)
+- [ ] Neon PITR / バックアップ確認 (15分)
+- [ ] Stripe dogfood Phase 1-3 (90分、個人情報 15m + マッチング 30m + Stripe 45m)
+
+🟠 推奨:
+- [ ] Sentry env 投入 (SENTRY_DSN 他 5本、15分)
+- [ ] CRON_SECRET 投入 (5分、auto-release 用)
+- [ ] Pusher env 投入 (6本、20分、chat realtime 復旧)
+- [ ] 招待先 5-10名 + Google Form Q1-5 確定 (30分)
+- [ ] 商標 J-PlatPat + whois + SNS ハンドル調査 (30分)
+
+### 本番公開前セキュリティチェック (release plan §7 由来) — 2026-10-31 時点
+- [x] #12 Upstash KV 不通 → **解決済**（新 upstash-kv-citrine-yacht 投入）
+- [x] #13 Neon staging/prod 分離 → **確認済、既に分離**
+- [x] #15 認証棚卸し → **完了、HIGH 0件**
+- [ ] Vercel Pro upgrade
+- [ ] Neon PITR 確認
+
 ---
 
 ## 直近の変更 (2026-08-08 〜 2026-08-09)
