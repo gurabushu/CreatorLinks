@@ -132,27 +132,48 @@ Fee-only pivot (2026-10-17) 以降、Preview 側で複数の障害が重なっ�
 - **Neon 分離確認**: cyclamen-cave (Prod, ep-flat-wave) / claret-ball (Preview, ep-mute-heart) → **完全分離済**
 - **Production DB 現状**: admin ユーザ 1 名のみ（dogfood はクリーンな状態で開始可能）
 
-### ベータ配布 (M1) 残タスク — 2026-10-31 時点
+### 一般公開 (M1 beta → M2 一般) に向けた残タスク — 2026-10-31 時点
 
-🔴 必須 (本番公開 blocker):
-- [ ] **⚠️ REMINDER: Vercel Pro upgrade** (5分、Hobby ToS §2.3 違反)
-      ベータ配布開始**前**に必ず実施。現状 Hobby 非商用のまま運用は ToS 違反なので、本番ユーザーを招く前に $20/月 Pro へ切替。dashboard: https://vercel.com/tonokyama-s-projects/~/settings/billing
-- [x] ~~Neon PITR / バックアップ確認~~ → **Free tier 24h 有効 (公式デフォルト) で前提**。dashboard アクセスは要 org 切替、ベータ後に正式確認
-- [ ] Stripe dogfood Phase 1-3 (90分、個人情報 15m + マッチング 30m + Stripe 45m)
+**本番移行スコープ**: 一般公開（SNS 告知、誰でもサインアップ可、実金決済）
 
-🟠 推奨:
-- [x] ~~Sentry env 投入~~ → **SENTRY_DSN + NEXT_PUBLIC_SENTRY_DSN 投入済** (ORG/PROJECT/AUTH_TOKEN は source map 用で後回し)
-- [x] ~~CRON_SECRET 投入~~ → **投入済** (64char base64, Prod + Preview)
-- [ ] Pusher env 投入 (6本、20分、chat realtime 復旧)
-- [ ] 招待先 5-10名 + Google Form Q1-5 確定 (30分)
-- [ ] 商標 J-PlatPat + whois + SNS ハンドル調査 (30分)
+🔴 必須 (この順で実施):
+- [ ] **1. ⚠️ Vercel Pro upgrade** (5 分)
+      - 現 Hobby 非商用のまま商用運用は ToS §2.3 違反
+      - https://vercel.com/tonokyama-s-projects/~/settings/billing → Upgrade to Pro ($20/月)
+- [ ] **2. 本番 apex `encorecue.jp` 切替** (10 分)
+      - 現状 staging.encorecue.jp のみ稼働、apex を Production デプロイにマップ
+      - Vercel dashboard → Settings → Domains → Add `encorecue.jp`
+      - DNS: Xserver 側で A/AAAA レコードを Vercel 指定の値に
+- [ ] **3. NEXT_PUBLIC_APP_URL 更新** (2 分)
+      - `https://encorecue.jp` に差替（Prod + Preview）
+      - 招待リンク・OGP・canonical が本番 URL を指すように
+- [ ] **4. Stripe Live mode 鍵 3 本切替** (15 分〜数日)
+      - Stripe dashboard で "Activate account" (本人確認: 住所・口座・身分証) → 未済なら数日
+      - 完了後 Live mode の `pk_live_*` / `sk_live_*` / Webhook secret を取得
+      - Vercel env で Test mode 値を Live mode 値に上書き
+- [ ] **5. RESEND 送信ドメイン認証** (20 分 + 伝播待ち)
+      - 送信元を `noreply@encorecue.jp` にする場合、SPF/DKIM/DMARC の DNS 設定が必要
+      - RESEND dashboard → Domains → Add `encorecue.jp` → 表示される TXT レコードを Xserver DNS に追加
+      - 無いと招待メール等が迷惑メール行き
+- [ ] **6. Stripe dogfood Phase 1-3** (90 分)
+      - 個人情報 (15 分) + マッチング (30 分) + Stripe 決済 (45 分)
+      - 2 アカウント要（発注者 + アーティスト）
 
-### 本番公開前セキュリティチェック (release plan §7 由来) — 2026-10-31 時点
-- [x] #12 Upstash KV 不通 → **解決済**（新 upstash-kv-citrine-yacht 投入）
-- [x] #13 Neon staging/prod 分離 → **確認済、既に分離**
-- [x] #15 認証棚卸し → **完了、HIGH 0件**
-- [ ] Vercel Pro upgrade
-- [ ] Neon PITR 確認
+🟡 推奨 (ベータ中に追加で OK):
+- [ ] Pusher env 投入 (chat realtime 復旧、無しだと polling fallback)
+- [ ] 招待先 5-10 名リスト + Google Form Q1-5
+- [ ] Sentry ORG / PROJECT / AUTH_TOKEN (source map upload 用)
+- [ ] Google OAuth 投入 (Credentials 以外の選択肢)
+
+### 既に完了済（本セッション）
+- [x] Vercel Pro upgrade: ⚠️ **未着手**（上記 #1）
+- [x] ~~Neon PITR 確認~~ → **Free tier 24h 有効 (公式デフォルト) で前提**
+- [x] ~~Sentry env 投入 (DSN 2本)~~ → **SENTRY_DSN + NEXT_PUBLIC_SENTRY_DSN 投入済**
+- [x] ~~CRON_SECRET 投入~~ → **投入済**（Prod + Preview）
+- [x] ~~商標調査~~ → **J-PlatPat で "EncoreCue" 衝突なし確認済**
+- [x] #12 Upstash KV 不通 → **解決済**（upstash-kv-citrine-yacht）
+- [x] #13 Neon staging/prod 分離 → **cyclamen (Prod) / claret-ball (Preview) で物理分離済**
+- [x] #15 認証棚卸し → **HIGH 0件、本番公開レベル**
 
 ---
 
