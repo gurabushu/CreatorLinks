@@ -11,7 +11,7 @@ test.describe('認証フロー', () => {
     await page.goto('/auth')
     await expect(page).toHaveTitle(/ログイン|EncoreCue/)
     await expect(page.getByLabel('メールアドレス')).toBeVisible()
-    await expect(page.getByLabel('パスワード')).toBeVisible()
+    await expect(page.getByLabel('パスワード', { exact: true })).toBeVisible()
   })
 
   test('正しい認証情報でログインできる', async ({ page }) => {
@@ -23,7 +23,7 @@ test.describe('認証フロー', () => {
   test('誤ったパスワードではログインできない', async ({ page }) => {
     await page.goto('/auth')
     await page.getByLabel('メールアドレス').fill('client@example.com')
-    await page.getByLabel('パスワード').fill('wrongpassword')
+    await page.getByLabel('パスワード', { exact: true }).fill('wrongpassword')
     await page.getByRole('button', { name: 'ログイン' }).click()
 
     // エラーメッセージが表示される
@@ -38,12 +38,12 @@ test.describe('認証フロー', () => {
 
     await page.goto('/auth')
 
-    // 新規登録タブに切り替え
-    await page.getByRole('tab', { name: '新規登録' }).click()
+    // 新規登録タブに切り替え（role=tab ではなく plain button）
+    await page.getByRole('button', { name: '新規登録', exact: true }).click()
 
     await page.getByLabel('名前').fill('E2Eテストユーザー')
     await page.getByLabel('メールアドレス').fill(testEmail)
-    await page.getByLabel('パスワード').fill('testpass123')
+    await page.getByLabel('パスワード', { exact: true }).fill('testpass123')
     await page.getByRole('button', { name: '登録する' }).click()
 
     // 登録成功後ダッシュボードへ
@@ -56,10 +56,7 @@ test.describe('認証フロー', () => {
     await expect(page).toHaveURL(/\/auth/, { timeout: 5000 })
   })
 
-  test('PRO アーティストとしてログインすると正しいロールが表示される', async ({ page }) => {
-    await loginAs(page, 'artist')
-    await page.goto('/dashboard')
-    // PRO バッジが何らかの形で存在することを確認
-    await expect(page.getByText('PRO')).toBeVisible()
-  })
+  // 2026-10-17 fee-only pivot で UserRole から PRO が削除されたため、本ケースは obsolete。
+  // 残り role は GENERAL / ADMIN のみで PRO バッジは存在しない。
+  test.skip('PRO アーティストとしてログインすると正しいロールが表示される', async () => {})
 })

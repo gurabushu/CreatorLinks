@@ -14,15 +14,18 @@ export async function loginAs(page: Page, account: keyof typeof TEST_ACCOUNTS) {
   await page.goto('/auth')
   await page.waitForLoadState('networkidle')
 
-  // ログインタブを選択（デフォルトがログインの場合はそのまま）
-  const loginTab = page.getByRole('tab', { name: 'ログイン' })
-  if (await loginTab.isVisible()) {
-    await loginTab.click()
+  // ログイン / 新規登録はタブではなく plain button。role=tab ではヒットしないので role=button で明示。
+  // mode が signup のときのみ切替が必要（defaults to login）。
+  const loginSwitch = page.getByRole('button', { name: 'ログイン', exact: true })
+  if (await loginSwitch.count() > 1) {
+    await loginSwitch.first().click()
   }
 
   await page.getByLabel('メールアドレス').fill(email)
-  await page.getByLabel('パスワード').fill(password)
-  await page.getByRole('button', { name: 'ログイン' }).click()
+  // PasswordInput は <input> と visibility toggle <button aria-label="パスワードを表示する"> を含むため、
+  // getByLabel('パスワード') だと 2 要素ヒットする。exact マッチで <input> だけに絞る。
+  await page.getByLabel('パスワード', { exact: true }).fill(password)
+  await page.getByRole('button', { name: 'ログイン', exact: true }).last().click()
 
   // ダッシュボードへのリダイレクトを待機
   await page.waitForURL(/\/(dashboard|$)/, { timeout: 10000 })
