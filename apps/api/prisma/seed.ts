@@ -9,7 +9,8 @@ async function main() {
 
   // ---- ユーザー作成 ----
   const adminHash = await bcrypt.hash('admin1234', 12)
-  const proHash = await bcrypt.hash('pro12345', 12)
+  // 旧 PRO 用のパスワード。role 自体は fee-only pivot (2026-10-17) で廃止され GENERAL に統合。
+  const artistHash = await bcrypt.hash('pro12345', 12)
   const generalHash = await bcrypt.hash('user1234', 12)
 
   // 公式アカウント兼管理者: 全体お知らせ・ウェルカム DM・サポート窓口の送信元
@@ -36,8 +37,8 @@ async function main() {
     create: {
       email: 'yamada@example.com',
       name: '山田 太郎',
-      passwordHash: proHash,
-      role: 'PRO',
+      passwordHash: artistHash,
+      role: 'GENERAL',
       genres: ['音楽', '動画'],
       bio: 'シンガーソングライター/映像クリエイター。YouTube チャンネル登録者 3 万人。BGM・楽曲制作承ります。',
       averageRating: 4.8,
@@ -198,11 +199,10 @@ async function main() {
     },
   })
 
-  // ---- ベータ体験ユーザー向けプロモコード（永年無料 PRO 発行）----
-  // ユーザーがサインアップ後、/pro/subscribe の「プロモコードを入力」に
-  // BETA-ENCORE-2026 を入れると hasLifetimeFreePro=true + role=PRO が付与される。
-  // 上限 20 名 / 有効期限 2027-02-28（半年間の redeem 期限）。
-  // 上限に達したら別コードを追加するか、maxRedemptions を増やして再 seed する。
+  // ---- ベータ体験ユーザー向けプロモコード ----
+  // fee-only pivot 以降は PRO サブスクが廃止されたので、このコードは hasLifetimeFreePro フラグ用途のみ残す。
+  // 新規発行は Admin UI 推奨で、seed では redeem カウンタ保護のため upsert update は空にする。
+  // 有効期限 2027-02-28、上限 20 名。
   await prisma.promoCode.upsert({
     where: { code: 'BETA-ENCORE-2026' },
     update: {}, // 既存レコードには手を加えない（redemptionCount を保護）
@@ -218,11 +218,11 @@ async function main() {
   console.log('✅ Seed complete!')
   console.log('\n📋 テストアカウント:')
   console.log('  管理者    : admin@creatorlinks.jp / admin1234')
-  console.log('  PRO artist: yamada@example.com   / pro12345')
-  console.log('  artist    : sato@example.com     / user1234')
+  console.log('  artist1   : yamada@example.com   / pro12345')
+  console.log('  artist2   : sato@example.com     / user1234')
   console.log('  client    : client@example.com   / user1234')
   console.log('\n🎟  ベータ用プロモコード:')
-  console.log('  BETA-ENCORE-2026  (永年無料 PRO / 20 名分 / 2027-02-28 まで)')
+  console.log('  BETA-ENCORE-2026  (hasLifetimeFreePro / 20 名分 / 2027-02-28 まで)')
 }
 
 main()
