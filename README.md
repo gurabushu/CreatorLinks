@@ -135,7 +135,8 @@ Fee-only pivot (2026-10-17) 以降、Preview 側で複数の障害が重なっ�
 ### ベータ配布 (M1) 残タスク — 2026-10-31 時点
 
 🔴 必須 (本番公開 blocker):
-- [ ] Vercel Pro upgrade (5分、Hobby ToS §2.3 違反)
+- [ ] **⚠️ REMINDER: Vercel Pro upgrade** (5分、Hobby ToS §2.3 違反)
+      ベータ配布開始**前**に必ず実施。現状 Hobby 非商用のまま運用は ToS 違反なので、本番ユーザーを招く前に $20/月 Pro へ切替。dashboard: https://vercel.com/tonokyama-s-projects/~/settings/billing
 - [ ] Neon PITR / バックアップ確認 (15分)
 - [ ] Stripe dogfood Phase 1-3 (90分、個人情報 15m + マッチング 30m + Stripe 45m)
 
