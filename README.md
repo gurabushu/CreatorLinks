@@ -158,6 +158,36 @@ Fee-only pivot (2026-10-17) 以降、Preview 側で複数の障害が重なっ�
 - [ ] **6. Stripe dogfood Phase 1-3** (90 分)
       - 個人情報 (15 分) + マッチング (30 分) + Stripe 決済 (45 分)
       - 2 アカウント要（発注者 + アーティスト）
+- [ ] **7. ⚠️⚠️ 本番 DB の reset + admin 再投入** (5 分, リリース直前の最後)
+      - **理由**: staging.encorecue.jp = Production DB を直接触っているため、dogfood/検証で作ったテストデータ (ユーザー・案件・マッチ・通知) が全て本番 DB に残っている。これを一般ユーザーに見せたくないため、ローンチ当日に 1 回だけクリーンアップする。
+      - **手順** (Vercel dashboard から Preview DATABASE_URL_UNPOOLED と同じ要領で Production DATABASE_URL_UNPOOLED を取得 → `/tmp/prod_dburl` に貼る):
+        ```bash
+        PROD_DB=$(cat /tmp/prod_dburl)
+        cd apps/api
+        DATABASE_URL="$PROD_DB" PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=yes \
+          npx prisma migrate reset --force --skip-seed
+        # admin のみ再投入
+        DATABASE_URL="$PROD_DB" node --input-type=module -e "$(cat <<'EOF'
+        import { PrismaClient } from '@prisma/client'
+        import bcrypt from 'bcryptjs'
+        const p = new PrismaClient()
+        const hash = await bcrypt.hash('admin1234', 12)
+        await p.user.upsert({
+          where: { email: 'admin@creatorlinks.jp' },
+          update: { isOfficial: true, role: 'ADMIN', passwordHash: hash },
+          create: {
+            email: 'admin@creatorlinks.jp', name: '運営', displayName: '運営公式',
+            passwordHash: hash, role: 'ADMIN', isOfficial: true, genres: [],
+            bio: 'プラットフォーム運営公式アカウントです。',
+          },
+        })
+        await p.\$disconnect()
+        EOF
+        )"
+        rm /tmp/prod_dburl
+        ```
+      - **一般公開告知の 30 分前が目安**。この後に自分で動作確認してから告知。
+      - admin パスワードを変えるなら最後に `admin1234` を強いパスワードに差し替えること。
 
 🟡 推奨 (ベータ中に追加で OK):
 - [ ] Pusher env 投入 (chat realtime 復旧、無しだと polling fallback)
