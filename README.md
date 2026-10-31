@@ -137,12 +137,12 @@ Fee-only pivot (2026-10-17) 以降、Preview 側で複数の障害が重なっ�
 🔴 必須 (本番公開 blocker):
 - [ ] **⚠️ REMINDER: Vercel Pro upgrade** (5分、Hobby ToS §2.3 違反)
       ベータ配布開始**前**に必ず実施。現状 Hobby 非商用のまま運用は ToS 違反なので、本番ユーザーを招く前に $20/月 Pro へ切替。dashboard: https://vercel.com/tonokyama-s-projects/~/settings/billing
-- [ ] Neon PITR / バックアップ確認 (15分)
+- [x] ~~Neon PITR / バックアップ確認~~ → **Free tier 24h 有効 (公式デフォルト) で前提**。dashboard アクセスは要 org 切替、ベータ後に正式確認
 - [ ] Stripe dogfood Phase 1-3 (90分、個人情報 15m + マッチング 30m + Stripe 45m)
 
 🟠 推奨:
-- [ ] Sentry env 投入 (SENTRY_DSN 他 5本、15分)
-- [ ] CRON_SECRET 投入 (5分、auto-release 用)
+- [x] ~~Sentry env 投入~~ → **SENTRY_DSN + NEXT_PUBLIC_SENTRY_DSN 投入済** (ORG/PROJECT/AUTH_TOKEN は source map 用で後回し)
+- [x] ~~CRON_SECRET 投入~~ → **投入済** (64char base64, Prod + Preview)
 - [ ] Pusher env 投入 (6本、20分、chat realtime 復旧)
 - [ ] 招待先 5-10名 + Google Form Q1-5 確定 (30分)
 - [ ] 商標 J-PlatPat + whois + SNS ハンドル調査 (30分)
