@@ -37,6 +37,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
     projects = await prisma.project.findMany({
       where: {
         status: 'OPEN',
+        deletedAt: null,
         ...(activeLevel ? { commitmentLevel: activeLevel } : {}),
       },
       take: 20,

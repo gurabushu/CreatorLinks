@@ -13,7 +13,7 @@ export const matchRouter = router({
   submit: protectedProcedure.input(ApplyMatchSchema).mutation(async ({ ctx, input }) => {
     const project = await ctx.prisma.project.findUnique({ where: { id: input.projectId } })
 
-    if (!project) {
+    if (!project || project.deletedAt) {
       throw new TRPCError({ code: 'NOT_FOUND', message: '案件が見つかりません' })
     }
 

@@ -25,9 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const project = await prisma.project.findUnique({
       where: { id },
-      select: { title: true, description: true },
+      select: { title: true, description: true, deletedAt: true },
     })
-    if (!project) return { title: '案件が見つかりません' }
+    if (!project || project.deletedAt) return { title: '案件が見つかりません' }
     return {
       title: project.title,
       description: project.description ?? project.title,
@@ -55,7 +55,7 @@ export default async function ProjectDetailPage({ params }: Props) {
     notFound()
   }
 
-  if (!project) notFound()
+  if (!project || project.deletedAt) notFound()
 
   // 自分がすでに応募しているか確認
   let alreadyApplied = false
@@ -107,7 +107,17 @@ export default async function ProjectDetailPage({ params }: Props) {
                 {project.status === 'OPEN' ? '募集中' : project.status === 'MATCHING' ? 'マッチング中' : 'クローズ'}
               </span>
             </div>
-            <h1 className="text-2xl font-bold">{project.title}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl font-bold">{project.title}</h1>
+              {session?.user.id === project.clientId && (
+                <a
+                  href={`/projects/${project.id}/edit`}
+                  className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  編集
+                </a>
+              )}
+            </div>
             <p className="text-gray-400 text-sm mt-2">
               {formatDate(project.createdAt)} に掲載 ·{' '}
               <span className="text-gray-500">

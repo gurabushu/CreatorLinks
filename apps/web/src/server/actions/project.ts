@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { CreateProjectSchema } from '@creator-links/shared'
+import { CreateProjectSchema, UpdateProjectSchema } from '@creator-links/shared'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { inngest } from '@/lib/inngest'
@@ -69,7 +69,7 @@ export async function applyToProjectAction(
   if (!session) return { success: false, error: 'ログインが必要です' }
 
   const project = await prisma.project.findUnique({ where: { id: projectId } })
-  if (!project) return { success: false, error: '案件が見つかりません' }
+  if (!project || project.deletedAt) return { success: false, error: '案件が見つかりません' }
   if (project.status !== 'OPEN') return { success: false, error: '現在募集していない案件です' }
   if (project.clientId === session.user.id) return { success: false, error: '自分の案件には応募できません' }
 
@@ -198,7 +198,7 @@ export async function listMyPrivateProjectsAction() {
   if (!session) return []
   try {
     return await prisma.project.findMany({
-      where: { clientId: session.user.id, status: 'PRIVATE' },
+      where: { clientId: session.user.id, status: 'PRIVATE', deletedAt: null },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -211,4 +211,125 @@ export async function listMyPrivateProjectsAction() {
   } catch {
     return []
   }
+}
+
+// ---------------------------------------------------------------
+// 編集・ステータス変更・削除
+// 2026-11-01: 発注後に typo 修正 / 募集締切 / 取り下げ ができるよう追加。
+// contractType だけは SPOT/SUBSCRIPTION 変更で決済フローが崩れるため編集禁止 (whitelist で弾く)。
+// ACCEPTED 以降の match がある案件は削除禁止 (支払発生の恐れ)。
+// ---------------------------------------------------------------
+
+type UpdateResult = { success: true } | { success: false; error: string }
+
+export async function updateProjectAction(
+  projectId: string,
+  formData: FormData
+): Promise<UpdateResult> {
+  const session = await auth()
+  if (!session) return { success: false, error: 'ログインが必要です' }
+
+  const existing = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { clientId: true, deletedAt: true, matches: { where: { status: { in: ['ACCEPTED', 'COMPLETED'] } }, select: { id: true }, take: 1 } },
+  })
+  if (!existing || existing.deletedAt) return { success: false, error: '案件が見つかりません' }
+  if (existing.clientId !== session.user.id) return { success: false, error: '権限がありません' }
+
+  const hasActiveMatch = existing.matches.length > 0
+
+  // formData → raw object。空文字は undefined 扱い。
+  const toStr = (k: string) => {
+    const v = formData.get(k)
+    return typeof v === 'string' && v !== '' ? v : undefined
+  }
+  const raw: Record<string, unknown> = {
+    title: toStr('title'),
+    description: toStr('description'),
+    genres: formData.getAll('genres').filter((g): g is string => typeof g === 'string' && g !== ''),
+    budget: toStr('budget') ? Number(toStr('budget')) : undefined,
+    commitmentLevel: toStr('commitmentLevel'),
+    status: toStr('status'),
+    scheduledStartAt: toStr('scheduledStartAt'),
+    scheduledEndAt: toStr('scheduledEndAt'),
+  }
+  // genres が空配列なら送らない (部分更新)
+  if (Array.isArray(raw.genres) && (raw.genres as string[]).length === 0) delete raw.genres
+
+  const parsed = UpdateProjectSchema.safeParse(raw)
+  if (!parsed.success) {
+    const first = parsed.error.errors[0]
+    return { success: false, error: first?.message ?? '入力内容を確認してください' }
+  }
+
+  // contractType / clientId / createdAt は変更対象外 (shared schema に contractType 含まれるが server 側で明示的に落とす)
+  const { contractType: _contractType, isPrivate: _isPrivate, ...safe } = parsed.data
+
+  // ACCEPTED 以降 match がある案件は budget / commitmentLevel 変更禁止 (募集条件の後出し変更回避)
+  if (hasActiveMatch && (safe.budget !== undefined || safe.commitmentLevel !== undefined)) {
+    return {
+      success: false,
+      error: '承認済み応募がある案件の予算・本気度は変更できません',
+    }
+  }
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: safe,
+  })
+
+  revalidatePath('/projects')
+  revalidatePath('/projects/manage')
+  revalidatePath(`/projects/${projectId}`)
+  return { success: true }
+}
+
+export async function closeProjectAction(projectId: string): Promise<UpdateResult> {
+  const session = await auth()
+  if (!session) return { success: false, error: 'ログインが必要です' }
+
+  const existing = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { clientId: true, deletedAt: true },
+  })
+  if (!existing || existing.deletedAt) return { success: false, error: '案件が見つかりません' }
+  if (existing.clientId !== session.user.id) return { success: false, error: '権限がありません' }
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { status: 'CLOSED' },
+  })
+
+  revalidatePath('/projects')
+  revalidatePath('/projects/manage')
+  revalidatePath(`/projects/${projectId}`)
+  return { success: true }
+}
+
+export async function deleteProjectAction(projectId: string): Promise<UpdateResult> {
+  const session = await auth()
+  if (!session) return { success: false, error: 'ログインが必要です' }
+
+  const existing = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: {
+      clientId: true,
+      deletedAt: true,
+      matches: { where: { status: { in: ['ACCEPTED', 'COMPLETED'] } }, select: { id: true }, take: 1 },
+    },
+  })
+  if (!existing || existing.deletedAt) return { success: false, error: '案件が見つかりません' }
+  if (existing.clientId !== session.user.id) return { success: false, error: '権限がありません' }
+  if (existing.matches.length > 0) {
+    return { success: false, error: '承認済み応募がある案件は削除できません。先に募集を締め切ってください' }
+  }
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { deletedAt: new Date() },
+  })
+
+  revalidatePath('/projects')
+  revalidatePath('/projects/manage')
+  return { success: true }
 }

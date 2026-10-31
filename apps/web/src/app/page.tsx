@@ -29,7 +29,7 @@ async function getLatestData() {
   try {
     const [projects, artists, featured] = await Promise.all([
       prisma.project.findMany({
-        where: { status: 'OPEN' },
+        where: { status: 'OPEN', deletedAt: null },
         take: 6,
         orderBy: { createdAt: 'desc' },
         include: {

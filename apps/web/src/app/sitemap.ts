@@ -48,9 +48,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         orderBy: { updatedAt: 'desc' },
         take: 5000,
       }),
-      // 募集中プロジェクトのみ（クローズ済みは検索価値が低い）
+      // 募集中プロジェクトのみ（クローズ済み・削除済みは検索価値が低い）
       prisma.project.findMany({
-        where: { status: 'OPEN' },
+        where: { status: 'OPEN', deletedAt: null },
         select: { id: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
         take: 5000,

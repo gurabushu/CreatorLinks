@@ -61,7 +61,7 @@ export default async function AdminPage() {
       guestNew7d,
     ] = await Promise.all([
       prisma.user.count(),
-      prisma.project.count(),
+      prisma.project.count({ where: { deletedAt: null } }),
       prisma.match.count(),
       // 2026-10-17 fee-only pivot: PRO 廃止後は認証バッジ保有者を "本気度ユーザー" 指標として表示
       prisma.user.count({ where: { isVerified: true } }),

@@ -270,11 +270,16 @@ model Project {
   scheduledEndAt   DateTime?
   status          ProjectStatus   @default(OPEN)
   createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
+  // ソフトデリート。発注者が削除すると null → now。全 listing/detail query で WHERE deletedAt IS NULL を強制。
+  // ACCEPTED 以降の match がある案件は削除不可 (支払発生の恐れ)。server action 側でガード。
+  deletedAt       DateTime?
 
   client  User    @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
   matches Match[]
 
   @@index([scheduledStartAt])
+  @@index([deletedAt])
   @@map("projects")
 }
 

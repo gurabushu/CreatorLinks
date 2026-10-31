@@ -115,7 +115,7 @@ export default async function DashboardPage() {
         include: { project: { select: { id: true, title: true, budget: true, clientId: true } } },
       }),
       prisma.project.findMany({
-        where: { clientId: userId },
+        where: { clientId: userId, deletedAt: null },
         take: 5,
         orderBy: { createdAt: 'desc' },
         select: {

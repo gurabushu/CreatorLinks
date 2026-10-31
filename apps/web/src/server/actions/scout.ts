@@ -69,12 +69,12 @@ export async function sendScoutAction(
     return { success: false, error: '自分自身にはオファーを送れません' }
   }
 
-  // プロジェクトの所有者確認 + OPEN 状態のみ
+  // プロジェクトの所有者確認 + OPEN 状態のみ (削除済除外)
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { id: true, clientId: true, title: true, status: true },
+    select: { id: true, clientId: true, title: true, status: true, deletedAt: true },
   })
-  if (!project) return { success: false, error: '案件が見つかりません' }
+  if (!project || project.deletedAt) return { success: false, error: '案件が見つかりません' }
   if (project.clientId !== session.user.id) {
     return { success: false, error: '権限がありません' }
   }

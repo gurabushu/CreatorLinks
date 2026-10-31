@@ -24,7 +24,7 @@ export default async function ProjectManagePage() {
   let projects: any[] = []
   try {
     projects = await prisma.project.findMany({
-      where: { clientId: session.user.id },
+      where: { clientId: session.user.id, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       include: {
         matches: {
@@ -193,6 +193,12 @@ export default async function ProjectManagePage() {
                     <p className="text-purple-600 font-bold">{formatCurrency(project.budget)}</p>
                   )}
                   <p className="text-xs text-gray-400 mt-0.5">応募 {project.matches.length}件</p>
+                  <Link
+                    href={`/projects/${project.id}/edit`}
+                    className="inline-block mt-2 text-xs px-3 py-1 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    編集 / 締切 / 削除
+                  </Link>
                 </div>
               </div>
 

@@ -11,6 +11,7 @@ export const projectRouter = router({
     const items = await ctx.prisma.project.findMany({
       where: {
         status: status ?? 'OPEN',
+        deletedAt: null,
         ...(contractType ? { contractType } : {}),
         ...(genres && genres.length > 0 ? { genres: { hasSome: genres } } : {}),
       },
@@ -53,7 +54,7 @@ export const projectRouter = router({
         },
       })
 
-      if (!project) {
+      if (!project || project.deletedAt) {
         throw new TRPCError({ code: 'NOT_FOUND', message: '案件が見つかりません' })
       }
 
@@ -78,7 +79,7 @@ export const projectRouter = router({
     .mutation(async ({ ctx, input }) => {
       const project = await ctx.prisma.project.findUnique({ where: { id: input.id } })
 
-      if (!project) {
+      if (!project || project.deletedAt) {
         throw new TRPCError({ code: 'NOT_FOUND', message: '案件が見つかりません' })
       }
 
@@ -86,16 +87,19 @@ export const projectRouter = router({
         throw new TRPCError({ code: 'FORBIDDEN', message: '権限がありません' })
       }
 
+      // contractType は決済フロー影響のため編集禁止 (web action と同じ guard)
+      const { contractType: _contractType, isPrivate: _isPrivate, ...safe } = input.data
+
       return ctx.prisma.project.update({
         where: { id: input.id },
-        data: input.data,
+        data: safe,
       })
     }),
 
   // 自分が作成した案件一覧
   myProjects: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.project.findMany({
-      where: { clientId: ctx.user.id },
+      where: { clientId: ctx.user.id, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       include: { _count: { select: { matches: true } } },
     })

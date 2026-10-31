@@ -238,6 +238,7 @@ export default async function ArtistDetailPage({ params }: Props) {
         where: {
           clientId: viewerId,
           status: { in: ['OPEN', 'PRIVATE'] },
+          deletedAt: null,
         },
         select: { id: true, title: true, budget: true },
         orderBy: { createdAt: 'desc' },
