@@ -15,26 +15,11 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
-import Image from 'next/image'
-import { getDisplayName } from '@/lib/user'
 import type { Metadata } from 'next'
+import { CrmList } from './crm-list'
 
 export const metadata: Metadata = { title: 'CRM 顧客一覧' }
 export const dynamic = 'force-dynamic'
-
-function relTime(d: Date | null): string {
-  if (!d) return '—'
-  const diffMs = Date.now() - new Date(d).getTime()
-  const min = Math.floor(diffMs / 60000)
-  if (min < 60) return `${min} 分前`
-  const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr} 時間前`
-  const day = Math.floor(hr / 24)
-  if (day < 30) return `${day} 日前`
-  const month = Math.floor(day / 30)
-  return `${month} ヶ月前`
-}
 
 type CounterpartyStats = {
   id: string
@@ -176,86 +161,8 @@ export default async function CrmPage() {
           まだ取引履歴はありません。案件のマッチが成立すると、ここに顧客カードが並びます。
         </div>
       ) : (
-        <>
-          <ul className="space-y-3">
-            {visible.map((c) => (
-              <li key={c.id}>
-                <CounterpartyCard c={c} meId={meId} />
-              </li>
-            ))}
-          </ul>
-
-        </>
+        <CrmList stats={visible} meId={meId} />
       )}
     </div>
-  )
-}
-
-// ---- 顧客カード ----
-function CounterpartyCard({ c, meId: _meId }: { c: CounterpartyStats; meId: string }) {
-  const displayName = c.displayName || c.name
-  return (
-    <Link
-      href={`/artists/${c.id}`}
-      className="block bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 hover:shadow-sm hover:border-purple-300 transition group"
-    >
-      <div className="flex items-start gap-3 sm:gap-4">
-        {/* Avatar */}
-        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
-          {c.avatarUrl ? (
-            <Image src={c.avatarUrl} alt={displayName} width={56} height={56} className="w-full h-full object-cover" />
-          ) : (
-            displayName.charAt(0)
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          {/* 名前 + Encore バッジ */}
-          <div className="flex items-center gap-2 flex-wrap mb-2">
-            <p className="font-bold text-base sm:text-lg text-gray-900 group-hover:text-purple-700 transition truncate">
-              {displayName}
-            </p>
-            {c.mutualEncore && (
-              <span className="text-[10px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200 px-2 py-0.5 rounded-full">
-                🎵 Encore 相性
-              </span>
-            )}
-          </div>
-
-          {/* 統計 */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-2 text-xs">
-            <div>
-              <div className="text-gray-400">取引件数</div>
-              <div className="font-bold text-gray-800">
-                {c.matchCount}
-                {c.completedCount < c.matchCount && (
-                  <span className="text-[10px] text-gray-400 font-normal ml-0.5">
-                    ({c.completedCount} 完了)
-                  </span>
-                )}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-400">累計取引額</div>
-              <div className="font-bold text-purple-700">¥{c.totalYen.toLocaleString()}</div>
-            </div>
-            <div>
-              <div className="text-gray-400">最終取引</div>
-              <div className="font-bold text-gray-800">{relTime(c.lastMatchAt)}</div>
-            </div>
-          </div>
-
-          {/* 最新メッセージ */}
-          {c.latestMessage && (
-            <div className="text-xs text-gray-500 line-clamp-1 border-l-2 border-gray-200 pl-2">
-              <span className="text-[10px] font-medium mr-1">
-                {c.latestMessage.senderIsMe ? '自分' : displayName}:
-              </span>
-              {c.latestMessage.body}
-            </div>
-          )}
-        </div>
-      </div>
-    </Link>
   )
 }
