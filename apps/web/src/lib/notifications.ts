@@ -95,6 +95,29 @@ export async function countUnreadNotifications(userId: string): Promise<number> 
   return prisma.notification.count({ where: { userId, readAt: null } })
 }
 
+// アクター (actorId) のフォロワー全員に同じ通知を配る。
+// ブロック関係にあるフォロワーは createNotification 側で自動 skip されるので
+// 事前フィルタ不要。actorId == followerId のケースも skip される。
+export async function notifyFollowers(
+  actorId: string,
+  input: Omit<CreateInput, 'userId' | 'actorId'>,
+): Promise<void> {
+  try {
+    const followers = await prisma.follow.findMany({
+      where: { followingId: actorId },
+      select: { followerId: true },
+      take: 1000, // 保険: 1000 フォロワー以上はトリムしてスパム化を防ぐ
+    })
+    await Promise.allSettled(
+      followers.map((f) =>
+        createNotification({ ...input, userId: f.followerId, actorId }),
+      ),
+    )
+  } catch {
+    // 失敗しても呼び出し元ロジックを巻き込まない
+  }
+}
+
 export async function listNotifications(userId: string, limit = 50) {
   return prisma.notification.findMany({
     where: { userId },

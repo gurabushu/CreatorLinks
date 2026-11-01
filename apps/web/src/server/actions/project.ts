@@ -12,7 +12,7 @@ import {
   MATCH_APPLIED_EVENT,
 } from '@/lib/pusher-server'
 import { getDisplayName } from '@/lib/user'
-import { createNotification } from '@/lib/notifications'
+import { createNotification, notifyFollowers } from '@/lib/notifications'
 import { isBlockedBetween } from '@/lib/blocks'
 
 export type ProjectActionResult =
@@ -57,6 +57,22 @@ export async function createProjectAction(
       clientId: session.user.id,
     },
   })
+
+  // PRIVATE は非公開なのでフォロワー通知しない
+  if (!isPrivate) {
+    const actor = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, displayName: true },
+    })
+    const actorName = actor ? getDisplayName(actor) : '誰か'
+    await notifyFollowers(session.user.id, {
+      kind: 'FOLLOW_PROJECT_CREATED',
+      title: `${actorName} が新しい案件を投稿しました`,
+      body: project.title,
+      href: `/projects/${project.id}`,
+      metadata: { projectId: project.id },
+    })
+  }
 
   revalidatePath('/projects')
   return { success: true, projectId: project.id }
@@ -289,15 +305,50 @@ export async function updateProjectAction(
     }
   }
 
-  await prisma.project.update({
+  const updated = await prisma.project.update({
     where: { id: projectId },
     data: safe,
+    select: { title: true },
+  })
+
+  // 応募中・承認済・完了済の応募者全員に内容変更を通知
+  await notifyActiveApplicants(projectId, session.user.id, 'PROJECT_UPDATED', {
+    title: `応募中の案件が更新されました`,
+    body: updated.title,
+    href: `/projects/${projectId}`,
   })
 
   revalidatePath('/projects')
   revalidatePath('/projects/manage')
   revalidatePath(`/projects/${projectId}`)
   return { success: true }
+}
+
+// 案件に紐付く active な応募者 (APPLIED / ACCEPTED / COMPLETED) に一斉通知するヘルパ。
+// 削除・内容変更・締切などで使用。actor (発注者本人) 自身には飛ばない (createNotification 側で skip)。
+async function notifyActiveApplicants(
+  projectId: string,
+  actorId: string,
+  kind: 'PROJECT_UPDATED',
+  payload: { title: string; body?: string; href: string },
+) {
+  const matches = await prisma.match.findMany({
+    where: {
+      projectId,
+      status: { in: ['APPLIED', 'ACCEPTED', 'COMPLETED'] },
+    },
+    select: { artistId: true },
+  })
+  await Promise.allSettled(
+    matches.map((m) =>
+      createNotification({
+        userId: m.artistId,
+        kind,
+        actorId,
+        ...payload,
+      }),
+    ),
+  )
 }
 
 export async function closeProjectAction(projectId: string): Promise<UpdateResult> {

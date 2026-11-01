@@ -7,7 +7,7 @@
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { createNotification } from '@/lib/notifications'
+import { createNotification, notifyFollowers } from '@/lib/notifications'
 import { getDisplayName } from '@/lib/user'
 import { isBlockedBetween } from '@/lib/blocks'
 import type { z } from 'zod'
@@ -98,6 +98,22 @@ export async function createEventAction(
     },
     select: { id: true },
   })
+
+  // PUBLISHED かつ visibility=PUBLIC/FOLLOWERS ならフォロワーに通知
+  if (publish && (input.visibility === 'PUBLIC' || input.visibility === 'FOLLOWERS')) {
+    const actor = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, displayName: true },
+    })
+    const actorName = actor ? getDisplayName(actor) : '誰か'
+    await notifyFollowers(session.user.id, {
+      kind: 'FOLLOW_EVENT_CREATED',
+      title: `${actorName} が新しいイベントを登録しました`,
+      body: input.title.trim(),
+      href: `/events/${event.id}`,
+      metadata: { eventId: event.id },
+    })
+  }
 
   revalidatePath('/events')
   revalidatePath('/dashboard/calendar')
@@ -196,10 +212,38 @@ export async function updateEventAction(
     }
   })
 
+  // 応募者 (APPLIED/ACCEPTED) に内容変更通知
+  await notifyEventApplicants(eventId, session.user.id, 'EVENT_UPDATED', {
+    title: '応募中のイベントが更新されました',
+    body: input.title?.trim(),
+    href: `/events/${eventId}`,
+  })
+
   revalidatePath('/events')
   revalidatePath(`/events/${eventId}`)
   revalidatePath('/dashboard/calendar')
   return { success: true, data: undefined }
+}
+
+// イベントの公募枠に応募中の全ユーザー (APPLIED/ACCEPTED) に通知するヘルパ。
+async function notifyEventApplicants(
+  eventId: string,
+  actorId: string,
+  kind: 'EVENT_UPDATED' | 'EVENT_CANCELLED',
+  payload: { title: string; body?: string; href: string },
+) {
+  const matches = await prisma.match.findMany({
+    where: {
+      eventOpenRole: { eventId },
+      status: { in: ['APPLIED', 'ACCEPTED'] },
+    },
+    select: { artistId: true },
+  })
+  await Promise.allSettled(
+    matches.map((m) =>
+      createNotification({ userId: m.artistId, kind, actorId, ...payload }),
+    ),
+  )
 }
 
 // --- 可視性の変更（主催者のみ） ---
@@ -432,6 +476,14 @@ export async function cancelEventAction(eventId: string): Promise<ActionResult> 
     where: { id: eventId },
     data: { status: 'CANCELLED', cancelledAt: new Date() },
   })
+
+  // 応募者 (APPLIED/ACCEPTED) に中止通知
+  await notifyEventApplicants(eventId, session.user.id, 'EVENT_CANCELLED', {
+    title: '応募中のイベントが中止になりました',
+    body: event.title,
+    href: `/events/${eventId}`,
+  })
+
   revalidatePath('/events')
   revalidatePath(`/events/${eventId}`)
   return { success: true, data: undefined }

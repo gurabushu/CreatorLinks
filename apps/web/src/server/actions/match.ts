@@ -333,6 +333,19 @@ export async function sendMessageAction(
     }).catch(() => {/* Inngest 未設定時は無視 */})
   }
 
+  // 永続化通知: 相手ユーザーに MATCH_MESSAGE
+  // (chat 画面を開いていても通知自体は残る。bell 側で既読タイミング調整する)
+  const senderName = sender ? getDisplayName(sender) : 'ユーザー'
+  await createNotification({
+    userId: recipientId,
+    kind: 'MATCH_MESSAGE',
+    actorId: session.user.id,
+    title: `${senderName} からメッセージ`,
+    body: body.trim().slice(0, 80),
+    href: `/dashboard/chat/${matchId}`,
+    metadata: { matchId, messageId: message.id },
+  })
+
   revalidatePath(`/dashboard/chat/${matchId}`)
 
   return { success: true }

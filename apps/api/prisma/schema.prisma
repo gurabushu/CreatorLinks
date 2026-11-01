@@ -835,19 +835,26 @@ model VerificationToken {
 // Pusher がある環境では create 同時に channel broadcast して realtime 配信、
 // 無い環境は polling (30s) に劣化。
 enum NotificationKind {
-  FOLLOW                // 誰かにフォローされた
-  EVENT_RSVP            // 自分主催イベントに「行く」反応が付いた
-  EVENT_APPLY           // 自分主催イベントの公募枠に応募あり
-  EVENT_ACCEPTED        // 自分の応募が承認された
-  EVENT_REJECTED        // 自分の応募が却下された
-  MATCH_APPLIED         // 自分の案件に応募あり
-  MATCH_ACCEPTED        // 自分の応募が承認された
-  MATCH_REJECTED        // 自分の応募が却下された
-  MATCH_COMPLETED       // 相手が納品完了にした
-  MATCH_MESSAGE         // チャット新着 (当該 match 画面にいない時のみ生成)
-  SCOUT                 // スカウトされた
-  SUPPORT_MESSAGE       // 公式サポートから返信
-  PROMO_GRANTED         // プロモコード / 認証バッジ / Founding Supporter 付与
+  FOLLOW                   // 誰かにフォローされた
+  FOLLOW_EVENT_CREATED     // フォロー中の人がイベント作成
+  FOLLOW_PROJECT_CREATED   // フォロー中の人が案件投稿
+  FOLLOW_PORTFOLIO_ADDED   // フォロー中の人がポートフォリオ追加
+  EVENT_RSVP               // 自分主催イベントに「行く」反応が付いた
+  EVENT_APPLY              // 自分主催イベントの公募枠に応募あり
+  EVENT_ACCEPTED           // 自分の応募が承認された
+  EVENT_REJECTED           // 自分の応募が却下された
+  EVENT_UPDATED            // 応募済イベントの内容変更
+  EVENT_CANCELLED          // 応募済イベントがキャンセル
+  MATCH_APPLIED            // 自分の案件に応募あり
+  MATCH_ACCEPTED           // 自分の応募が承認された
+  MATCH_REJECTED           // 自分の応募が却下された
+  MATCH_COMPLETED          // 相手が納品完了にした
+  MATCH_MESSAGE            // チャット新着
+  PROJECT_UPDATED          // 応募済案件の内容変更/締切/削除
+  SCOUT                    // スカウトされた
+  SUPPORT_MESSAGE          // 公式サポートから返信
+  ANNOUNCEMENT             // 全体お知らせ公開
+  PROMO_GRANTED            // プロモコード / 認証バッジ / Founding Supporter 付与
 }
 
 // 2026-11-01 追加: 1 対 1 のユーザーブロック。

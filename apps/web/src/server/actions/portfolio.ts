@@ -4,6 +4,9 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CreatePortfolioSchema, type CreatePortfolioInput } from '@creator-links/shared'
 import { revalidatePath } from 'next/cache'
+import { notifyFollowers } from '@/lib/notifications'
+import { getDisplayName } from '@/lib/user'
+
 export async function createPortfolioAction(data: CreatePortfolioInput) {
   const session = await auth()
   if (!session) return { success: false as const, error: '認証が必要です' }
@@ -16,9 +19,24 @@ export async function createPortfolioAction(data: CreatePortfolioInput) {
   // 2026-10-17 fee-only pivot: PRO 限定の 10 件上限は撤廃、全員無制限に。
 
   try {
-    await prisma.portfolio.create({
+    const portfolio = await prisma.portfolio.create({
       data: { ...parsed.data, userId: session.user.id },
     })
+
+    // フォロワーに新着ポートフォリオ通知
+    const actor = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, displayName: true },
+    })
+    const actorName = actor ? getDisplayName(actor) : '誰か'
+    await notifyFollowers(session.user.id, {
+      kind: 'FOLLOW_PORTFOLIO_ADDED',
+      title: `${actorName} が新しい作品を追加しました`,
+      body: portfolio.title,
+      href: `/artists/${session.user.id}`,
+      metadata: { portfolioId: portfolio.id },
+    })
+
     revalidatePath('/dashboard/portfolio')
     return { success: true as const }
   } catch {

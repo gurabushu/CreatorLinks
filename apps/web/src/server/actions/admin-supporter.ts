@@ -9,6 +9,7 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { createNotification } from '@/lib/notifications'
 
 type Result = { ok: true } | { ok: false; error: string }
 
@@ -33,6 +34,16 @@ export async function grantFoundingSupporterAction(
         isFounderExempt: true,
         ...(withVerifiedBadge ? { isVerified: true } : {}),
       },
+    })
+    await createNotification({
+      userId: targetUserId,
+      kind: 'PROMO_GRANTED',
+      actorId: check.session.user.id,
+      title: withVerifiedBadge
+        ? 'Founding Supporter + 認証バッジが付与されました'
+        : 'Founding Supporter が付与されました',
+      body: '運営から無償枠が付与されました。詳細はアカウント設定でご確認ください。',
+      href: '/dashboard/account',
     })
     revalidatePath('/admin/supporters')
     return { ok: true }
@@ -71,6 +82,14 @@ export async function grantVerifiedBadgeAction(targetUserId: string): Promise<Re
     await prisma.user.update({
       where: { id: targetUserId },
       data: { isVerified: true },
+    })
+    await createNotification({
+      userId: targetUserId,
+      kind: 'PROMO_GRANTED',
+      actorId: check.session.user.id,
+      title: '認証バッジが付与されました',
+      body: '運営から認証バッジを無償付与しました。',
+      href: '/dashboard/account',
     })
     revalidatePath('/admin/supporters')
     return { ok: true }

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { createNotification } from '@/lib/notifications'
 
 // Admin お知らせ配信の Server Actions
 // - ADMIN ロールのみ操作可能
@@ -107,9 +108,41 @@ export async function createAnnouncementAction(
     select: { id: true },
   })
 
+  // 即時公開 (publishedAt <= now) なら全ユーザーに ANNOUNCEMENT 通知を配布。
+  // SCHEDULED / DRAFT は未配布 (配布は public になった時点で別途トリガーすべきだが、
+  // 現状はスケジュール投稿が稀なので割愛)。
+  if (publishedAt && publishedAt <= new Date()) {
+    await broadcastAnnouncementNotification(created.id, parsed.title)
+  }
+
   revalidatePath('/announcements')
   revalidatePath('/admin/announcements')
   return { success: true, id: created.id }
+}
+
+// 全ユーザー (ゲスト・退会者・公式アカウント除く) に 1 回ずつ ANNOUNCEMENT 通知を配布。
+// 大規模化すると O(N) で重いので、将来 10k 超えたら Inngest 等でバックグラウンド化推奨。
+async function broadcastAnnouncementNotification(announcementId: string, title: string) {
+  try {
+    const users = await prisma.user.findMany({
+      where: { isGuest: false, deletedAt: null, isOfficial: false },
+      select: { id: true },
+      take: 10000,
+    })
+    await Promise.allSettled(
+      users.map((u) =>
+        createNotification({
+          userId: u.id,
+          kind: 'ANNOUNCEMENT',
+          title: `お知らせ: ${title}`,
+          href: '/announcements',
+          metadata: { announcementId },
+        }),
+      ),
+    )
+  } catch {
+    // 配布失敗はアナウンス自体を巻き込まない
+  }
 }
 
 export async function updateAnnouncementAction(
