@@ -8,6 +8,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createNotification } from '@/lib/notifications'
 import { getDisplayName } from '@/lib/user'
+import { isBlockedBetween } from '@/lib/blocks'
 
 export type FollowActionResult =
   | { success: true }
@@ -25,6 +26,11 @@ export async function followUserAction(userId: string): Promise<FollowActionResu
     select: { id: true },
   })
   if (!target) return { success: false, error: 'ユーザーが見つかりません' }
+
+  // ブロック中はフォロー不可
+  if (await isBlockedBetween(session.user.id, userId)) {
+    return { success: false, error: 'このユーザーはフォローできません' }
+  }
 
   // 既にフォロー済みなら通知を再発火しない (upsert の判定)
   const existed = await prisma.follow.findUnique({

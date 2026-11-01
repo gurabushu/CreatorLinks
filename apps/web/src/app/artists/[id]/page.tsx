@@ -14,6 +14,8 @@ import { FoundingMemberBadge } from '@/components/early-bird/founding-member-bad
 import { ProfileFacts } from '@/components/artist/profile-facts'
 import { FollowButton } from './follow-button'
 import { ArtistLikeButton } from './like-button'
+import { BlockButton } from './block-button'
+import { hasUserBlocked } from '@/lib/blocks'
 import {
   EVENT_TYPE_LABELS,
   EVENT_VISIBILITY_ICONS,
@@ -152,6 +154,9 @@ export default async function ArtistDetailPage({ params }: Props) {
     ])
   const isFollower = initialIsFollowing
   const mutualEncoreCount = Number(mutualEncoreRows[0]?.c ?? 0)
+
+  // ブロック状態 (viewer が target をブロックしてるか)
+  const initialIsBlocked = viewerId && !isSelf ? await hasUserBlocked(viewerId, id) : false
 
   // 今後のイベント（visibility に応じて）
   const eventVisibilityOr: Array<Record<string, unknown>> = [{ visibility: 'PUBLIC' }]
@@ -405,6 +410,9 @@ export default async function ArtistDetailPage({ params }: Props) {
                   <line x1="10" y1="14" x2="21" y2="3" />
                 </svg>
               </a>
+            )}
+            {viewerId && !isSelf && (
+              <BlockButton targetUserId={id} initialBlocked={initialIsBlocked} />
             )}
           </div>
         </div>

@@ -15,6 +15,7 @@
 
 import { prisma } from './prisma'
 import { getPusherServer, getUserChannel } from './pusher-server'
+import { isBlockedBetween } from './blocks'
 import type { NotificationKind, Prisma } from '@prisma/client'
 
 export const NOTIFICATION_EVENT = 'notification:new'
@@ -32,6 +33,9 @@ type CreateInput = {
 export async function createNotification(input: CreateInput): Promise<void> {
   // 自己通知は作成しない (自分でフォローして自分に通知が飛ぶ、など)
   if (input.actorId && input.actorId === input.userId) return
+
+  // actor がブロック関係にある場合は通知自体を作らない (露出も遮断)
+  if (input.actorId && (await isBlockedBetween(input.userId, input.actorId))) return
 
   try {
     const notification = await prisma.notification.create({

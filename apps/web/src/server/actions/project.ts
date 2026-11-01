@@ -13,6 +13,7 @@ import {
 } from '@/lib/pusher-server'
 import { getDisplayName } from '@/lib/user'
 import { createNotification } from '@/lib/notifications'
+import { isBlockedBetween } from '@/lib/blocks'
 
 export type ProjectActionResult =
   | { success: true; projectId: string }
@@ -73,6 +74,9 @@ export async function applyToProjectAction(
   if (!project || project.deletedAt) return { success: false, error: '案件が見つかりません' }
   if (project.status !== 'OPEN') return { success: false, error: '現在募集していない案件です' }
   if (project.clientId === session.user.id) return { success: false, error: '自分の案件には応募できません' }
+  if (await isBlockedBetween(session.user.id, project.clientId)) {
+    return { success: false, error: 'この案件には応募できません' }
+  }
 
   // 重複応募チェック
   const existing = await prisma.match.findFirst({

@@ -239,6 +239,10 @@ model User {
   notificationsReceived Notification[] @relation("UserNotifications")
   notificationsActed    Notification[] @relation("ActorNotifications")
 
+  // ユーザーブロック (自分がブロックした相手 / 自分をブロックしてる相手)
+  blocks    UserBlock[] @relation("UserBlocks")
+  blockedBy UserBlock[] @relation("UserBlockedBy")
+
   @@index([isGuest, createdAt])
   @@map("users")
 }
@@ -844,6 +848,30 @@ enum NotificationKind {
   SCOUT                 // スカウトされた
   SUPPORT_MESSAGE       // 公式サポートから返信
   PROMO_GRANTED         // プロモコード / 認証バッジ / Founding Supporter 付与
+}
+
+// 2026-11-01 追加: 1 対 1 のユーザーブロック。
+// 効果: ブロック済み同士では以下が全て不可になる
+//   - follow / unfollow (new)
+//   - scout
+//   - 案件応募 (clientがartist, artistがclient 両方向)
+//   - チャット新規メッセージ送信 (既存の match の chat は閲覧のみ、送信ブロック)
+//   - 新規 notification 生成 (actorId がブロック済なら skip)
+// 相手のプロフィール閲覧 (/artists/[id]) 自体は許可 (隠蔽すると「ブロックされた」事実が
+// 強く伝わる副作用があるため、公開情報のみ普通に見える形にする)。
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  reason    String?  // 任意メモ (将来の通報機能で流用)
+  createdAt DateTime @default(now())
+
+  blocker User @relation("UserBlocks", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("UserBlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("user_blocks")
 }
 
 model Notification {

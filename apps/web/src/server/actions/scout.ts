@@ -20,6 +20,7 @@ import {
 import { inngest } from '@/lib/inngest'
 import { getDisplayName } from '@/lib/user'
 import { createNotification } from '@/lib/notifications'
+import { isBlockedBetween } from '@/lib/blocks'
 
 export type ScoutActionResult =
   | { success: true; matchId: string }
@@ -68,6 +69,11 @@ export async function sendScoutAction(
   // 2026-10-17 fee-only pivot: PRO 限定の受領ガードを撤廃、全アーティストにオファー可。
   if (artistId === session.user.id) {
     return { success: false, error: '自分自身にはオファーを送れません' }
+  }
+
+  // ブロック中はスカウト不可
+  if (await isBlockedBetween(session.user.id, artistId)) {
+    return { success: false, error: 'このアーティストにはオファーを送れません' }
   }
 
   // プロジェクトの所有者確認 + OPEN 状態のみ (削除済除外)

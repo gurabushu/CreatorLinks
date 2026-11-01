@@ -9,6 +9,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createNotification } from '@/lib/notifications'
 import { getDisplayName } from '@/lib/user'
+import { isBlockedBetween } from '@/lib/blocks'
 import type { z } from 'zod'
 import { CreateEventSchema, UpdateEventSchema } from '@creator-links/shared'
 import type { EventMediaInput, EventParticipantRole, EventVisibility } from '@creator-links/shared'
@@ -308,6 +309,9 @@ export async function applyToOpenRoleAction(
   }
   if (role.event.creatorId === session.user.id) {
     return { success: false, error: '自分が主催するイベントには応募できません' }
+  }
+  if (await isBlockedBetween(session.user.id, role.event.creatorId)) {
+    return { success: false, error: 'このイベントには応募できません' }
   }
 
   try {

@@ -16,6 +16,7 @@ import {
 import { inngest } from '@/lib/inngest'
 import { getDisplayName } from '@/lib/user'
 import { createNotification } from '@/lib/notifications'
+import { isBlockedBetween } from '@/lib/blocks'
 
 export type MatchActionResult = { success: boolean; error?: string }
 
@@ -268,6 +269,15 @@ export async function sendMessageAction(
     match.partnerUserId === session.user.id ||
     (match.project && match.project.clientId === session.user.id)
   if (!isParticipant) return { success: false, error: '権限がありません' }
+
+  // 相手を特定して block guard (match の相手は 2 人のうち自分じゃない方)
+  const counterpartId =
+    match.artistId === session.user.id
+      ? (match.partnerUserId ?? match.project?.clientId ?? null)
+      : match.artistId
+  if (counterpartId && (await isBlockedBetween(session.user.id, counterpartId))) {
+    return { success: false, error: 'このユーザーにはメッセージを送れません' }
+  }
 
   const message = await prisma.message.create({
     data: { matchId, senderId: session.user.id, body: body.trim() },
