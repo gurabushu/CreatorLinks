@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDisplayName } from '@/lib/user'
+import { HeroCta } from '@/components/dashboard-shell/hero-cta'
 
 export const metadata: Metadata = { title: 'マイページ' }
 export const dynamic = 'force-dynamic'
@@ -215,6 +216,9 @@ export default async function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Zero-state Hero CTA: ロール別に 3 枚の大 CTA を提示 (localStorage 由来の役割で切替) */}
+      <HeroCta />
 
       {/* ステータスサマリー */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
