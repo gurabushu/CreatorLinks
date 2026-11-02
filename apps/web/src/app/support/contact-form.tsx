@@ -117,7 +117,7 @@ export function ContactForm() {
           {sending ? '送信中…' : '公式アカウントに送信'}
         </button>
         <p className="text-xs text-gray-500">
-          送信内容はマイページのチャットからも確認・追記できます。
+          送信内容はダッシュボードのチャットからも確認・追記できます。
         </p>
       </div>
     </form>

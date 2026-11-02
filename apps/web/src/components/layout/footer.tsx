@@ -47,7 +47,7 @@ export function Footer() {
             <p className="font-medium mb-2">アカウント</p>
             <ul className="space-y-1 text-sm text-gray-500">
               <li><Link href="/auth" className="hover:text-purple-600">ログイン / 登録</Link></li>
-              <li><Link href="/dashboard" className="hover:text-purple-600">マイページ</Link></li>
+              <li><Link href="/dashboard" className="hover:text-purple-600">ダッシュボード</Link></li>
             </ul>
           </div>
           <div>

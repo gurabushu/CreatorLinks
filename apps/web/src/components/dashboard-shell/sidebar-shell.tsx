@@ -387,7 +387,7 @@ export function SidebarShell({
   const { mode, setMode } = usePreferredMode()
 
   const items: NavItem[] = [
-    { href: '/dashboard', label: 'マイページ', icon: <HomeIcon />, matchExact: true },
+    { href: '/dashboard', label: 'ダッシュボード', icon: <HomeIcon />, matchExact: true },
     { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },
     { href: '/artists', label: 'クリエイター', icon: <MicIcon /> },
     { href: '/projects', label: '案件を探す', icon: <SearchIcon /> },

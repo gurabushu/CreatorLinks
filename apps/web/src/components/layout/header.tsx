@@ -147,7 +147,7 @@ export async function Header() {
                     {(session.user.name?.trim()?.[0] ?? '?')}
                   </span>
                   <span className="hidden sm:inline truncate">
-                    {session.user.name ?? 'マイページ'}
+                    {session.user.name ?? 'ダッシュボード'}
                   </span>
                 </Link>
                 {/* ログアウト: SP はアイコンのみ (log-out アイコン)、sm 以上はテキスト */}

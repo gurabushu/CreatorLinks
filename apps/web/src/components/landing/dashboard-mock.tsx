@@ -51,7 +51,7 @@ export function DashboardMock() {
               <li className="px-2 py-1 text-gray-500">クリエイターを探す</li>
               <li className="px-2 py-1 text-gray-500">メッセージ</li>
               <li className="px-2 py-1 text-gray-500">お気に入り</li>
-              <li className="px-2 py-1 text-gray-500">マイページ</li>
+              <li className="px-2 py-1 text-gray-500">ダッシュボード</li>
             </ul>
           </aside>
 

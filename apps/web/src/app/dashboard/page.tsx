@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx — マイページ (SSR)
+// app/dashboard/page.tsx — ダッシュボード (SSR)
 // 3 軸ステータス一覧: 進行中の依頼(仕事DX) / 今週の予定(掲示板+カレンダー) / 掲載中の案件 / クイックアクション
 // ログイン直後の主動線。岩田さんフィードバック反映 (2026-08-11)。
 
@@ -10,7 +10,7 @@ import type { Metadata } from 'next'
 import { getDisplayName } from '@/lib/user'
 import { HeroCta } from '@/components/dashboard-shell/hero-cta'
 
-export const metadata: Metadata = { title: 'マイページ' }
+export const metadata: Metadata = { title: 'ダッシュボード' }
 export const dynamic = 'force-dynamic'
 
 type Match = {
@@ -210,7 +210,7 @@ export default async function DashboardPage() {
       {/* ヘッダー */}
       <div className="flex justify-between items-start mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">マイページ</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">ダッシュボード</h1>
           <p className="text-gray-500 mt-1 text-sm">
             こんにちは、{session.user.name} さん
           </p>
