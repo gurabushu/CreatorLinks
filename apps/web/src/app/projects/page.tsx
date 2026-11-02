@@ -41,7 +41,13 @@ export default async function ProjectsPage({ searchParams }: Props) {
         ...(activeLevel ? { commitmentLevel: activeLevel } : {}),
       },
       take: 20,
-      orderBy: { createdAt: 'desc' },
+      // 2026-11-02: 発注者 (client) が創設メンバー/恩人枠なら上位ブースト。
+      // relation sort は Prisma 側で許容されている (client.isFounderExempt desc 等)。
+      orderBy: [
+        { client: { isFounderExempt: 'desc' } },
+        { client: { earlyBirdSlot: { sort: 'asc', nulls: 'last' } } },
+        { createdAt: 'desc' },
+      ],
       include: {
         client: { select: { id: true, name: true, avatarUrl: true } },
         _count: { select: { matches: true } },

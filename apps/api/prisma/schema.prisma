@@ -164,10 +164,8 @@ model User {
   skillLevel                  CommitmentLevel? // 熟練度（HOBBY/SEMI_PRO/PRO）。案件の CommitmentLevel と照合
   instruments                 String[]         @default([]) // 楽器タグ（音楽系のみ利用）
   earlyBirdSlot               Int?             @unique // 創設メンバー枠のスロット番号（1..EARLY_BIRD_TOTAL）。null なら通常ユーザー
-  earlyBirdExpiresAt          DateTime? // PRO 無料期間の終わり。null なら期限なし（旧・先着 30 名の永久 PRO 組）
+  earlyBirdExpiresAt          DateTime? // 創設メンバー 6ヶ月手数料無料期間の終わり。null なら期限なし（旧・先着 30 名の永久組 / Founding Supporter）
   earlyBirdReminderSentAt     DateTime? // 無料期間終了の切迫メール送信済みタイムスタンプ（重複送信防止）
-  hasPaidSubscription         Boolean          @default(false) // RevenueCat webhook が維持。true なら失効 cron の対象外
-  hasLifetimeFreePro          Boolean          @default(false) // プロモコード redeem で付与される「月額料金 永年無料」フラグ。失効 cron の対象外
   // --- Stripe Connect (Express) ---
   // アーティストが報酬を受け取るための Connect アカウント。null なら未オンボーディング
   stripeConnectAccountId      String?          @unique
@@ -178,12 +176,12 @@ model User {
   featuredPortfolioId         String? // アーティスト本人が一覧カードのメインに見せる作品
   isGuest                     Boolean          @default(false) // テスト用ゲストアカウント（24h で自動削除）
   isOfficial                  Boolean          @default(false) // プラットフォーム公式アカウント。通常 1 人だけ true
-  // 恩義のある少数の関係者向け「無償枠」フラグ。
-  // 立ち上げ期にお世話になった 5 名前後を想定。手動で SQL / 管理画面から true にする。
+  // 恩人枠 (開発ヒアリング協力者など、立ち上げ期を支えた関係者向けの永年手数料無料枠)。
+  // Admin から /admin/supporters で手動付与。
   // このフラグが true のユーザーは:
-  //   - Stripe 案件手数料: 発注側・受注側いずれか一方でも true なら platformFee=0
-  //   - PRO サブスク: hasFreeProAccess が常に true を返し、失効 cron の対象外
-  //   - UI: 本人にだけ「無償枠」バッジを表示、他ユーザーには非表示
+  //   - Stripe 案件手数料: 発注側・受注側いずれか一方でも true なら platformFee=0 (永年)
+  //   - 失効 cron の対象外
+  //   - UI: プロフィール/カード/chat で「🎖 恩人枠」バッジ表示
   isFounderExempt             Boolean          @default(false)
   // 認証バッジ Layer 2（¥3,000 買切・お布施モデル）。
   // Stripe 単発決済成功時に webhook 経由で true になる。一度 true になったら永久有効。
@@ -206,9 +204,7 @@ model User {
   likesReceived       Like[]               @relation("LikesReceived")
   passwordResetTokens PasswordResetToken[] @relation("PasswordResets")
   emailChangeRequests EmailChangeRequest[] @relation("EmailChanges")
-  promoRedemptions    PromoRedemption[]
-  projectTemplates    ProjectTemplate[]  @relation("ProjectTemplates") // PRO 特典: 案件テンプレ保存
-  promoCodesCreated   PromoCode[]          @relation("PromoCodesCreated")
+  projectTemplates    ProjectTemplate[]  @relation("ProjectTemplates")
   featuredEntry       FeaturedArtist?
   accounts            Account[]
   sessions            Session[]
@@ -493,38 +489,6 @@ model Announcement {
   @@index([publishedAt])
   @@index([expiresAt])
   @@map("announcements")
-}
-
-// プロモコード（例: 招待キャンペーン、パートナー割当）。redeem すると User.hasLifetimeFreePro=true になる
-// grantType は将来「3ヶ月無料」等を増やすときに enum 化する想定。今は redeem = 常に永年無料
-model PromoCode {
-  id              String    @id @default(cuid())
-  code            String    @unique // 表示上は upper-case 想定。redeem 時に upper 化して照合
-  label           String? // 管理用メモ（例: "2027 春キャンペーン"）
-  maxRedemptions  Int? // null なら無制限
-  redemptionCount Int       @default(0)
-  expiresAt       DateTime? // コード自体の有効期限。null なら無期限
-  createdById     String? // 発行者（通常は公式アカウント）。null は SQL 直入れ等の匿名発行
-  createdAt       DateTime  @default(now())
-
-  createdBy   User?             @relation("PromoCodesCreated", fields: [createdById], references: [id], onDelete: SetNull)
-  redemptions PromoRedemption[]
-
-  @@map("promo_codes")
-}
-
-model PromoRedemption {
-  id         String   @id @default(cuid())
-  codeId     String
-  userId     String
-  redeemedAt DateTime @default(now())
-
-  code PromoCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
-  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([codeId, userId]) // 同じユーザーが同じコードを重複 redeem できない
-  @@index([userId])
-  @@map("promo_redemptions")
 }
 
 // =============================================

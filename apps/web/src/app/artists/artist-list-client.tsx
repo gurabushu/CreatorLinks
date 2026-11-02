@@ -14,6 +14,7 @@ import {
   buildVimeoEmbed,
 } from '@/lib/media-source'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
+import { FounderExemptBadge } from '@/components/early-bird/founder-exempt-badge'
 import { ProfileFacts } from '@/components/artist/profile-facts'
 import {
   COMMITMENT_LEVELS,
@@ -59,6 +60,7 @@ type ArtistItem = {
   coverUrl: string | null
   averageRating: number
   earlyBirdSlot: number | null
+  isFounderExempt: boolean
   featuredPortfolioId: string | null
   gender: Gender | null
   heightCm: number | null
@@ -592,6 +594,7 @@ function ArtistCard({
                   </span>
                 )}
                 <FoundingMemberBadge slot={artist.earlyBirdSlot} />
+                <FounderExemptBadge isFounderExempt={artist.isFounderExempt} />
               </div>
             )}
           </div>

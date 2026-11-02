@@ -20,6 +20,7 @@ const ARTIST_SELECT = {
   coverUrl: true,
   averageRating: true,
   earlyBirdSlot: true,
+  isFounderExempt: true,
   featuredPortfolioId: true,
   gender: true,
   heightCm: true,
@@ -101,7 +102,14 @@ export async function listArtistsAction(params: {
     where,
     take: limit + 1,
     cursor: cursor ? { id: cursor } : undefined,
-    orderBy: [{ role: 'asc' }, { averageRating: 'desc' }],
+    // 2026-11-02: 創設メンバー (earlyBirdSlot 若い順) と恩人枠を上位ブースト。
+    // 以降は従来通り role → averageRating で決定論的に並べる。
+    orderBy: [
+      { isFounderExempt: 'desc' },
+      { earlyBirdSlot: { sort: 'asc', nulls: 'last' } },
+      { role: 'asc' },
+      { averageRating: 'desc' },
+    ],
     select: ARTIST_SELECT,
   })
   const nextCursor = items.length > limit ? items.pop()!.id : null

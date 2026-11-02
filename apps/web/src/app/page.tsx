@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { getDisplayName } from '@/lib/user'
 import { EarlyBirdBanner } from '@/components/early-bird/early-bird-banner'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
+import { FounderExemptBadge } from '@/components/early-bird/founder-exempt-badge'
 import { HeroSection } from '@/components/landing/hero-section'
 import { FeatureBar } from '@/components/landing/feature-bar'
 import { WhyNotLine } from '@/components/landing/why-not-line'
@@ -42,7 +43,7 @@ async function getLatestData() {
         orderBy: [{ role: 'asc' }, { averageRating: 'desc' }],
         select: {
           id: true, name: true, displayName: true, role: true, genres: true, bio: true,
-          avatarUrl: true, averageRating: true, earlyBirdSlot: true,
+          avatarUrl: true, averageRating: true, earlyBirdSlot: true, isFounderExempt: true,
         },
       }),
       prisma.featuredArtist.findMany({
@@ -56,7 +57,7 @@ async function getLatestData() {
           user: {
             select: {
               id: true, name: true, displayName: true, role: true, genres: true,
-              avatarUrl: true, averageRating: true, earlyBirdSlot: true,
+              avatarUrl: true, averageRating: true, earlyBirdSlot: true, isFounderExempt: true,
             },
           },
         },
@@ -158,6 +159,7 @@ export default async function HomePage() {
                   <p className="font-bold text-sm">{getDisplayName(f.user)}</p>
                   <div className="flex items-center justify-center gap-1 flex-wrap">
                     <FoundingMemberBadge slot={f.user.earlyBirdSlot} showTotal={false} />
+                    <FounderExemptBadge isFounderExempt={f.user.isFounderExempt} />
                   </div>
                   {f.note && (
                     <p className="text-xs text-purple-700 mt-2 italic line-clamp-2">「{f.note}」</p>

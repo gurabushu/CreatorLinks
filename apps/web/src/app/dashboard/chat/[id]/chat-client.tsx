@@ -7,6 +7,8 @@ import { sendMessageAction, completeMatchAction, createReviewAction } from '@/se
 import { createCheckoutSessionAction, releasePaymentAction } from '@/server/actions/payments'
 import { PaymentBadge, type PaymentStatus } from '@/components/payments/payment-badge'
 import { OfficialBadge } from '@/components/official-badge'
+import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
+import { FounderExemptBadge } from '@/components/early-bird/founder-exempt-badge'
 import { useInterval } from '@/hooks/use-interval'
 import { getPusherClient } from '@/lib/pusher-client'
 import { getDisplayName } from '@/lib/user'
@@ -49,6 +51,8 @@ interface Props {
     partnerName: string
     partnerAvatar: string | null
     partnerIsOfficial: boolean
+    partnerEarlyBirdSlot: number | null
+    partnerIsFounderExempt: boolean
   }
   feeBreakdown: { platformFeeYen: number; artistPayoutYen: number } | null
   payment: PaymentInfo | null
@@ -406,9 +410,11 @@ export function ChatClient({
             />
           )}
           <div className="min-w-0">
-            <p className="font-medium text-sm leading-none truncate flex items-center gap-1.5">
+            <p className="font-medium text-sm leading-none truncate flex items-center gap-1.5 flex-wrap">
               <span className="truncate">{match.partnerName}</span>
               {match.partnerIsOfficial && <OfficialBadge size="sm" />}
+              <FoundingMemberBadge slot={match.partnerEarlyBirdSlot} showTotal={false} />
+              <FounderExemptBadge isFounderExempt={match.partnerIsFounderExempt} />
             </p>
             {match.partnerIsOfficial ? (
               <p className="text-xs text-purple-600">公式サポート・お知らせ窓口</p>

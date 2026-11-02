@@ -16,6 +16,7 @@ import { prisma } from '@/lib/prisma'
 import { CURRENCY, calcArtistPayout, calcPlatformFee, getStripe } from '@/lib/stripe'
 import { releasePayment } from '@/lib/payment-release'
 import { resolveAppUrl } from '@/lib/app-url'
+import { hasZeroFeeAccess } from '@/lib/early-bird'
 
 export type ReleaseActionResult =
   | { success: true }
@@ -42,18 +43,27 @@ export async function createCheckoutSessionAction(matchId: string): Promise<neve
           clientId: true,
           title: true,
           budget: true,
-          client: { select: { email: true, isFounderExempt: true } },
+          client: {
+            select: {
+              email: true,
+              isFounderExempt: true,
+              earlyBirdSlot: true,
+              earlyBirdExpiresAt: true,
+            },
+          },
         },
       },
       artist: {
-        // role は PRO 手数料減額 (5%) 判定用。hasLifetimeFreePro / Early Bird / 課金 PRO
-        // すべて role='PRO' に集約されるため role のみで判定できる。
-        // isFounderExempt はどちらか一方でも true なら手数料 0 にする恩人枠フラグ。
+        // 2026-11-02 fee-only pivot v2: 手数料 0% 判定は hasZeroFeeAccess() に集約。
+        // isFounderExempt (恩人枠, 永年 0%) または earlyBirdSlot + 期限内 (創設メンバー 6ヶ月) で 0%。
+        // どちらか一方でも 0% 対象なら platformFeeRate=0。
         select: {
           role: true,
           stripePayoutsEnabled: true,
           stripeConnectAccountId: true,
           isFounderExempt: true,
+          earlyBirdSlot: true,
+          earlyBirdExpiresAt: true,
         },
       },
       payment: {
@@ -83,8 +93,12 @@ export async function createCheckoutSessionAction(matchId: string): Promise<neve
     throw new Error('この案件は既に支払い済みです')
   }
 
-  // 2026-10-17 fee-only pivot: PRO 判定を撤廃、全員 7%。Founding Supporter のみ 0%。
-  const isFounderExempt = match.artist.isFounderExempt || match.project.client.isFounderExempt
+  // 2026-11-02 fee-only pivot v2: 手数料 7% を 2 条件で 0% に減免する。
+  //   1) 恩人枠 (isFounderExempt): admin 手動付与、永年 0%。
+  //   2) 創設メンバー 100 名 (earlyBirdSlot != null && earlyBirdExpiresAt > now): 最初の 6ヶ月 0%、以降 7%。
+  // 発注側・受注側いずれか一方でも 0% 対象なら platformFeeRate=0 (当事者双方の恩恵)。
+  const isFounderExempt =
+    hasZeroFeeAccess(match.artist) || hasZeroFeeAccess(match.project.client)
   const platformFeeYen = calcPlatformFee(budget, { isFounderExempt })
   const artistPayoutYen = calcArtistPayout(budget, { isFounderExempt })
 

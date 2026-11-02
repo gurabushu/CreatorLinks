@@ -69,8 +69,6 @@ export async function deleteAccountAction(input: {
       genres: [],
       // 表示上の順位・レコメンドから外す
       role: 'GENERAL',
-      hasLifetimeFreePro: false,
-      hasPaidSubscription: false,
       // Stripe Connect は本人主導で解除する運用（当事業者では触らない）
       // Stripe 側 KYC 情報は Stripe が保持しており、当事業者はキャンセルの権限がある実装後に扱う
       deletedAt: new Date(),

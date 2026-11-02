@@ -11,6 +11,7 @@ import { recordProfileView } from '@/lib/profile-analytics'
 import { getDisplayName } from '@/lib/user'
 import { PortfolioGallery } from './portfolio-gallery'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
+import { FounderExemptBadge } from '@/components/early-bird/founder-exempt-badge'
 import { ProfileFacts } from '@/components/artist/profile-facts'
 import { FollowButton } from './follow-button'
 import { ArtistLikeButton } from './like-button'
@@ -31,7 +32,7 @@ interface Props {
 }
 
 // 公開プロフィール専用の loader。email / stripeConnectAccountId / passwordHash /
-// hasPaidSubscription / announcementsReadAt など内部フィールドを絶対に返さない。
+// announcementsReadAt など内部フィールドを絶対に返さない。
 // prisma の select 型が絶対に守られるので RSC ペイロードにも漏れない。
 async function loadArtist(id: string) {
   return prisma.user.findUnique({
@@ -49,6 +50,7 @@ async function loadArtist(id: string) {
       activityYears: true,
       averageRating: true,
       earlyBirdSlot: true,
+      isFounderExempt: true,
       isGuest: true,
       isOfficial: true,
       portfolios: { orderBy: { createdAt: 'desc' as const } },
@@ -90,7 +92,7 @@ export default async function ArtistDetailPage({ params }: Props) {
   const { id } = await params
   const session = await auth()
 
-  // 明示 select で email / stripeConnectAccountId / hasPaidSubscription / passwordHash 等の
+  // 明示 select で email / stripeConnectAccountId / passwordHash 等の
   // 内部フィールドを RSC ペイロードから完全に除外する（公開プロフィールなので厳格に）
   let user = null as Awaited<ReturnType<typeof loadArtist>>
   try {
@@ -286,6 +288,7 @@ export default async function ArtistDetailPage({ params }: Props) {
               {getDisplayName(user)}
             </h1>
             <FoundingMemberBadge slot={user.earlyBirdSlot} size="md" />
+            <FounderExemptBadge isFounderExempt={user.isFounderExempt} size="md" />
           </div>
 
           {/* ジャンル */}

@@ -8,6 +8,7 @@ import { listMyPrivateProjectsAction } from '@/server/actions/project'
 import { checkPaymentStatusAction } from '@/server/actions/payments'
 import { calcArtistPayout, calcPlatformFee } from '@/lib/stripe'
 import { getDisplayName } from '@/lib/user'
+import { hasZeroFeeAccess } from '@/lib/early-bird'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -36,19 +37,29 @@ export default async function ChatPage({ params, searchParams }: Props) {
       project: {
         select: {
           id: true, title: true, clientId: true, budget: true,
-          client: { select: { isFounderExempt: true } },
+          client: {
+            select: {
+              isFounderExempt: true,
+              earlyBirdSlot: true,
+              earlyBirdExpiresAt: true,
+            },
+          },
         },
       },
       artist: {
-        // role は Checkout 前 fee 表示 (5%/7%) を actions/payments 側の記録と一致させるため
-        // isFounderExempt はどちらか一方でも true なら手数料 0 表示にする
+        // isFounderExempt (恩人枠, 永年 0%) または earlyBirdSlot + 期限内 (創設メンバー 6ヶ月 0%)
+        // どちらか一方でも 0% 対象なら手数料 0% 表示 (hasZeroFeeAccess で判定)
         select: {
           id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true,
           role: true, isFounderExempt: true,
+          earlyBirdSlot: true, earlyBirdExpiresAt: true,
         },
       },
       partner: {
-        select: { id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true },
+        select: {
+          id: true, name: true, displayName: true, avatarUrl: true, isOfficial: true,
+          earlyBirdSlot: true, isFounderExempt: true,
+        },
       },
       payment: {
         select: {
@@ -95,31 +106,44 @@ export default async function ChatPage({ params, searchParams }: Props) {
   let partnerName: string
   let partnerAvatar: string | null
   let partnerIsOfficial = false
+  let partnerEarlyBirdSlot: number | null = null
+  let partnerIsFounderExempt = false
   if (isP2P) {
     // P2P: 自分でない方が相手
     if (isArtist) {
       partnerName = match.partner ? getDisplayName(match.partner) : '相手'
       partnerAvatar = match.partner?.avatarUrl ?? null
       partnerIsOfficial = match.partner?.isOfficial ?? false
+      partnerEarlyBirdSlot = match.partner?.earlyBirdSlot ?? null
+      partnerIsFounderExempt = match.partner?.isFounderExempt ?? false
     } else {
       partnerName = getDisplayName(match.artist)
       partnerAvatar = match.artist.avatarUrl
       partnerIsOfficial = match.artist.isOfficial
+      partnerEarlyBirdSlot = match.artist.earlyBirdSlot
+      partnerIsFounderExempt = match.artist.isFounderExempt
     }
   } else {
     // Project: アーティスト側から見ると発注者、発注者側から見るとアーティスト
     if (isArtist) {
       const client = await prisma.user.findUnique({
         where: { id: match.project!.clientId },
-        select: { name: true, displayName: true, avatarUrl: true, isOfficial: true },
+        select: {
+          name: true, displayName: true, avatarUrl: true, isOfficial: true,
+          earlyBirdSlot: true, isFounderExempt: true,
+        },
       })
       partnerName = client ? getDisplayName(client) : '発注者'
       partnerAvatar = client?.avatarUrl ?? null
       partnerIsOfficial = client?.isOfficial ?? false
+      partnerEarlyBirdSlot = client?.earlyBirdSlot ?? null
+      partnerIsFounderExempt = client?.isFounderExempt ?? false
     } else {
       partnerName = getDisplayName(match.artist)
       partnerAvatar = match.artist.avatarUrl
       partnerIsOfficial = match.artist.isOfficial
+      partnerEarlyBirdSlot = match.artist.earlyBirdSlot
+      partnerIsFounderExempt = match.artist.isFounderExempt
     }
   }
 
@@ -127,9 +151,11 @@ export default async function ChatPage({ params, searchParams }: Props) {
   const myPrivateProjects = isP2P ? await listMyPrivateProjectsAction() : []
 
   const budget = isP2P ? null : match.project!.budget
-  // 2026-10-17 fee-only pivot: PRO 判定は撤廃。手数料は 7% 固定 (Founding Supporter のみ 0%)。
+  // 2026-11-02 fee-only pivot v2: 手数料 0% は 2 条件。
+  // 恩人枠 (isFounderExempt) または 創設メンバー 100 名の期限内 (earlyBirdSlot + expiresAt > now)
+  // どちらか一方の当事者でも対象なら 0% 表示 (payments action と同一ロジック)
   const isFounderExempt =
-    match.artist.isFounderExempt || (match.project?.client.isFounderExempt ?? false)
+    hasZeroFeeAccess(match.artist) || (match.project ? hasZeroFeeAccess(match.project.client) : false)
   const feeBreakdown =
     budget && budget > 0
       ? {
@@ -153,6 +179,8 @@ export default async function ChatPage({ params, searchParams }: Props) {
         partnerName,
         partnerAvatar,
         partnerIsOfficial,
+        partnerEarlyBirdSlot,
+        partnerIsFounderExempt,
       }}
       feeBreakdown={feeBreakdown}
       payment={

@@ -107,17 +107,8 @@ export async function POST(req: NextRequest) {
 }
 
 async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
-  // 認証バッジ買切 (fee-only pivot): purpose metadata で分岐、User.isVerified=true に遷移
-  // updateMany + where.isVerified=false で冪等化（二重 webhook・既付与ユーザーで no-op）
-  if (pi.metadata?.purpose === 'verify_badge') {
-    const userId = pi.metadata?.userId
-    if (!userId) return
-    await prisma.user.updateMany({
-      where: { id: userId, isVerified: false },
-      data: { isVerified: true },
-    })
-    return
-  }
+  // 2026-11-02: 認証バッジ買切は廃止 (admin 手動付与のみに切替)。
+  // 以前はここで purpose === 'verify_badge' を分岐処理していた。
 
   const paymentId = pi.metadata?.paymentId
   if (!paymentId) return

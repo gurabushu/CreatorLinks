@@ -185,16 +185,7 @@ function SidebarNav({
         ))}
       </nav>
 
-      {!user.isVerified && (
-        <div className={`p-3 border-t border-zinc-200 ${hideWhenCollapsed}`}>
-          <Link
-            href="/verify"
-            className="block text-center bg-purple-600 text-white text-sm font-semibold px-3 py-2.5 rounded-xl hover:bg-purple-700 transition-colors"
-          >
-            認証バッジを取得
-          </Link>
-        </div>
-      )}
+      {/* 2026-11-02: 認証バッジ買切は廃止。admin 手動付与のみ運用に変更。 */}
     </>
   )
 }
@@ -239,7 +230,6 @@ export function SidebarShell({
           { href: '/admin', label: '管理ダッシュボード (Admin)', icon: <ShieldIcon />, matchExact: true } as NavItem,
           { href: '/admin/support', label: 'サポート受信箱 (Admin)', icon: <LifeBuoyIcon /> } as NavItem,
           { href: '/admin/payments', label: '決済管理 (Admin)', icon: <WalletIcon /> } as NavItem,
-          { href: '/admin/promo', label: 'プロモコード管理 (Admin)', icon: <GiftIcon /> } as NavItem,
           { href: '/admin/announcements', label: 'お知らせ配信 (Admin)', icon: <MegaphoneIcon /> } as NavItem,
         ]
       : []),

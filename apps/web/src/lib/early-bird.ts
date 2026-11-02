@@ -1,7 +1,8 @@
-// 創設メンバー枠（先着 100 名・PRO 6ヶ月無料 + スロット番号入りバッジ永久付与）
-// User.earlyBirdSlot は 1..EARLY_BIRD_TOTAL のバッジ番号として永久に保持される。
-// PRO ロールは earlyBirdExpiresAt までの期限付きで、以後は本課金がなければ GENERAL に落ちる。
-// 旧・先着 30 名の永久 PRO 組は earlyBirdExpiresAt = null で失効対象外。
+// 創設メンバー枠（先着 100 名・最初の 6ヶ月は手数料 0% + スロット番号入りバッジ永久付与）
+// User.earlyBirdSlot は 1..EARLY_BIRD_TOTAL のバッジ番号として永久に保持される（signal）。
+// earlyBirdExpiresAt を過ぎると手数料 0% 特典は失効 (ただしバッジ自体は永久)。
+// 旧・先着 30 名の永久組 (earlyBirdExpiresAt=null) は手数料 0% も永久。
+// 恩人枠 (isFounderExempt=true) は常に手数料 0% (別軸、admin 手動付与)。
 
 import { prisma } from './prisma'
 
@@ -53,7 +54,7 @@ export async function getEarlyBirdRemaining(): Promise<number | null> {
   }
 }
 
-// 無料期間中の PRO 特典が有効か。earlyBirdExpiresAt が null（旧永久組）または未来なら true。
+// 創設メンバー無料期間中か判定。earlyBirdExpiresAt が null（旧永久組）または未来なら true。
 export function isEarlyBirdFreeActive(user: {
   earlyBirdSlot: number | null
   earlyBirdExpiresAt: Date | null
@@ -63,17 +64,14 @@ export function isEarlyBirdFreeActive(user: {
   return user.earlyBirdExpiresAt.getTime() > Date.now()
 }
 
-// 月額料金を免除される PRO アクセス権があるか。
-// 創設メンバー無料期間中 or プロモコードで付与された「永年無料」ユーザー、
-// または isFounderExempt=true の恩人枠ユーザー。
-// 案件成立時の手数料（PLATFORM_FEE_RATE）は別途 stripe.ts 側で判定する。
-export function hasFreeProAccess(user: {
+// 手数料 0% 特典が有効か。
+// 創設メンバー 6ヶ月無料期間中 OR 恩人枠 (isFounderExempt=true) なら true。
+// 案件成立時の platformFeeRate 計算で参照する。
+export function hasZeroFeeAccess(user: {
   earlyBirdSlot: number | null
   earlyBirdExpiresAt: Date | null
-  hasLifetimeFreePro: boolean
-  isFounderExempt?: boolean
+  isFounderExempt?: boolean | null
 }): boolean {
   if (user.isFounderExempt) return true
-  if (user.hasLifetimeFreePro) return true
   return isEarlyBirdFreeActive(user)
 }
