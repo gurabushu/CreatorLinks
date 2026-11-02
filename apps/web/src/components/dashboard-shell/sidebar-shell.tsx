@@ -1,11 +1,68 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { UserRole } from '@creator-links/shared'
 
 type User = { name: string; role: UserRole; isVerified: boolean }
+
+type PreferredMode = 'ARTIST' | 'CLIENT' | 'HYBRID'
+const PREFERRED_MODE_KEY = 'encorecue:preferredMode'
+const MORE_OPEN_KEY = 'encorecue:sidebarMoreOpen'
+
+const MODE_LABEL: Record<PreferredMode, string> = {
+  ARTIST: '出演モード',
+  CLIENT: '依頼モード',
+  HYBRID: '両方モード',
+}
+
+// localStorage から読む都合でフックに切り出し。SSR では常に 'HYBRID' を返すため
+// ハイドレーション前は 'HYBRID' を基準にレンダリングされる。
+function usePreferredMode() {
+  const [mode, setModeState] = useState<PreferredMode>('HYBRID')
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(PREFERRED_MODE_KEY)
+      if (stored === 'ARTIST' || stored === 'CLIENT' || stored === 'HYBRID') {
+        setModeState(stored)
+      }
+    } catch {
+      // SSR / strict storage ポリシー下では無視
+    }
+  }, [])
+  const setMode = (next: PreferredMode) => {
+    setModeState(next)
+    try {
+      window.localStorage.setItem(PREFERRED_MODE_KEY, next)
+    } catch {
+      // 無視
+    }
+  }
+  return { mode, setMode }
+}
+
+function useMoreOpen(initial: boolean) {
+  const [open, setOpenState] = useState(initial)
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(MORE_OPEN_KEY)
+      if (stored === 'true') setOpenState(true)
+      if (stored === 'false') setOpenState(false)
+    } catch {
+      // 無視
+    }
+  }, [])
+  const setOpen = (next: boolean) => {
+    setOpenState(next)
+    try {
+      window.localStorage.setItem(MORE_OPEN_KEY, String(next))
+    } catch {
+      // 無視
+    }
+  }
+  return { open, setOpen }
+}
 
 type NavItem = {
   href: string
@@ -117,15 +174,6 @@ const ChartIcon = () => (
     <line x1="6" y1="20" x2="6" y2="14" />
   </svg>
 )
-const GiftIcon = () => (
-  <svg className={iconClass} {...iconProps}>
-    <polyline points="20 12 20 22 4 22 4 12" />
-    <rect x="2" y="7" width="20" height="5" />
-    <line x1="12" y1="22" x2="12" y2="7" />
-    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-  </svg>
-)
 const UsersIcon = () => (
   <svg className={iconClass} {...iconProps}>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -134,58 +182,189 @@ const UsersIcon = () => (
     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 )
+const SearchIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.5" y2="16.5" />
+  </svg>
+)
+const HeartIcon = () => (
+  <svg className={iconClass} {...iconProps}>
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+)
+
+// ロール別の TOP5 固定順。href で参照するので label 変更に強い。
+const PIN_HREFS: Record<PreferredMode, string[]> = {
+  ARTIST: [
+    '/dashboard',
+    '/dashboard/matches',
+    '/projects',
+    '/dashboard/portfolio',
+    '/dashboard/payouts',
+  ],
+  CLIENT: [
+    '/dashboard',
+    '/dashboard/matches',
+    '/artists',
+    '/projects/manage',
+    '/dashboard/payouts',
+  ],
+  HYBRID: [
+    '/dashboard',
+    '/dashboard/matches',
+    '/artists',
+    '/projects',
+    '/dashboard/portfolio',
+  ],
+}
+
+function RoleTogglePill({
+  mode,
+  onChange,
+}: {
+  mode: PreferredMode
+  onChange: (next: PreferredMode) => void
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="relative px-3 pb-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-full bg-zinc-50 hover:bg-zinc-100 transition-colors"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <span className="inline-block px-2.5 py-0.5 rounded-full bg-purple-600 text-white font-medium text-[11px]">
+          {MODE_LABEL[mode]}
+        </span>
+        <span className="text-zinc-500 text-[11px] pr-1">切替 ▾</span>
+      </button>
+      {open && (
+        <>
+          <button
+            type="button"
+            aria-label="閉じる"
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+          <div
+            role="menu"
+            className="absolute left-3 right-3 mt-1 z-50 bg-white rounded-xl border border-zinc-200 shadow-lg overflow-hidden"
+          >
+            {(['ARTIST', 'CLIENT', 'HYBRID'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  onChange(m)
+                  setOpen(false)
+                }}
+                className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                  m === mode
+                    ? 'bg-purple-50 text-purple-700 font-semibold'
+                    : 'text-zinc-700 hover:bg-purple-50'
+                }`}
+              >
+                {MODE_LABEL[m]}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function NavLink({
+  item,
+  active,
+  onClick,
+}: {
+  item: NavItem
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm mb-0.5 transition-colors duration-200 ${
+        active
+          ? 'bg-purple-100/70 text-purple-700 font-semibold'
+          : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
+      }`}
+    >
+      <span className="shrink-0 text-current">{item.icon}</span>
+      <span className="flex-1 truncate whitespace-nowrap">{item.label}</span>
+      {item.badge != null && item.badge > 0 && (
+        <span className="bg-zinc-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center shadow-sm shadow-zinc-300/40">
+          {item.badge > 99 ? '99+' : item.badge}
+        </span>
+      )}
+    </Link>
+  )
+}
 
 function SidebarNav({
   user,
   items,
   isActive,
   onNavigate,
-  collapsible = false,
+  mode,
+  setMode,
 }: {
   user: User
   items: NavItem[]
   isActive: (item: NavItem) => boolean
   onNavigate: () => void
-  collapsible?: boolean
+  mode: PreferredMode
+  setMode: (next: PreferredMode) => void
 }) {
-  // collapsible=true のときは通常アイコンだけ表示し、親 <aside class="group"> の hover / focus-within で展開
-  const hideWhenCollapsed = collapsible ? 'hidden group-hover:block group-focus-within:block' : ''
-  const hideInlineWhenCollapsed = collapsible ? 'hidden group-hover:inline group-focus-within:inline' : ''
+  const { open: moreOpen, setOpen: setMoreOpen } = useMoreOpen(false)
+
+  const pinnedHrefs = PIN_HREFS[mode]
+  const pinned = pinnedHrefs
+    .map((h) => items.find((i) => i.href === h))
+    .filter((v): v is NavItem => v !== undefined)
+  const pinnedSet = new Set(pinned.map((i) => i.href))
+  const rest = items.filter((i) => !pinnedSet.has(i.href))
 
   return (
     <>
-      <div className={`px-4 pt-4 pb-3 border-b border-zinc-200 ${hideWhenCollapsed}`}>
+      <div className="px-4 pt-4 pb-2">
         <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Signed in as</p>
         <p className="font-semibold text-zinc-800 truncate">{user.name}</p>
       </div>
 
-      <nav className="p-2 flex-1">
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            title={collapsible ? item.label : undefined}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm mb-0.5 transition-colors duration-200 ${
-              isActive(item)
-                ? 'bg-purple-100/70 text-purple-700 font-semibold'
-                : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
-            }`}
-          >
-            <span className="shrink-0 text-current">{item.icon}</span>
-            <span className={`flex-1 truncate whitespace-nowrap ${hideInlineWhenCollapsed}`}>
-              {item.label}
-            </span>
-            {item.badge != null && item.badge > 0 && (
-              <span className="bg-zinc-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center shadow-sm shadow-zinc-300/40">
-                {item.badge > 99 ? '99+' : item.badge}
-              </span>
-            )}
-          </Link>
-        ))}
-      </nav>
+      <RoleTogglePill mode={mode} onChange={setMode} />
 
-      {/* 2026-11-02: 認証バッジ買切は廃止。admin 手動付与のみ運用に変更。 */}
+      <nav className="px-2 flex-1">
+        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider px-3 pb-1">
+          よく使う
+        </p>
+        {pinned.map((item) => (
+          <NavLink key={item.href} item={item} active={isActive(item)} onClick={onNavigate} />
+        ))}
+
+        <div className="my-2 mx-3 border-t border-zinc-200" />
+
+        <button
+          type="button"
+          onClick={() => setMoreOpen(!moreOpen)}
+          className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider hover:text-purple-600 transition-colors"
+          aria-expanded={moreOpen}
+        >
+          <span>もっと見る</span>
+          <span className="text-[10px]">{moreOpen ? '▾' : '▸'}</span>
+        </button>
+        {moreOpen &&
+          rest.map((item) => (
+            <NavLink key={item.href} item={item} active={isActive(item)} onClick={onNavigate} />
+          ))}
+      </nav>
     </>
   )
 }
@@ -205,26 +384,28 @@ export function SidebarShell({
 }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { mode, setMode } = usePreferredMode()
 
   const items: NavItem[] = [
     { href: '/dashboard', label: 'マイページ', icon: <HomeIcon />, matchExact: true },
+    { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },
+    { href: '/artists', label: 'クリエイター', icon: <MicIcon /> },
+    { href: '/projects', label: '案件を探す', icon: <SearchIcon /> },
+    { href: '/projects/manage', label: '案件管理', icon: <ClipboardIcon /> },
+    { href: '/dashboard/portfolio', label: 'ポートフォリオ', icon: <GalleryIcon /> },
+    { href: '/dashboard/payouts', label: '入金設定', icon: <WalletIcon /> },
     { href: '/dashboard/notifications', label: '通知', icon: <BellIcon />, badge: notificationUnread },
     { href: '/dashboard/profile', label: 'プロフィール', icon: <UserIcon /> },
-    { href: '/dashboard/portfolio', label: 'ポートフォリオ', icon: <GalleryIcon /> },
-    { href: '/dashboard/matches', label: '応募案件', icon: <InboxIcon />, badge: unreadCount },
-    { href: '/projects/manage', label: '案件管理', icon: <ClipboardIcon /> },
-    { href: '/dashboard/payouts', label: '入金設定', icon: <WalletIcon /> },
     // 2026-10-17 fee-only pivot: CRM と分析は全ユーザー解放
     { href: '/dashboard/crm', label: '顧客一覧 (CRM)', icon: <UsersIcon /> },
     { href: '/dashboard/analytics', label: 'プロフィール分析', icon: <ChartIcon /> },
-    { href: '/events', label: 'イベント', icon: <MicIcon /> },
-    { href: '/dashboard/following', label: 'フォロー中', icon: <UsersIcon /> },
+    { href: '/events', label: 'イベント', icon: <MegaphoneIcon /> },
+    { href: '/dashboard/following', label: 'フォロー中', icon: <HeartIcon /> },
     { href: '/dashboard/calendar', label: 'カレンダー', icon: <CalendarIcon /> },
     { href: '/dashboard/account', label: 'アカウント設定', icon: <CogIcon /> },
     { href: '/announcements', label: 'お知らせ', icon: <MegaphoneIcon />, badge: announcementUnread },
     { href: '/support', label: 'サポート・お問い合わせ', icon: <LifeBuoyIcon /> },
-    // ADMIN 専用: 管理ダッシュボード + サポート + 決済 + プロモ + お知らせ
-    // /admin は matchExact にしないと /admin/* と両方 highlight してしまう
+    // ADMIN 専用。/admin は matchExact にしないと /admin/* と両方 highlight してしまう
     ...(user.role === 'ADMIN'
       ? [
           { href: '/admin', label: '管理ダッシュボード (Admin)', icon: <ShieldIcon />, matchExact: true } as NavItem,
@@ -258,15 +439,12 @@ export function SidebarShell({
 
       {mobileOpen && (
         <>
-          {/* SP 展開時のバックドロップ。半透明は使わず不透明のダークグレーで完全に背後を遮る
-              （旧来の bg-black/40 が端末によってちらつく／見づらい問題への対応） */}
           <button
             type="button"
             aria-label="メニューを閉じる"
             onClick={close}
             className="md:hidden fixed inset-0 bg-gray-900 z-40"
           />
-          {/* サイドバー本体も完全不透明。旧グラデ (via-purple-50/30 の 30% 透明) を廃止 */}
           <aside className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-purple-100 z-50 flex flex-col overflow-y-auto shadow-lg">
             <div className="px-4 py-3 border-b border-purple-100 flex items-center justify-between">
               <p className="font-semibold text-purple-600">メニュー</p>
@@ -279,18 +457,30 @@ export function SidebarShell({
                 ✕
               </button>
             </div>
-            <SidebarNav user={user} items={items} isActive={isActive} onNavigate={close} />
+            <SidebarNav
+              user={user}
+              items={items}
+              isActive={isActive}
+              onNavigate={close}
+              mode={mode}
+              setMode={setMode}
+            />
           </aside>
         </>
       )}
 
-      <aside
-        className="peer group hidden md:flex md:flex-col md:fixed md:left-0 md:top-20 lg:top-24 md:bottom-0 md:w-14 hover:md:w-60 focus-within:md:w-60 transition-[width] duration-300 ease-out md:overflow-y-auto md:overflow-x-hidden md:border-r md:border-purple-100/60 bg-gradient-to-b from-white via-purple-50/30 to-white z-30 hover:shadow-md hover:shadow-purple-200/40"
-      >
-        <SidebarNav user={user} items={items} isActive={isActive} onNavigate={close} collapsible />
+      <aside className="hidden md:flex md:flex-col md:fixed md:left-0 md:top-20 lg:top-24 md:bottom-0 md:w-60 md:border-r md:border-purple-100/60 bg-white md:overflow-y-auto md:overflow-x-hidden z-30">
+        <SidebarNav
+          user={user}
+          items={items}
+          isActive={isActive}
+          onNavigate={close}
+          mode={mode}
+          setMode={setMode}
+        />
       </aside>
 
-      <div className="md:ml-14 peer-hover:md:ml-60 peer-focus-within:md:ml-60 transition-[margin-left] duration-300 ease-out min-w-0">{children}</div>
+      <div className="md:ml-60 min-w-0">{children}</div>
     </div>
   )
 }
