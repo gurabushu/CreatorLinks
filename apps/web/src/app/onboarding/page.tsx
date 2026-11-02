@@ -7,6 +7,7 @@ import QRCode from 'qrcode'
 import { auth } from '@/lib/auth'
 import { APP_URL } from '@/lib/resend'
 import { InviteShare } from './invite-share'
+import { RoleSelector } from './role-selector'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: '仕事仲間を招待' }
@@ -29,15 +30,25 @@ export default async function OnboardingPage() {
           ようこそ 🎉
         </span>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-          よく仕事する仲間を、
-          <br className="sm:hidden" />
-          最初に招待しよう。
+          EncoreCue へようこそ。
         </h1>
         <p className="text-gray-600 mt-4 leading-relaxed">
+          2 ステップだけでスタートできます。<b>使い方を選ぶ</b> → <b>仲間を招待する</b> の順でサッと進めましょう。
+        </p>
+      </div>
+
+      <RoleSelector />
+
+      <div className="mb-5">
+        <span className="inline-block text-[11px] font-bold tracking-wider text-purple-600 bg-purple-50 border border-purple-200/70 px-2.5 py-0.5 rounded-full mb-2">
+          Step 2 / 2
+        </span>
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+          よく仕事する仲間を招待
+        </h2>
+        <p className="text-xs sm:text-sm text-gray-600 mt-1 leading-relaxed">
           β 期間中は、すでに <b>LINE や DM で仕事をお願いし合っている人たち</b> を招待して、
           <b>そのやり取りをアプリに移す</b> と価値を実感しやすいです。
-          <br />
-          ミュージシャン・発注者・スタッフ、思いつく人を数人だけでも呼んでみましょう。
         </p>
       </div>
 
