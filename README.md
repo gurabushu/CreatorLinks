@@ -132,6 +132,12 @@ Fee-only pivot (2026-10-17) 以降、Preview 側で複数の障害が重なっ�
 - **Neon 分離確認**: cyclamen-cave (Prod, ep-flat-wave) / claret-ball (Preview, ep-mute-heart) → **完全分離済**
 - **Production DB 現状**: admin ユーザ 1 名のみ（dogfood はクリーンな状態で開始可能）
 
+### 本番リリース前 手動操作検証
+→ **[本番リリース前_操作検証チェックリスト.md](./本番リリース前_操作検証チェックリスト.md)** に 20 カテゴリ・100+ 項目のチェックリスト。
+staging.encorecue.jp 上で admin + テストアカウント 2〜3 を使って一通り触って潰す運用。
+
+---
+
 ### 一般公開 (M1 beta → M2 一般) に向けた残タスク — 2026-10-31 時点
 
 **本番移行スコープ**: 一般公開（SNS 告知、誰でもサインアップ可、実金決済）
