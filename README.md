@@ -235,23 +235,105 @@ staging.encorecue.jp 上で admin + テストアカウント 2〜3 を使って�
 
 ---
 
-## 技術スタック
+## 技術スタック (2026-11-03 現在)
 
-| レイヤー | 技術 |
+### 基盤
+| カテゴリ | 技術 | 用途 |
+|---|---|---|
+| Monorepo | **Turborepo** 2 + **pnpm** 10 | ワークスペース管理 |
+| 言語 | **TypeScript** 5.7 | 全ソース |
+| ランタイム | **Node.js** 20+ | サーバー / ビルド |
+| ホスティング | **Vercel** (Hobby → Pro 予定) | Next.js + サーバーレス関数 |
+| ドメイン | **Xserver Domain** | `encorecue.jp` (staging/本番) |
+
+### フロントエンド (`apps/web`)
+| カテゴリ | 技術 |
 |---|---|
-| フロントエンド | Next.js 15 (App Router) + React 19 + Tailwind CSS 4 |
-| バックエンド | Next.js Server Actions + Hono 4.x（ローカル API サーバー） |
-| API | tRPC 11 + Zod（ローカル開発時）/ Server Actions（本番） |
-| ORM / DB | Prisma 6 + PostgreSQL（Railway / ローカルは Docker 5433:5432） |
-| 認証 | Auth.js v5（NextAuth v5 beta、JWT + Google OAuth） |
-| ファイル | **Vercel Blob**（ブラウザ→CDN 直接アップロード + Canvas 圧縮） |
-| 課金 (サブスク) | **RevenueCat Web Billing**（PRO サブスクのみ） |
-| 決済 (案件代金) | **Stripe Connect**（Separate Charges & Transfers、7% プラットフォーム手数料、検収後支払い / 自動リリース 7 日） |
-| リアルタイム | Pusher Channels（未設定時は 3 秒ポーリングにフォールバック） |
-| メール | Resend + react-email + Inngest |
-| モノレポ | Turborepo + pnpm workspaces |
-| ホスティング | Vercel（フロント） + Railway（DB） |
-| モバイル | 未着手（PWA → Capacitor を想定） |
+| フレームワーク | **Next.js 15** (App Router, Turbopack) |
+| UI | **React 19** |
+| スタイル | **Tailwind CSS 4** + PostCSS |
+| フォーム | **React Hook Form** + Zod resolver |
+| アイコン | **Lucide React** (大半は自前 inline SVG) |
+| ユーティリティ | `clsx` / `class-variance-authority` / `tailwind-merge` |
+| 状態管理 | **Zustand** 5 (限定使用、大半は Server Actions) |
+| QR | `qrcode` |
+
+### API / バックエンド
+| カテゴリ | 技術 |
+|---|---|
+| サーバー | **Hono** 4 + `@hono/node-server` (`apps/api`) |
+| RPC | **tRPC** 11 (`@trpc/server` / `@trpc/client` / `@trpc/react-query`) |
+| Server Actions | **Next.js Server Actions** (本番の大半はこっち) |
+| JWT | `jose` |
+
+### データ・キャッシュ
+| カテゴリ | 技術 |
+|---|---|
+| DB | **PostgreSQL** (**Neon** Serverless, Vercel Marketplace 統合) |
+| ORM | **Prisma** 6 |
+| バリデーション | **Zod** 3 |
+| シリアライズ | `superjson` |
+| Redis / レート制限 | **Upstash Redis** + `@upstash/ratelimit` |
+| ストレージ | **Vercel Blob** (`@vercel/blob`) — 画像/動画 |
+| ローカル DB | Docker PostgreSQL 16 (port **5433** → コンテナ内 5432) |
+
+### 認証
+| カテゴリ | 技術 |
+|---|---|
+| 認証 | **NextAuth v5 (Auth.js)** + `@auth/prisma-adapter` |
+| パスワードハッシュ | **bcryptjs** |
+| セッション | JWT ストラテジー (stateless) + Credentials provider |
+
+### 決済
+| カテゴリ | 技術 |
+|---|---|
+| 決済 | **Stripe** (Checkout + Connect Express) |
+| エスクロー | 自前 `actions/payments.ts` (手数料 7%、創設メンバー/恩人枠は 0%) |
+| 領収書 | Stripe 公式自動発行 |
+
+### 通知・リアルタイム・メール
+| カテゴリ | 技術 |
+|---|---|
+| リアルタイム | **Pusher Channels** (`pusher` / `pusher-js`) |
+| バックグラウンドジョブ | **Inngest** |
+| メール送信 | **Resend** |
+| 永続通知 | 自前 Notification モデル + Pusher broadcast + 30 秒 polling fallback |
+
+### 監視・セキュリティ
+| カテゴリ | 技術 |
+|---|---|
+| エラー監視 | **Sentry** (`@sentry/nextjs`) |
+| 認証ガード | 自前 (`lib/blocks.ts`, Admin role check, `isBlockedBetween`) |
+| レート制限 | Upstash Redis + sliding window、`middleware.ts` で signin も保護 |
+
+### テスト
+| カテゴリ | 技術 |
+|---|---|
+| ユニット | **Vitest** 2 (api + web) |
+| コンポーネント | `@testing-library/react` |
+| E2E | **Playwright** 1.59 |
+
+### 開発ツール
+| カテゴリ | 技術 |
+|---|---|
+| TS 実行 | `tsx` |
+| フォーマッタ | **Prettier** |
+| Lint | **ESLint** 9 + `eslint-config-next` (本格設定は Next 16 対応で整備予定) |
+
+### Vercel Marketplace 統合
+- **Neon** (Postgres) — Production / Preview 別 branch
+- **Upstash Redis** (`upstash-kv-citrine-yacht`) — レート制限
+- **Vercel Blob** — 画像/動画
+- **Resend** — トランザクションメール
+
+### 概要 (1 行版、投稿用)
+
+> Next.js 15 (App Router, React 19) + TypeScript / Prisma + Neon (Postgres) / NextAuth v5 / Stripe Connect / Vercel + Vercel Blob / Pusher + Upstash Redis / Resend / Sentry / Vitest + Playwright。モノレポは Turborepo + pnpm。
+
+### fee-only pivot v2 (2026-11-02) で削除された依存
+- `@revenuecat/purchases-js` (旧 PRO サブスク、fee-only pivot で廃止)
+- 認証バッジ買切 Stripe Checkout (admin 手動付与のみに切替)
+- プロモコード redeem 機構 (ユーザー向け課金機能全撤廃)
 
 ---
 
