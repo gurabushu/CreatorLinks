@@ -95,6 +95,70 @@
 
 ---
 
+## 直近の変更 (2026-11-02 〜 2026-11-04)
+
+### 事前登録 (創設メンバー枠 Google Form 連携) 導入 (2026-11-04)
+Google Form で事前登録 → 投稿順に 1〜100 の創設メンバースロットを先取り予約。
+正式公開後に同じ email でサインアップすれば予約 slot が `User.earlyBirdSlot` に
+自動継承される仕組み。実装詳細:
+- schema: `EarlyBirdReservation` (email unique / reservedSlot unique / claimedAt / claimedUserId)
+- migration: `20261104104437_add_early_bird_reservations`
+- `lib/early-bird.ts` の `assignEarlyBirdIfAvailable(userId, email)` に email 引数を追加、
+  サインアップ 2 ヶ所 (Credentials + Google OAuth) で email を渡す形に
+- `/admin/reservations` ページ + CSV import フォーム (自前 CSV パーサ、quote escape 対応)
+- `getEarlyBirdRemaining` を 未 claim 予約 + サインアップ済 User の合算で計算
+- サイドバー ADMIN セクションに「事前登録 (Admin)」追加
+- 運用手順は下記 §「事前登録 (創設メンバー枠 先着 100 名) 運用手順」参照
+
+### LP 文言改修 + 恩人枠を非公開化 (2026-11-04)
+アーティスト・表現者という繊細な言語能力を持つ層が「引かない」前向きな表現に揃えた。
+- **置換**: 「逃げられない仕事」→「お互い気持ちよく完了できる」、
+  「踏み倒し/未払い」→「お支払いのすれ違い/お金のやりとりが気まずくならない」、
+  「保険料」→「安心」、「仕事 DX/マッチング」→「仕事のやりとり/出会い」、
+  「Stripe エスクロー」→「発注者が先払い → 納品確認後にアーティストへ送金」、
+  「可視化」→「わかりやすく伝える」等
+- **決済利用料の明記**: 手数料 7% は "アプリ内決済を使ったときの利用料" である旨を
+  Hero / Pricing / FAQ に補足追加。登録・案件投稿・プロフィール公開・やりとりは 0 円のままを強調
+- **恩人枠を公開面から全撤去**: LP バナーサブ文言、`FounderExemptBadge` 表示 4 ヶ所
+  (featured カード / artist プロフィール / artist 一覧カード / chat 相手名横)、
+  見積書 / 契約書の文言 (「恩人枠適用」→「特典適用」) を全て削除。
+  内部のロジック (`isFounderExempt` / 手数料 0% 計算 / admin 付与 UI) は残置。
+
+### fee-only pivot v2: PRO/認証バッジ買切/プロモコードを削ぎ落とし (2026-11-02)
+決済周りを手数料 7% だけ残す方針で全面整理。
+- **削除**: `/pro/subscribe`, `/verify`, `/admin/promo`, promo.ts / admin-promo.ts /
+  verify-badge.ts、`User.hasPaidSubscription` / `User.hasLifetimeFreePro` フィールド、
+  `PromoCode` / `PromoRedemption` モデル、Stripe webhook の `purpose=verify_badge` 分岐
+- **バナー再定義**: 「PRO 6ヶ月無料」→「最初の 6ヶ月 手数料 0% + 創設メンバーバッジ」
+- **手数料計算**: `hasZeroFeeAccess(user)` で判定 — 恩人枠 (永年 0%) または
+  創設メンバー 100 名 + 期限内 (6ヶ月 0%) ならどちらかの当事者で `platformFeeRate=0`
+- **一覧ブースト**: `/artists` と `/projects` で創設メンバー/恩人枠の案件を上位表示
+- 認証バッジは残す (admin 手動付与のみ、Stripe 購入導線は削除)
+- migration: `20261102104419_drop_pro_fields_and_promo_codes`
+
+### チャット・SNS 安全機能 (2026-11-01)
+- **ユーザーブロック**: `UserBlock` model + `/artists/[id]` に BlockButton、
+  `/dashboard/account/blocked` でブロック一覧。相手からのメッセージ・フォロー・
+  スカウト・応募・通知を全遮断 (双方向)
+- **通知 11 種拡張**: FOLLOW_EVENT_CREATED / FOLLOW_PROJECT_CREATED /
+  FOLLOW_PORTFOLIO_ADDED / EVENT_UPDATED / EVENT_CANCELLED / PROJECT_UPDATED /
+  MATCH_MESSAGE / SUPPORT_MESSAGE / ANNOUNCEMENT / PROMO_GRANTED 等を追加、
+  各 server action にフック仕込み
+- **CRM 検索ソート**: `/dashboard/crm` に名前検索 + 5 種類ソート追加
+
+### 永続化通知基盤 (2026-10-31 夜)
+- `Notification` model (13 kinds → 20 kinds に拡張) + 中央ヘルパ `createNotification`
+- サイドバー + ヘッダー Bell に未読バッジ、`/dashboard/notifications` 一覧ページ
+- Pusher リアルタイム + 30 秒 polling fallback (Pusher 未投入でも動作)
+- 既存 action (follow / event RSVP / scout / match / message) に通知仕込み
+
+### 案件編集機能 (2026-10-31 午後)
+- タイトル / 詳細 / 予算 / ステータス編集、「募集締切」「削除 (soft-delete)」
+- ACCEPTED 以降 match がある案件は予算・本気度変更禁止、削除も禁止
+- 削除済案件は全 listing から除外、`/projects/[id]` 直接アクセスで 404
+
+---
+
 ## 直近の変更 (2026-10-31)
 
 ### Preview 環境・検証インフラの一斉復旧 (2026-10-31)
