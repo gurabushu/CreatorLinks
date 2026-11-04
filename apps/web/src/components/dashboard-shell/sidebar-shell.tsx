@@ -412,6 +412,7 @@ export function SidebarShell({
           { href: '/admin/support', label: 'サポート受信箱 (Admin)', icon: <LifeBuoyIcon /> } as NavItem,
           { href: '/admin/payments', label: '決済管理 (Admin)', icon: <WalletIcon /> } as NavItem,
           { href: '/admin/announcements', label: 'お知らせ配信 (Admin)', icon: <MegaphoneIcon /> } as NavItem,
+          { href: '/admin/reservations', label: '事前登録 (Admin)', icon: <UserIcon /> } as NavItem,
         ]
       : []),
   ]

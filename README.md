@@ -132,6 +132,35 @@ Fee-only pivot (2026-10-17) 以降、Preview 側で複数の障害が重なっ�
 - **Neon 分離確認**: cyclamen-cave (Prod, ep-flat-wave) / claret-ball (Preview, ep-mute-heart) → **完全分離済**
 - **Production DB 現状**: admin ユーザ 1 名のみ（dogfood はクリーンな状態で開始可能）
 
+### 事前登録 (創設メンバー枠 先着 100 名) 運用手順
+2026-11-04 導入。Google Form で事前登録 → 投稿順に 1〜100 のスロット仮予約 → サインアップ時に email 照合で slot を自動継承。
+
+**Google Form 項目** (必須):
+- Email アドレス (short answer)
+- お名前 (short answer)
+- 主な楽器 / 専門ジャンル (short answer)
+- 利用規約・プライバシーポリシーに同意する (checkbox, 単一)
+
+**運用フロー**:
+1. Google Form の回答が Google Sheets に貯まる
+2. 運営が Sheets を CSV ダウンロード (`ファイル → ダウンロード → カンマ区切り値 (.csv)`)
+3. CSV の header を `email,name,primaryInstrument` に調整 (Google Form の列名と一致させる)
+4. Admin が `/admin/reservations` にアクセス → CSV ファイル選択 → 「インポート実行」
+5. 投稿順に reservedSlot (1〜100) が自動採番、既存 email は skip、100 名到達以降は reject
+6. 正式公開日に全事前登録者へメール送信 (「同じ email でサインアップしてください」ガイド付き)
+7. 各ユーザがサインアップすると、email 照合で `EarlyBirdReservation.reservedSlot` が `User.earlyBirdSlot` に自動移管 (claimedAt タイムスタンプが立つ)
+
+**100 名到達時の対応**:
+- Google Form 側: Form description を「受付終了」に手動差替
+- アプリ側: `/admin/reservations` の「残り枠」が 0 になる、CSV 追加投入しても reject される
+- 101 名以降の希望者には「キャンセル待ち」案内メールを別途運営から送信 (手動)
+
+**キャンセル / スロット解放**:
+- サインアップ前に取り消したい場合、Admin が `/admin/reservations` から該当行を削除 (未 claim のみ可能)
+- 削除後は次の import で slot 番号が再利用される
+
+---
+
 ### 本番リリース前 手動操作検証
 → **[本番リリース前_操作検証チェックリスト.md](./本番リリース前_操作検証チェックリスト.md)** に 20 カテゴリ・100+ 項目のチェックリスト。
 staging.encorecue.jp 上で admin + テストアカウント 2〜3 を使って一通り触って潰す運用。

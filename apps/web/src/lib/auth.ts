@@ -80,10 +80,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   events: {
     // PrismaAdapter が新規ユーザーを作った直後（Google OAuth の初回サインイン）
-    // 先着 30 名 PRO 永久無料スロットを割り当てる
+    // 事前登録 (EarlyBirdReservation) があれば email 照合で予約済 slot を継承、
+    // 無ければ 1..EARLY_BIRD_TOTAL の空きスロットを付与。
     async createUser({ user }) {
-      if (!user.id) return
-      await assignEarlyBirdIfAvailable(user.id).catch(() => null)
+      if (!user.id || !user.email) return
+      await assignEarlyBirdIfAvailable(user.id, user.email).catch(() => null)
       revalidatePath('/')
     },
   },

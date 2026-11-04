@@ -794,6 +794,24 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+// 2026-11-04 追加: 事前登録 (Google Form) で創設メンバー枠を先取りした予約レコード。
+// 正式公開前に Form 投稿順に reservedSlot (1..100) を割当、公開後に本人が同じ email で
+// サインアップした時点で User.earlyBirdSlot にスロットが移管される (claimedAt が立つ)。
+// CSV で Admin から bulk import する運用を想定。
+model EarlyBirdReservation {
+  id                String    @id @default(cuid())
+  email             String    @unique  // サインアップ時の照合キー
+  name              String
+  primaryInstrument String?             // 「主な楽器 / 専門ジャンル」自由記述
+  reservedSlot      Int       @unique   // 1..100、投稿順に採番
+  createdAt         DateTime  @default(now())
+  claimedAt         DateTime?           // サインアップで実ユーザに紐付いた時刻
+  claimedUserId     String?             // どの User が claim したか (後追い調査用)
+
+  @@index([claimedAt])
+  @@map("early_bird_reservations")
+}
+
 // 2026-11-01 追加: 永続化通知 (follow / event-rsvp / match / scout / support 他)。
 // 既存の NotificationBell は Pusher transient だったが、履歴が残らずリロードで消える問題を解消。
 // Pusher がある環境では create 同時に channel broadcast して realtime 配信、

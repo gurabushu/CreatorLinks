@@ -118,8 +118,10 @@ export async function signUpAction(formData: FormData): Promise<SignUpResult> {
     return { success: false, error: 'アカウント作成に失敗しました。しばらく後で再試行してください。', field: 'general' }
   }
 
-  // 創設メンバー枠（先着 100 名 PRO 6ヶ月無料 + 永久バッジ）の割当（失敗しても登録自体は成功扱い）
-  await assignEarlyBirdIfAvailable(createdUserId).catch(() => null)
+  // 創設メンバー枠（先着 100 名 最初の 6ヶ月手数料 0% + 永久バッジ）の割当
+  // email 照合で事前登録 (EarlyBirdReservation) 有れば予約済 slot を優先継承、無ければ残り枠から付与。
+  // 失敗しても登録自体は成功扱い。
+  await assignEarlyBirdIfAvailable(createdUserId, email).catch(() => null)
   // 公式アカウントからのウェルカム DM 送信（失敗しても登録は成功扱い）
   await sendWelcomeDm(createdUserId).catch(() => null)
   // トップページの残数バナーの ISR を無効化
