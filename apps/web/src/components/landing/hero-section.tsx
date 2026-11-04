@@ -8,7 +8,7 @@ export function HeroSection() {
         {/* 左: コピー & CTA。SP でも読み切れる範囲に文字サイズを段階制御 */}
         <div className="text-center md:text-left min-w-0">
           <span className="inline-flex flex-wrap items-center justify-center md:justify-start gap-x-1 text-[11px] sm:text-xs font-bold tracking-wider text-purple-600 bg-purple-50 border border-purple-200/70 px-3 py-1 rounded-full mb-4 max-w-full">
-            イベント掲示板 × 仕事 DX × マッチング
+            イベント告知 × 仕事のやりとり × 出会い
           </span>
           <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.2] tracking-tight text-gray-900 break-keep">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-zinc-600">
@@ -19,25 +19,25 @@ export function HeroSection() {
             続く、音楽の場所。
           </h1>
           <p className="mt-5 sm:mt-6 text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed">
-            ライブ・セッション告知の <b>掲示板</b>、LINE や DM でやってた依頼の <b>仕事 DX</b>、
-            音楽業界特化の <b>マッチング</b>。
+            ライブやセッションの <b>告知</b>、LINE や DM に散らばる <b>お仕事のやりとり</b>、
+            音楽仲間との <b>新しい出会い</b>。
             <br className="hidden sm:block" />
-            3 つを 1 つのアプリに。
+            3 つを、1 つのアプリに。
           </p>
 
-          {/* LINE との差別化を Hero で明示。「まだ LINE で消耗してるの？」フック */}
+          {/* お互い気持ちよく仕事を続けられる、を軸に。表現者が引かない柔らかい言葉で揃える。 */}
           <ul className="mt-5 space-y-1.5 text-sm text-gray-700 max-w-md mx-auto md:mx-0">
             <li className="flex items-start gap-2">
               <span aria-hidden className="text-purple-600 shrink-0 mt-0.5">✓</span>
-              <span><b>逃げられない仕事に</b>できる（Stripe エスクローで先払い→検収後送金）</span>
+              <span><b>お支払いは、お互い気持ちよく。</b>（発注者が先にお支払い → 納品を確認してからアーティストへ送金）</span>
             </li>
             <li className="flex items-start gap-2">
               <span aria-hidden className="text-purple-600 shrink-0 mt-0.5">✓</span>
-              <span><b>確定申告で LINE を掘り返さない</b>（金額・納期・領収書が全部残る）</span>
+              <span><b>確定申告で LINE を遡らなくていい。</b>（金額・納期・領収書が全部残ります）</span>
             </li>
             <li className="flex items-start gap-2">
               <span aria-hidden className="text-purple-600 shrink-0 mt-0.5">✓</span>
-              <span><b>知り合いの外から仕事が来る</b>（業界内検索・レビュー・イベント告知）</span>
+              <span><b>知り合いの外にも、音楽仲間が広がる。</b>（楽器・ジャンル・実績で見つけてもらえます）</span>
             </li>
           </ul>
 
@@ -60,7 +60,7 @@ export function HeroSection() {
             <span className="inline-block bg-zinc-50 text-zinc-700 border border-zinc-200/70 px-2 py-0.5 rounded-full text-xs font-semibold mr-2">
               創設メンバー枠
             </span>
-            先着 100 名に PRO 6ヶ月無料 + 永久バッジを進呈中
+            先着 100 名に、最初の 6ヶ月 手数料 0% + 永久バッジを進呈中
           </p>
         </div>
 

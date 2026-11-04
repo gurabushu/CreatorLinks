@@ -5,22 +5,22 @@
 
 const REASONS = [
   {
-    tag: '01 / 未払い・踏み倒し',
-    line: '「振り込んだよ」と言われて信じるしかない。',
-    encore: 'Stripe エスクローで先払い→検収完了後に自動送金。逃げられない。',
-    detail: '初対面・知り合いの知り合いとの案件で、金の話を先延ばしにできる安心感。',
+    tag: '01 / お支払いのすれ違い',
+    line: '「振り込んだよ」のひと言を、信じるしかない。',
+    encore: '発注者が先にお支払い → アプリが一時お預かり → 納品を確認してから、アーティストへ送金。お互い気持ちよく完了できます。',
+    detail: '初対面や、知り合いの知り合いとのお仕事で、お金の話を切り出しづらい気まずさが消えます。',
   },
   {
     tag: '02 / 記録が残らない',
-    line: 'あの MIX、¥40k だっけ ¥50k だっけ…毎年 3 月にトーク履歴を発掘。',
-    encore: '金額・納期・成果物・領収書が 1 画面に。CSV でそのまま確定申告へ。',
-    detail: '副業でやってる人ほど効く。年間の売上・支払をワンクリックで集計。',
+    line: 'あの MIX、¥40,000 だっけ ¥50,000 だっけ…毎年 3 月にトーク履歴を掘り返す羽目に。',
+    encore: '金額・納期・成果物・領収書が 1 画面にまとまります。CSV でそのまま確定申告へ。',
+    detail: '副業でやってる方ほど効きます。年間の売上・支払いをワンクリックで集計。',
   },
   {
-    tag: '03 / 知り合いの外から仕事が来ない',
-    line: 'LINE は繋がってる人だけ。新規の依頼は営業しないと入ってこない。',
-    encore: '業界内検索・レビュー・イベント告知で発見される名刺代わりのプロフィール。',
-    detail: '「11/3 空いてる Sax 探してる」で見つけてもらえる場所。若手・上京組に効く。',
+    tag: '03 / 知り合いの外から、仕事が来ない',
+    line: 'LINE で繋がってるのは身内だけ。新しい依頼は、営業しないと入ってこない。',
+    encore: '業界内で検索・レビュー・イベント告知から見つけてもらえる、名刺代わりのプロフィール。',
+    detail: '「11/3 空いてる Sax 探してる」で見つけてもらえる場所。若手・上京組にも効きます。',
   },
 ]
 
@@ -30,18 +30,18 @@ export function WhyNotLine() {
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10 sm:mb-12">
           <span className="inline-block text-xs font-bold tracking-wider text-purple-600 bg-purple-50 border border-purple-200/70 px-3 py-1 rounded-full mb-4">
-            なぜ手数料 7% を払ってまで
+            手数料 7% で何が得られるの？
           </span>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-            LINE で十分な仕事は、LINE で。
+            LINE で足りている仕事は、LINE のままで。
             <br className="sm:hidden" />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-zinc-600">
-              残るのはこの 3 シーン。
+              EncoreCue が役に立つのは、この 3 つの場面。
             </span>
           </h2>
           <p className="text-sm sm:text-base text-gray-600 mt-3 leading-relaxed">
-            長年の常連との仕事は LINE で構いません。<br className="hidden sm:block" />
-            EncoreCue は「LINE のままだとリスクがある仕事」だけを、安全にやるためのアプリです。
+            長年の仲間とのやりとりは、LINE のままで大丈夫です。<br className="hidden sm:block" />
+            EncoreCue は「LINE のままだと少し気まずくなりそうな仕事」を、お互い安心してやれる場所です。
           </p>
         </div>
 
@@ -69,28 +69,28 @@ export function WhyNotLine() {
           ))}
         </ol>
 
-        {/* 手数料 7% の再フレーミング */}
+        {/* 手数料 7% の再フレーミング — お金の話を "気まずさ回避 + 発見される価値" に変換 */}
         <div className="mt-10 sm:mt-12 rounded-2xl bg-gradient-to-br from-purple-50 to-zinc-50/70 border border-purple-200/60 p-6 sm:p-8">
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
-            手数料 7% は「サービス料」ではなく「保険料 + 集客費」。
+            手数料 7% は、「安心」と「出会い」への投資。
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-700">
             <div>
-              <div className="font-bold text-purple-700 mb-1">未払い回避</div>
+              <div className="font-bold text-purple-700 mb-1">お金のやりとりが、気まずくならない</div>
               <div className="leading-relaxed">
-                年 1 件 ¥50k の踏み倒しで、Encore 案件 7 件分の手数料が相殺。
+                「お金は先に」を自分から言わなくていいので、お互い演奏や制作に集中できます。
               </div>
             </div>
             <div>
-              <div className="font-bold text-purple-700 mb-1">確定申告の時短</div>
+              <div className="font-bold text-purple-700 mb-1">事務作業の時間が戻ってくる</div>
               <div className="leading-relaxed">
-                LINE 発掘に費やしてた数時間が、ワンクリック集計に。
+                LINE 遡りや Excel 作成に取られていた数時間が、ワンクリックで片付きます。
               </div>
             </div>
             <div>
-              <div className="font-bold text-purple-700 mb-1">新規発注の呼び水</div>
+              <div className="font-bold text-purple-700 mb-1">新しい出会いが、向こうから届く</div>
               <div className="leading-relaxed">
-                プロフィールと実績が業界内で見つけられる状態に。
+                プロフィールと実績が業界内で見つけられるので、営業しなくても依頼が届きます。
               </div>
             </div>
           </div>

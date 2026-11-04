@@ -18,7 +18,7 @@ import { SITE_NAME } from '@/lib/brand'
 export const metadata: Metadata = {
   title: `${SITE_NAME} — 音楽の依頼、LINE から卒業。"また一緒に" が続く場所。`,
   description:
-    '音楽業界特化の依頼管理アプリ。LINE や DM でやっていた録音・ライブ・MIX 依頼をひとつに。Stripe エスクローで初対面の相手にも安心送金、スケジュール自動連携、「また一緒に」で継続。手数料 7%（業界最安クラス）。',
+    '音楽業界特化のお仕事管理アプリ。LINE や DM でやっていた録音・ライブ・MIX 依頼をひとつに。発注者が先払い・納品確認後にアーティストへ送金の安心決済、スケジュール自動連携、「また一緒に」で継続。アプリ内決済利用時のみ手数料 7%（業界最安クラス）。',
   alternates: { canonical: '/' },
 }
 
@@ -228,10 +228,13 @@ export default async function HomePage() {
       {/* 料金プラン (手数料比較) */}
       <section id="pricing" className="py-14 sm:py-20 px-4 max-w-4xl mx-auto text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          手数料 7% で、ミュージシャンの手取りを守る
+          手数料 7% で、アーティストの手取りを守ります
         </h2>
-        <p className="text-sm sm:text-base text-gray-600 mb-8">
+        <p className="text-sm sm:text-base text-gray-600 mb-2">
           汎用クラウドソーシングの 3 分の 1 以下。手取りは 93% がアーティストに残ります。
+        </p>
+        <p className="text-xs sm:text-sm text-gray-500 mb-8">
+          ※ この 7% は <b>アプリ内決済を使ったときの利用料</b> です。登録・案件投稿・プロフィール公開・やりとりは 0 円のまま。
         </p>
         {/* SP は 2 列 (¥ 4 社を 2x2)、md 中間帯は狭くて 4 列で潰れるため sm 継続、lg で 4 列 */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
