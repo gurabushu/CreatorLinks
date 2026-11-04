@@ -81,8 +81,8 @@ export default async function ContractPage({
             乙の受取額から差し引かれるものとし、乙の実受取額は{' '}
             <span className="font-bold">¥{amounts.artistPayoutYen.toLocaleString()}</span> となる。
             {amounts.isFounderExempt
-              ? `なお本案件は ${SITE_NAME} 立ち上げ期の恩人枠 (Founding Supporter) が適用され、プラットフォーム利用料は 0% となる。`
-              : `なお利用料は通常 委託料の 7% であり、乙が ${SITE_NAME} PRO 会員である場合は 5% に減額される。`}
+              ? `なお本案件は ${SITE_NAME} が定める特典適用により、プラットフォーム利用料は 0% となる。`
+              : `なお利用料は通常 委託料の 7% であり、乙に特典が適用される場合はこれを減免することがある。`}
           </li>
         </ul>
       </section>

@@ -8,7 +8,6 @@ import { createCheckoutSessionAction, releasePaymentAction } from '@/server/acti
 import { PaymentBadge, type PaymentStatus } from '@/components/payments/payment-badge'
 import { OfficialBadge } from '@/components/official-badge'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
-import { FounderExemptBadge } from '@/components/early-bird/founder-exempt-badge'
 import { useInterval } from '@/hooks/use-interval'
 import { getPusherClient } from '@/lib/pusher-client'
 import { getDisplayName } from '@/lib/user'
@@ -414,7 +413,6 @@ export function ChatClient({
               <span className="truncate">{match.partnerName}</span>
               {match.partnerIsOfficial && <OfficialBadge size="sm" />}
               <FoundingMemberBadge slot={match.partnerEarlyBirdSlot} showTotal={false} />
-              <FounderExemptBadge isFounderExempt={match.partnerIsFounderExempt} />
             </p>
             {match.partnerIsOfficial ? (
               <p className="text-xs text-purple-600">公式サポート・お知らせ窓口</p>

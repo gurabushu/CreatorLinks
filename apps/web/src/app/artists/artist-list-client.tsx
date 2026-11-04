@@ -14,7 +14,6 @@ import {
   buildVimeoEmbed,
 } from '@/lib/media-source'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
-import { FounderExemptBadge } from '@/components/early-bird/founder-exempt-badge'
 import { ProfileFacts } from '@/components/artist/profile-facts'
 import {
   COMMITMENT_LEVELS,
@@ -594,7 +593,6 @@ function ArtistCard({
                   </span>
                 )}
                 <FoundingMemberBadge slot={artist.earlyBirdSlot} />
-                <FounderExemptBadge isFounderExempt={artist.isFounderExempt} />
               </div>
             )}
           </div>

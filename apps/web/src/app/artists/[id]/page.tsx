@@ -11,7 +11,6 @@ import { recordProfileView } from '@/lib/profile-analytics'
 import { getDisplayName } from '@/lib/user'
 import { PortfolioGallery } from './portfolio-gallery'
 import { FoundingMemberBadge } from '@/components/early-bird/founding-member-badge'
-import { FounderExemptBadge } from '@/components/early-bird/founder-exempt-badge'
 import { ProfileFacts } from '@/components/artist/profile-facts'
 import { FollowButton } from './follow-button'
 import { ArtistLikeButton } from './like-button'
@@ -288,7 +287,6 @@ export default async function ArtistDetailPage({ params }: Props) {
               {getDisplayName(user)}
             </h1>
             <FoundingMemberBadge slot={user.earlyBirdSlot} size="md" />
-            <FounderExemptBadge isFounderExempt={user.isFounderExempt} size="md" />
           </div>
 
           {/* ジャンル */}

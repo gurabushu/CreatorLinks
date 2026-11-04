@@ -6,7 +6,7 @@ import {
 } from '@/lib/early-bird'
 
 // トップページ用: 創設メンバー枠（先着 100 名・最初の 6ヶ月は手数料 0% + バッジ永久）の残数バナー
-// 恩人枠 (開発ヒアリング協力者) は admin 手動付与の別軸で、永年手数料 0% になる旨も併記。
+// 恩人枠 (isFounderExempt) は内部的な別軸 (admin 手動付与) で、公的告知はしない方針。
 // ISR 上で描画され、サインアップ時 revalidatePath('/') で更新される
 export async function EarlyBirdBanner() {
   const remaining = await getEarlyBirdRemaining()
@@ -32,9 +32,6 @@ export async function EarlyBirdBanner() {
                 残り {remaining} / {EARLY_BIRD_TOTAL} 名
               </span>
             )}
-          </div>
-          <div className="text-[11px] sm:text-xs opacity-80 mt-0.5">
-            恩人枠（開発へのヒアリング協力者）には永年 手数料 0% を運営から別途付与
           </div>
         </div>
         {!closed && (
