@@ -18,6 +18,9 @@ import {
   jstParts,
   jstTime,
 } from '@/lib/jst-date'
+import { userIdToCalendarToken } from '@/lib/calendar-token'
+import { resolveAppUrl } from '@/lib/app-url'
+import { GoogleCalendarSync } from './google-calendar-sync'
 
 type View = 'mine' | 'following'
 
@@ -362,7 +365,10 @@ export default async function CalendarPage({
             {year}年 {month}月
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 relative">
+          <GoogleCalendarSync
+            icsUrl={`${resolveAppUrl()}/api/calendar/${await userIdToCalendarToken(session.user.id)}/feed.ics`}
+          />
           <Link href="/events" className="text-sm text-slate-700 hover:underline">
             全イベント一覧 →
           </Link>
