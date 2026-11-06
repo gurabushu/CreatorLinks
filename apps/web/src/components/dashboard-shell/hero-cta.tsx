@@ -33,7 +33,7 @@ const CTA_BY_MODE: Record<PreferredMode, Cta[]> = {
 }
 
 const TONE_CLASS: Record<Cta['tone'], string> = {
-  primary: 'bg-purple-600 hover:bg-purple-700',
+  primary: 'bg-slate-600 hover:bg-slate-700',
   dark: 'bg-zinc-900 hover:bg-zinc-800',
   success: 'bg-emerald-600 hover:bg-emerald-700',
   warn: 'bg-amber-500 hover:bg-amber-600',

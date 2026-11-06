@@ -144,7 +144,7 @@ function ReviewModal({
           <p className="text-gray-500 text-sm mb-5">ありがとうございます</p>
           <button
             onClick={onClose}
-            className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold"
+            className="w-full bg-slate-600 text-white py-3 rounded-xl font-bold"
           >
             閉じる
           </button>
@@ -186,15 +186,15 @@ function ReviewModal({
               rows={3}
               maxLength={1000}
               placeholder="取引の感想を書いてください"
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 resize-none"
             />
           </div>
-          <label className="flex items-start gap-2 p-3 rounded-xl border border-gray-200 bg-purple-50 cursor-pointer hover:bg-purple-100 transition">
+          <label className="flex items-start gap-2 p-3 rounded-xl border border-gray-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition">
             <input
               type="checkbox"
               checked={wantAgain}
               onChange={(e) => setWantAgain(e.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-purple-600"
+              className="mt-0.5 w-4 h-4 accent-slate-600"
             />
             <span className="text-sm text-gray-800">
               <span className="font-bold">また一緒にやりたい</span>
@@ -214,7 +214,7 @@ function ReviewModal({
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-50"
+              className="flex-1 bg-slate-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-50"
             >
               {isPending ? '投稿中...' : '投稿する'}
             </button>
@@ -415,13 +415,13 @@ export function ChatClient({
               <FoundingMemberBadge slot={match.partnerEarlyBirdSlot} showTotal={false} />
             </p>
             {match.partnerIsOfficial ? (
-              <p className="text-xs text-purple-600">公式サポート・お知らせ窓口</p>
+              <p className="text-xs text-slate-600">公式サポート・お知らせ窓口</p>
             ) : match.isP2P ? (
               <p className="text-xs text-zinc-500">アーティスト同士のマッチ</p>
             ) : (
               <Link
                 href={`/projects/${match.projectId}`}
-                className="text-xs text-gray-400 hover:text-purple-600"
+                className="text-xs text-gray-400 hover:text-slate-600"
               >
                 {match.projectTitle}
               </Link>
@@ -441,7 +441,7 @@ export function ChatClient({
               startPayTransition(() => createCheckoutSessionAction(matchId))
             }
             disabled={isPaying}
-            className="shrink-0 text-[11px] sm:text-xs bg-purple-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 whitespace-nowrap"
+            className="shrink-0 text-[11px] sm:text-xs bg-slate-600 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-slate-700 transition disabled:opacity-50 whitespace-nowrap"
           >
             {isPaying
               ? '準備中'
@@ -479,14 +479,14 @@ export function ChatClient({
             </span>
             <button
               onClick={() => setShowReview(true)}
-              className="text-xs text-purple-600 hover:underline"
+              className="text-xs text-slate-600 hover:underline"
             >
               レビューを書く
             </button>
             {isClient && (
               <Link
                 href={`/projects/new?fromMatch=${matchId}`}
-                className="text-xs bg-purple-600 text-white px-3 py-1 rounded-full font-bold hover:bg-purple-700 transition"
+                className="text-xs bg-slate-600 text-white px-3 py-1 rounded-full font-bold hover:bg-slate-700 transition"
                 title="同じ内容で再依頼（金額・日程だけ変えて送信）"
               >
                 同じ内容で再依頼
@@ -498,7 +498,7 @@ export function ChatClient({
         {!match.partnerIsOfficial && (
           <Link
             href="/dashboard/support"
-            className="shrink-0 text-[11px] sm:text-xs text-purple-600 hover:text-purple-700 hover:underline whitespace-nowrap"
+            className="shrink-0 text-[11px] sm:text-xs text-slate-600 hover:text-slate-700 hover:underline whitespace-nowrap"
             title="公式サポート窓口を開く"
           >
             公式に相談
@@ -549,12 +549,12 @@ export function ChatClient({
         </div>
       )}
       {canShowPayButton && feeBreakdown && match.projectBudget && (
-        <div className="border-b bg-purple-50/60 px-4 py-2 text-[11px] sm:text-xs text-gray-700">
+        <div className="border-b bg-slate-50/60 px-4 py-2 text-[11px] sm:text-xs text-gray-700">
           支払い <span className="font-bold">¥{match.projectBudget.toLocaleString()}</span>
           {' = '}
           手数料 ¥{feeBreakdown.platformFeeYen.toLocaleString()}
           {' + '}
-          アーティスト受取 <span className="font-bold text-purple-700">¥{feeBreakdown.artistPayoutYen.toLocaleString()}</span>
+          アーティスト受取 <span className="font-bold text-slate-700">¥{feeBreakdown.artistPayoutYen.toLocaleString()}</span>
         </div>
       )}
 
@@ -571,7 +571,7 @@ export function ChatClient({
           return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} gap-2`}>
               {!isMe && (
-                <div className="w-7 h-7 rounded-full bg-purple-200 overflow-hidden shrink-0 mt-1">
+                <div className="w-7 h-7 rounded-full bg-slate-200 overflow-hidden shrink-0 mt-1">
                   {msg.sender.avatarUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -590,7 +590,7 @@ export function ChatClient({
                     <div
                       className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                         isMe
-                          ? 'bg-purple-600 text-white rounded-tr-sm'
+                          ? 'bg-slate-600 text-white rounded-tr-sm'
                           : 'bg-white text-gray-800 shadow-sm rounded-tl-sm'
                       }`}
                     >
@@ -604,7 +604,7 @@ export function ChatClient({
                     minute: '2-digit',
                   })}
                   {isMe && msg.readAt && (
-                    <span className="ml-1 text-purple-400">既読</span>
+                    <span className="ml-1 text-slate-400">既読</span>
                   )}
                 </p>
               </div>
@@ -670,13 +670,13 @@ export function ChatClient({
               rows={1}
               maxLength={5000}
               placeholder="メッセージを入力... (⌘+Enter で送信)"
-              className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none max-h-32 overflow-y-auto"
+              className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 resize-none max-h-32 overflow-y-auto"
               style={{ height: 'auto' }}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isSending}
-              className="bg-purple-600 text-white px-5 py-3 rounded-2xl font-medium hover:bg-purple-700 transition disabled:opacity-40 shrink-0 text-sm"
+              className="bg-slate-600 text-white px-5 py-3 rounded-2xl font-medium hover:bg-slate-700 transition disabled:opacity-40 shrink-0 text-sm"
             >
               送信
             </button>

@@ -80,7 +80,7 @@ export default async function MatchesPage() {
                   className="bg-white border border-zinc-100 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-300 to-purple-400 overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-300 to-slate-400 overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
                       {partner?.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={partner.avatarUrl} alt={partner ? getDisplayName(partner) : ''} className="w-full h-full object-cover" />
@@ -126,7 +126,7 @@ export default async function MatchesPage() {
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/projects/${match.projectId}`}
-                      className="font-medium hover:text-purple-600 break-words"
+                      className="font-medium hover:text-slate-600 break-words"
                     >
                       {match.project.title}
                     </Link>
@@ -152,7 +152,7 @@ export default async function MatchesPage() {
                   {status === 'ACCEPTED' && (
                     <Link
                       href={`/dashboard/chat/${match.id}`}
-                      className="text-sm bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-200 transition shrink-0 text-center w-full sm:w-auto"
+                      className="text-sm bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition shrink-0 text-center w-full sm:w-auto"
                     >
                       チャットへ
                     </Link>
@@ -171,7 +171,7 @@ export default async function MatchesPage() {
         <div className="text-center py-16 text-gray-400">
           <p>まだマッチがありません</p>
           <div className="flex gap-3 justify-center mt-3">
-            <Link href="/projects" className="text-purple-600 hover:underline">
+            <Link href="/projects" className="text-slate-600 hover:underline">
               案件を探す →
             </Link>
             <Link href="/artists" className="text-zinc-600 hover:underline">

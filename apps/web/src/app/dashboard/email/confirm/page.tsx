@@ -22,7 +22,7 @@ export default async function EmailConfirmPage({ searchParams }: Props) {
           </p>
           <Link
             href="/dashboard/profile"
-            className="inline-block bg-purple-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-purple-700 transition"
+            className="inline-block bg-slate-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-slate-700 transition"
           >
             プロフィールに戻る
           </Link>
@@ -47,7 +47,7 @@ export default async function EmailConfirmPage({ searchParams }: Props) {
             </p>
             <Link
               href="/dashboard/profile"
-              className="inline-block bg-purple-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-purple-700 transition"
+              className="inline-block bg-slate-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-slate-700 transition"
             >
               プロフィールに戻る
             </Link>
@@ -58,7 +58,7 @@ export default async function EmailConfirmPage({ searchParams }: Props) {
             <p className="text-sm text-gray-500 mb-6">{result.error}</p>
             <Link
               href="/dashboard/profile"
-              className="inline-block bg-purple-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-purple-700 transition"
+              className="inline-block bg-slate-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-slate-700 transition"
             >
               プロフィールに戻る
             </Link>

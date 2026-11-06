@@ -107,7 +107,7 @@ export function ExternalLinksSection({ initialLinks }: { initialLinks: LinkRow[]
                     type="button"
                     onClick={() => handleMove(idx, -1)}
                     disabled={idx === 0 || isPending}
-                    className="text-xs text-gray-400 hover:text-purple-700 disabled:opacity-30 leading-none"
+                    className="text-xs text-gray-400 hover:text-slate-700 disabled:opacity-30 leading-none"
                     aria-label="上へ移動"
                   >
                     ▲
@@ -116,14 +116,14 @@ export function ExternalLinksSection({ initialLinks }: { initialLinks: LinkRow[]
                     type="button"
                     onClick={() => handleMove(idx, +1)}
                     disabled={idx === links.length - 1 || isPending}
-                    className="text-xs text-gray-400 hover:text-purple-700 disabled:opacity-30 leading-none"
+                    className="text-xs text-gray-400 hover:text-slate-700 disabled:opacity-30 leading-none"
                     aria-label="下へ移動"
                   >
                     ▼
                   </button>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-purple-700">
+                  <p className="text-xs font-semibold text-slate-700">
                     {EXTERNAL_LINK_PLATFORM_LABELS[l.platform].label}
                     {l.label && <span className="ml-1 text-gray-500 font-normal">— {l.label}</span>}
                   </p>
@@ -150,7 +150,7 @@ export function ExternalLinksSection({ initialLinks }: { initialLinks: LinkRow[]
                 <select
                   value={platform}
                   onChange={(e) => setPlatform(e.target.value as ExternalLinkPlatform)}
-                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
                 >
                   {EXTERNAL_LINK_PLATFORMS.map((p) => (
                     <option key={p} value={p}>
@@ -163,7 +163,7 @@ export function ExternalLinksSection({ initialLinks }: { initialLinks: LinkRow[]
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://..."
-                  className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
                 />
               </div>
               <input
@@ -172,7 +172,7 @@ export function ExternalLinksSection({ initialLinks }: { initialLinks: LinkRow[]
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="表示ラベル (任意、30 文字以内)"
                 maxLength={30}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
               />
               <p className="text-[11px] text-gray-500">
                 {EXTERNAL_LINK_PLATFORM_LABELS[platform].hint}
@@ -186,7 +186,7 @@ export function ExternalLinksSection({ initialLinks }: { initialLinks: LinkRow[]
                 type="button"
                 onClick={handleAdd}
                 disabled={isPending || !url.trim()}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="w-full bg-slate-600 hover:bg-slate-700 text-white py-2 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 {isPending ? '追加中...' : '追加'}
               </button>

@@ -53,7 +53,7 @@ export default async function NotificationsPage() {
           {notifications.map((n) => {
             const icon = KIND_ICON[n.kind] ?? '🔔'
             const content = (
-              <div className="flex items-start gap-3 px-4 py-3 hover:bg-purple-50/40 transition">
+              <div className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50/40 transition">
                 <span className="text-xl shrink-0 w-8 text-center">{icon}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-800">{n.title}</p>

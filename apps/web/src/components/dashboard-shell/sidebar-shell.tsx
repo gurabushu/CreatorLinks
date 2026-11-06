@@ -236,7 +236,7 @@ function RoleTogglePill({
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <span className="inline-block px-2.5 py-0.5 rounded-full bg-purple-600 text-white font-medium text-[11px]">
+        <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-600 text-white font-medium text-[11px]">
           {MODE_LABEL[mode]}
         </span>
         <span className="text-zinc-500 text-[11px] pr-1">切替 ▾</span>
@@ -264,8 +264,8 @@ function RoleTogglePill({
                 }}
                 className={`w-full text-left px-3 py-2 text-xs transition-colors ${
                   m === mode
-                    ? 'bg-purple-50 text-purple-700 font-semibold'
-                    : 'text-zinc-700 hover:bg-purple-50'
+                    ? 'bg-slate-50 text-slate-700 font-semibold'
+                    : 'text-zinc-700 hover:bg-slate-50'
                 }`}
               >
                 {MODE_LABEL[m]}
@@ -293,8 +293,8 @@ function NavLink({
       onClick={onClick}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm mb-0.5 transition-colors duration-200 ${
         active
-          ? 'bg-purple-100/70 text-purple-700 font-semibold'
-          : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
+          ? 'bg-slate-100/70 text-slate-700 font-semibold'
+          : 'text-gray-600 hover:bg-slate-50 hover:text-slate-700'
       }`}
     >
       <span className="shrink-0 text-current">{item.icon}</span>
@@ -354,7 +354,7 @@ function SidebarNav({
         <button
           type="button"
           onClick={() => setMoreOpen(!moreOpen)}
-          className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider hover:text-purple-600 transition-colors"
+          className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider hover:text-slate-600 transition-colors"
           aria-expanded={moreOpen}
         >
           <span>もっと見る</span>
@@ -424,12 +424,12 @@ export function SidebarShell({
 
   return (
     <div>
-      <div className="md:hidden sticky top-14 sm:top-16 z-30 bg-white/90 backdrop-blur border-b border-purple-100/60 flex items-center h-11 px-4">
+      <div className="md:hidden sticky top-14 sm:top-16 z-30 bg-white/90 backdrop-blur border-b border-slate-100/60 flex items-center h-11 px-4">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
           aria-label="メニューを開く"
-          className="text-gray-600 hover:text-purple-600 flex items-center gap-2 text-sm transition-colors"
+          className="text-gray-600 hover:text-slate-600 flex items-center gap-2 text-sm transition-colors"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M4 6h16M4 12h16M4 18h16" />
@@ -446,14 +446,14 @@ export function SidebarShell({
             onClick={close}
             className="md:hidden fixed inset-0 bg-gray-900 z-40"
           />
-          <aside className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-purple-100 z-50 flex flex-col overflow-y-auto shadow-lg">
-            <div className="px-4 py-3 border-b border-purple-100 flex items-center justify-between">
-              <p className="font-semibold text-purple-600">メニュー</p>
+          <aside className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-100 z-50 flex flex-col overflow-y-auto shadow-lg">
+            <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+              <p className="font-semibold text-slate-600">メニュー</p>
               <button
                 type="button"
                 onClick={close}
                 aria-label="閉じる"
-                className="text-gray-400 hover:text-purple-500 transition-colors"
+                className="text-gray-400 hover:text-slate-500 transition-colors"
               >
                 ✕
               </button>
@@ -470,7 +470,7 @@ export function SidebarShell({
         </>
       )}
 
-      <aside className="hidden md:flex md:flex-col md:fixed md:left-0 md:top-20 lg:top-24 md:bottom-0 md:w-60 md:border-r md:border-purple-100/60 bg-white md:overflow-y-auto md:overflow-x-hidden z-30">
+      <aside className="hidden md:flex md:flex-col md:fixed md:left-0 md:top-20 lg:top-24 md:bottom-0 md:w-60 md:border-r md:border-slate-100/60 bg-white md:overflow-y-auto md:overflow-x-hidden z-30">
         <SidebarNav
           user={user}
           items={items}

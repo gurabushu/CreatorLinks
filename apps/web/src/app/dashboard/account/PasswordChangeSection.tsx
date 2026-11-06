@@ -82,7 +82,7 @@ export default function PasswordChangeSection({ passwordSet }: Props) {
                 id="current-password"
                 autoComplete="current-password"
                 {...register('currentPassword')}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
               />
               {errors.currentPassword && (
                 <p className="text-red-500 text-xs mt-1">{errors.currentPassword.message}</p>
@@ -98,7 +98,7 @@ export default function PasswordChangeSection({ passwordSet }: Props) {
               id="new-password"
               autoComplete="new-password"
               {...register('newPassword')}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
             />
             {errors.newPassword && (
               <p className="text-red-500 text-xs mt-1">{errors.newPassword.message}</p>
@@ -113,7 +113,7 @@ export default function PasswordChangeSection({ passwordSet }: Props) {
               id="confirm-password"
               autoComplete="new-password"
               {...register('confirmPassword')}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
             />
             {errors.confirmPassword && (
               <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
@@ -123,7 +123,7 @@ export default function PasswordChangeSection({ passwordSet }: Props) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50"
+            className="w-full bg-slate-600 text-white py-2 rounded-lg font-medium hover:bg-slate-700 transition disabled:opacity-50"
           >
             {loading ? '処理中...' : submitLabel}
           </button>

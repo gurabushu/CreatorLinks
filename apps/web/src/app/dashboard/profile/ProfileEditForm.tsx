@@ -161,7 +161,7 @@ export default function ProfileEditForm({ user }: Props) {
           <input
             {...register('displayName')}
             placeholder={user.name}
-            className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-500"
           />
           {errors.displayName && (
             <p className="text-red-500 text-sm mt-1">{errors.displayName.message}</p>
@@ -174,7 +174,7 @@ export default function ProfileEditForm({ user }: Props) {
             {...register('bio')}
             rows={4}
             placeholder="あなたの活動や得意なことを教えてください"
-            className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-500"
           />
           {errors.bio && <p className="text-red-500 text-sm mt-1">{errors.bio.message}</p>}
         </div>
@@ -187,7 +187,7 @@ export default function ProfileEditForm({ user }: Props) {
               {...register('gender', {
                 setValueAs: (v) => (v === '' || v == null ? null : v),
               })}
-              className="w-full border rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-slate-500"
               defaultValue={user.gender ?? ''}
             >
               <option value="">未回答</option>
@@ -212,7 +212,7 @@ export default function ProfileEditForm({ user }: Props) {
               {...register('heightCm', {
                 setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
               })}
-              className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-500"
             />
             {errors.heightCm && (
               <p className="text-red-500 text-sm mt-1">{errors.heightCm.message}</p>
@@ -231,7 +231,7 @@ export default function ProfileEditForm({ user }: Props) {
               {...register('activityYears', {
                 setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
               })}
-              className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-500"
             />
             {errors.activityYears && (
               <p className="text-red-500 text-sm mt-1">{errors.activityYears.message}</p>
@@ -249,8 +249,8 @@ export default function ProfileEditForm({ user }: Props) {
                 onClick={() => toggleGenre(g)}
                 className={`px-4 py-2 rounded-full border transition ${
                   selectedGenres.includes(g)
-                    ? 'bg-purple-600 text-white border-purple-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-purple-300'
+                    ? 'bg-slate-600 text-white border-slate-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-slate-300'
                 }`}
               >
                 {g}
@@ -292,7 +292,7 @@ export default function ProfileEditForm({ user }: Props) {
                   onClick={() => setValue('skillLevel', lv, { shouldDirty: true })}
                   className={`py-3 px-3 rounded-xl border-2 text-left transition ${
                     active
-                      ? 'border-purple-600 bg-purple-50'
+                      ? 'border-slate-600 bg-slate-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -322,8 +322,8 @@ export default function ProfileEditForm({ user }: Props) {
                   onClick={() => toggleInstrument(inst)}
                   className={`px-3 py-1.5 rounded-full border text-sm transition ${
                     active
-                      ? 'bg-purple-600 text-white border-purple-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-purple-300'
+                      ? 'bg-slate-600 text-white border-slate-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-slate-300'
                   }`}
                 >
                   {inst}
@@ -345,7 +345,7 @@ export default function ProfileEditForm({ user }: Props) {
               }}
               placeholder="その他の楽器 / 担当を追加（例: 二胡）"
               maxLength={30}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
             />
             <button
               type="button"
@@ -364,14 +364,14 @@ export default function ProfileEditForm({ user }: Props) {
                 .map((i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs"
+                    className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-xs"
                   >
                     {i}
                     <button
                       type="button"
                       onClick={() => toggleInstrument(i)}
                       aria-label={`${i} を外す`}
-                      className="text-purple-500 hover:text-purple-800"
+                      className="text-slate-500 hover:text-slate-800"
                     >
                       ✕
                     </button>
@@ -393,7 +393,7 @@ export default function ProfileEditForm({ user }: Props) {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition disabled:opacity-50"
+          className="w-full bg-slate-600 text-white py-3 rounded-lg font-bold hover:bg-slate-700 transition disabled:opacity-50"
         >
           {isPending ? '保存中...' : '変更を保存する'}
         </button>
@@ -406,7 +406,7 @@ export default function ProfileEditForm({ user }: Props) {
       </form>
 
       {/* ポートフォリオ管理へのリンク */}
-      <div className="mt-10 border rounded-xl p-4 sm:p-6 bg-purple-50">
+      <div className="mt-10 border rounded-xl p-4 sm:p-6 bg-slate-50">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
             <h2 className="font-bold text-gray-900">作品を登録する</h2>
@@ -416,7 +416,7 @@ export default function ProfileEditForm({ user }: Props) {
           </div>
           <Link
             href="/dashboard/portfolio"
-            className="shrink-0 bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition text-center"
+            className="shrink-0 bg-slate-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-700 transition text-center"
           >
             ポートフォリオ管理 →
           </Link>

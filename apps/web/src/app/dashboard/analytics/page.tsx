@@ -74,7 +74,7 @@ export default async function AnalyticsPage() {
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="rounded-xl border bg-white p-4">
               <p className="text-xs text-gray-500 mb-1">累計取引額</p>
-              <p className="text-xl sm:text-2xl font-bold text-purple-700">
+              <p className="text-xl sm:text-2xl font-bold text-slate-700">
                 ¥{revenue.grandTotalYen.toLocaleString()}
               </p>
               <p className="text-[10px] text-gray-400 mt-1">{revenue.grandTotalCount} 件</p>
@@ -109,7 +109,7 @@ export default async function AnalyticsPage() {
                         <div className="w-14 text-[11px] font-mono text-gray-500 shrink-0">{m.month}</div>
                         <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden relative">
                           <div
-                            className="h-full bg-gradient-to-r from-purple-500 to-zinc-500 transition-all"
+                            className="h-full bg-gradient-to-r from-slate-500 to-zinc-500 transition-all"
                             style={{ width: `${pct}%` }}
                           />
                           {m.amountYen > 0 && (
@@ -138,7 +138,7 @@ export default async function AnalyticsPage() {
                   return (
                     <li key={c.customerId} className="py-2 flex items-center gap-3">
                       <span className="text-xs text-gray-400 font-mono w-6 text-right">#{i + 1}</span>
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 overflow-hidden flex items-center justify-center text-white text-xs font-bold shrink-0">
                         {c.avatarUrl ? (
                           <Image src={c.avatarUrl} alt={displayName} width={32} height={32} className="w-full h-full object-cover" />
                         ) : (
@@ -148,13 +148,13 @@ export default async function AnalyticsPage() {
                       <div className="flex-1 min-w-0">
                         <Link
                           href={`/artists/${c.customerId}`}
-                          className="text-sm font-medium text-gray-800 hover:text-purple-700 truncate block"
+                          className="text-sm font-medium text-gray-800 hover:text-slate-700 truncate block"
                         >
                           {displayName}
                         </Link>
                         <p className="text-[10px] text-gray-400">{c.matchCount} 件</p>
                       </div>
-                      <div className="text-sm font-bold text-purple-700 shrink-0">
+                      <div className="text-sm font-bold text-slate-700 shrink-0">
                         ¥{c.totalYen.toLocaleString()}
                       </div>
                     </li>
@@ -218,7 +218,7 @@ function MetricCard({
   tone: 'purple' | 'indigo' | 'pink' | 'emerald'
 }) {
   const toneClass = {
-    purple: 'text-purple-700 bg-purple-50/60 border-purple-200/60',
+    purple: 'text-slate-700 bg-slate-50/60 border-slate-200/60',
     indigo: 'text-zinc-700 bg-zinc-50/60 border-zinc-200/60',
     pink: 'text-zinc-700 bg-zinc-50/60 border-zinc-200/60',
     emerald: 'text-zinc-700 bg-zinc-50/60 border-zinc-200/60',

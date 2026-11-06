@@ -18,7 +18,7 @@ export function DocumentFrame({
           <div className="flex gap-2">
             <button
               onClick={() => window.print()}
-              className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-bold hover:bg-purple-700 transition"
+              className="px-4 py-2 rounded-lg bg-slate-600 text-white text-sm font-bold hover:bg-slate-700 transition"
             >
               印刷 / PDF 保存
             </button>

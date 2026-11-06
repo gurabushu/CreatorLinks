@@ -39,7 +39,7 @@ export function ScoutResponseButtons({ matchId }: Props) {
         <button
           onClick={() => handle('ACCEPTED')}
           disabled={isPending}
-          className="flex-1 text-sm bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="flex-1 text-sm bg-slate-600 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           {isPending ? '...' : '承諾'}
         </button>

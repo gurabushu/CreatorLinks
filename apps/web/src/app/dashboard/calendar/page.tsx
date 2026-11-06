@@ -63,7 +63,7 @@ const ROLE_LABELS: Record<Role, string> = {
 
 // カレンダーセル内 pill 用（軽め）
 const ROLE_PILL: Record<Role, string> = {
-  ORGANIZER: 'bg-purple-100 text-purple-700 hover:bg-purple-200',
+  ORGANIZER: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
   PERFORMER: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
   STAFF: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
   GUEST: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200',
@@ -74,7 +74,7 @@ const ROLE_PILL: Record<Role, string> = {
 
 // アジェンダ用（濃さ調整）
 const ROLE_BADGE: Record<Role, string> = {
-  ORGANIZER: 'bg-purple-100 text-purple-700',
+  ORGANIZER: 'bg-slate-100 text-slate-700',
   PERFORMER: 'bg-zinc-100 text-zinc-700',
   STAFF: 'bg-zinc-100 text-zinc-700',
   GUEST: 'bg-zinc-100 text-zinc-700',
@@ -319,20 +319,20 @@ export default async function CalendarPage({
           <Link
             href={`?ym=${ymString(prev.year, prev.month)}${view === 'following' ? '&view=following' : ''}`}
             aria-label="前月"
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-purple-600 hover:bg-purple-50 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
           >
             ←
           </Link>
           <Link
             href={`?ym=${ymString(next.year, next.month)}${view === 'following' ? '&view=following' : ''}`}
             aria-label="翌月"
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-purple-600 hover:bg-purple-50 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
           >
             →
           </Link>
           <Link
             href={`/dashboard/calendar${view === 'following' ? '?view=following' : ''}`}
-            className="ml-1 text-sm px-3 py-1.5 rounded-lg text-purple-600 border border-purple-200 hover:bg-purple-50 transition-colors"
+            className="ml-1 text-sm px-3 py-1.5 rounded-lg text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors"
           >
             今日
           </Link>
@@ -341,12 +341,12 @@ export default async function CalendarPage({
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/events" className="text-sm text-purple-700 hover:underline">
+          <Link href="/events" className="text-sm text-slate-700 hover:underline">
             全イベント一覧 →
           </Link>
           <Link
             href="/events/new"
-            className="text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+            className="text-sm bg-slate-600 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg transition-colors"
           >
             + 新規
           </Link>
@@ -354,13 +354,13 @@ export default async function CalendarPage({
       </div>
 
       {/* ビュー切替タブ */}
-      <div className="mb-4 inline-flex rounded-lg border border-purple-100 bg-white p-0.5 text-sm">
+      <div className="mb-4 inline-flex rounded-lg border border-slate-100 bg-white p-0.5 text-sm">
         <Link
           href={`?ym=${ymString(year, month)}`}
           className={`px-3 py-1.5 rounded-md transition-colors ${
             view === 'mine'
-              ? 'bg-purple-600 text-white'
-              : 'text-gray-600 hover:bg-purple-50'
+              ? 'bg-slate-600 text-white'
+              : 'text-gray-600 hover:bg-slate-50'
           }`}
         >
           自分の予定
@@ -369,8 +369,8 @@ export default async function CalendarPage({
           href={`?ym=${ymString(year, month)}&view=following`}
           className={`px-3 py-1.5 rounded-md transition-colors ${
             view === 'following'
-              ? 'bg-purple-600 text-white'
-              : 'text-gray-600 hover:bg-purple-50'
+              ? 'bg-slate-600 text-white'
+              : 'text-gray-600 hover:bg-slate-50'
           }`}
         >
           フォロー中
@@ -378,7 +378,7 @@ export default async function CalendarPage({
       </div>
 
       {/* 曜日ヘッダー */}
-      <div className="grid grid-cols-7 text-center text-xs sm:text-sm border border-purple-100/60 rounded-t-xl overflow-hidden bg-gradient-to-b from-purple-50/60 to-white">
+      <div className="grid grid-cols-7 text-center text-xs sm:text-sm border border-slate-100/60 rounded-t-xl overflow-hidden bg-gradient-to-b from-slate-50/60 to-white">
         {WEEKDAYS.map((w, i) => (
           <div
             key={w}
@@ -400,7 +400,7 @@ export default async function CalendarPage({
           aria-hidden
           className="pointer-events-none absolute inset-0 m-auto w-1/2 max-w-md opacity-25 select-none z-10"
         />
-      <div className="grid grid-cols-7 grid-rows-6 border-l border-r border-b border-purple-100/60 rounded-b-xl overflow-hidden">
+      <div className="grid grid-cols-7 grid-rows-6 border-l border-r border-b border-slate-100/60 rounded-b-xl overflow-hidden">
         {cells.map((d, idx) => {
           const k = dateKey(d)
           const inMonth = d.getMonth() + 1 === month
@@ -413,7 +413,7 @@ export default async function CalendarPage({
           return (
             <div
               key={idx}
-              className={`min-h-[92px] sm:min-h-[112px] border-t border-purple-100/60 ${
+              className={`min-h-[92px] sm:min-h-[112px] border-t border-slate-100/60 ${
                 idx % 7 !== 0 ? 'border-l' : ''
               } p-1 sm:p-1.5 flex flex-col gap-1 ${
                 inMonth ? 'bg-white' : 'bg-gray-50/70'
@@ -426,14 +426,14 @@ export default async function CalendarPage({
                   aria-label={`${d.getMonth() + 1}月${d.getDate()}日に新規イベント作成`}
                   className={`text-xs sm:text-sm w-6 h-6 flex items-center justify-center rounded-full transition-colors ${
                     isToday
-                      ? 'bg-purple-600 text-white font-bold hover:bg-purple-700'
+                      ? 'bg-slate-600 text-white font-bold hover:bg-slate-700'
                       : !inMonth
-                        ? 'text-gray-300 hover:bg-purple-50 hover:text-purple-600'
+                        ? 'text-gray-300 hover:bg-slate-50 hover:text-slate-600'
                         : dow === 0
-                          ? 'text-red-500 hover:bg-purple-50'
+                          ? 'text-red-500 hover:bg-slate-50'
                           : dow === 6
-                            ? 'text-zinc-500 hover:bg-purple-50'
-                            : 'text-gray-700 hover:bg-purple-50'
+                            ? 'text-zinc-500 hover:bg-slate-50'
+                            : 'text-gray-700 hover:bg-slate-50'
                   }`}
                 >
                   {d.getDate()}
@@ -492,18 +492,18 @@ export default async function CalendarPage({
           {year}年 {month}月のアジェンダ
         </h2>
         {monthEntries.length === 0 ? (
-          <div className="rounded-xl border border-purple-100/60 bg-purple-50/30 p-6 text-center text-sm text-gray-600">
+          <div className="rounded-xl border border-slate-100/60 bg-slate-50/30 p-6 text-center text-sm text-gray-600">
             {view === 'following'
               ? 'フォロー中のアーティストからの公開イベントはまだありません。'
               : 'この月の予定はまだありません。'}
             <p className="mt-2">
-              <Link href="/events" className="text-purple-700 hover:underline">
+              <Link href="/events" className="text-slate-700 hover:underline">
                 イベントを探す →
               </Link>
               {view === 'mine' && (
                 <>
                   <span className="mx-2 text-gray-400">|</span>
-                  <Link href="/events/new" className="text-purple-700 hover:underline">
+                  <Link href="/events/new" className="text-slate-700 hover:underline">
                     新規作成 →
                   </Link>
                 </>
@@ -520,7 +520,7 @@ export default async function CalendarPage({
                 <li key={entry.event.id}>
                   <Link
                     href={entry.href}
-                    className="block rounded-xl border border-purple-100/60 bg-white hover:shadow-sm hover:shadow-purple-200/40 transition p-4"
+                    className="block rounded-xl border border-slate-100/60 bg-white hover:shadow-sm hover:shadow-slate-200/40 transition p-4"
                   >
                     <div className="flex items-start gap-3">
                       <div className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium ${ROLE_BADGE[entry.role]}`}>

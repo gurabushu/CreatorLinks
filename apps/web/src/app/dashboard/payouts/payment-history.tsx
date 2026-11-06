@@ -53,7 +53,7 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
               <div className="min-w-0">
                 <Link
                   href={`/dashboard/chat/${row.matchId}`}
-                  className="font-medium text-sm hover:text-purple-600 break-words"
+                  className="font-medium text-sm hover:text-slate-600 break-words"
                 >
                   {row.projectTitle ?? '非公開マッチ'}
                 </Link>
@@ -66,7 +66,7 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
                 <span className="sm:hidden">送金: </span>
                 {formatDate(row.releasedAt)}
               </div>
-              <div className="text-sm font-bold text-purple-700 mt-1 sm:mt-0 sm:text-right">
+              <div className="text-sm font-bold text-slate-700 mt-1 sm:mt-0 sm:text-right">
                 ¥{row.artistPayoutYen.toLocaleString()}
               </div>
               <div className="mt-1.5 sm:mt-0 sm:text-right">
@@ -79,7 +79,7 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
                       href={`/dashboard/matches/${row.matchId}/quote`}
                       target="_blank"
                       title="見積書"
-                      className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200"
+                      className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-200"
                     >
                       見積
                     </Link>
@@ -87,7 +87,7 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
                       href={`/dashboard/matches/${row.matchId}/contract`}
                       target="_blank"
                       title="契約書"
-                      className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200"
+                      className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-200"
                     >
                       契約
                     </Link>
@@ -95,7 +95,7 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
                       href={`/dashboard/matches/${row.matchId}/invoice`}
                       target="_blank"
                       title="請求書"
-                      className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200"
+                      className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-200"
                     >
                       請求
                     </Link>
@@ -107,7 +107,7 @@ export function PaymentHistory({ rows }: { rows: PayoutHistoryRow[] }) {
                         href={`/dashboard/matches/${row.matchId}/receipt`}
                         target="_blank"
                         title="領収書 (Stripe 発行)"
-                        className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200"
+                        className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-200"
                       >
                         領収
                       </Link>

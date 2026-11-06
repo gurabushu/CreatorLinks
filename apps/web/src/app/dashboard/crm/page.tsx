@@ -147,10 +147,10 @@ export default async function CrmPage() {
         {stats.length > 0 && (
           <div className="text-xs text-gray-600 text-right shrink-0">
             <div>
-              取引相手 <span className="font-bold text-purple-700">{stats.length}</span> 名
+              取引相手 <span className="font-bold text-slate-700">{stats.length}</span> 名
             </div>
             <div>
-              累計 <span className="font-bold text-purple-700">¥{totalYen.toLocaleString()}</span>
+              累計 <span className="font-bold text-slate-700">¥{totalYen.toLocaleString()}</span>
             </div>
           </div>
         )}

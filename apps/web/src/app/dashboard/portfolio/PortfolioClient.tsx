@@ -74,17 +74,17 @@ function FileDropzone({
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
       className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 transition cursor-pointer select-none ${
-        isDragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-purple-400'
+        isDragging ? 'border-slate-500 bg-slate-50' : 'border-gray-300 hover:border-slate-400'
       } ${isBusy ? 'pointer-events-none opacity-60' : ''}`}
     >
       {isCompressing ? (
         <>
-          <div className="w-10 h-10 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin" />
+          <div className="w-10 h-10 rounded-full border-4 border-slate-200 border-t-slate-600 animate-spin" />
           <p className="text-sm text-gray-500">圧縮中...</p>
         </>
       ) : isUploading ? (
         <>
-          <div className="w-10 h-10 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin" />
+          <div className="w-10 h-10 rounded-full border-4 border-slate-200 border-t-slate-600 animate-spin" />
           <p className="text-sm text-gray-500">
             {uploadProgress < 95 ? `アップロード中... ${uploadProgress}%` : '完了処理中...'}
           </p>
@@ -254,7 +254,7 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition"
+            className="bg-slate-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-700 transition"
           >
             + 作品を追加
           </button>
@@ -271,7 +271,7 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
               type="button"
               onClick={() => setInputMode('upload')}
               className={`px-3 py-1.5 rounded-md transition ${
-                inputMode === 'upload' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:text-purple-600'
+                inputMode === 'upload' ? 'bg-slate-600 text-white' : 'text-gray-600 hover:text-slate-600'
               }`}
             >
               ファイル
@@ -280,7 +280,7 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
               type="button"
               onClick={() => setInputMode('url')}
               className={`px-3 py-1.5 rounded-md transition ${
-                inputMode === 'url' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:text-purple-600'
+                inputMode === 'url' ? 'bg-slate-600 text-white' : 'text-gray-600 hover:text-slate-600'
               }`}
             >
               URL（YouTube / SNS）
@@ -301,7 +301,7 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
               </div>
             ) : (
               <div className="flex items-center gap-4 bg-white border rounded-lg p-4">
-                <div className="w-16 h-16 rounded-lg bg-purple-50 flex items-center justify-center text-xs text-purple-700 font-semibold flex-shrink-0">
+                <div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center text-xs text-slate-700 font-semibold flex-shrink-0">
                   {uploadedFile.type === 'IMAGE' ? (
                     <Image src={uploadedFile.url} alt={uploadedFile.name} width={64} height={64} className="w-16 h-16 object-cover rounded-lg" />
                   ) : (
@@ -325,7 +325,7 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="例：https://www.youtube.com/watch?v=..."
-                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
               />
               <p className="text-xs text-gray-400 mt-1">
                 YouTube・Vimeo・X（Twitter）など、本人の作品が公開されているページの URL を貼り付けてください。
@@ -339,7 +339,7 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
               placeholder="例：オリジナル楽曲「春の詩」"
             />
           </div>
@@ -350,7 +350,7 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
               placeholder="作品の概要・制作背景など"
             />
           </div>
@@ -368,7 +368,7 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
                 !title.trim() ||
                 (inputMode === 'upload' ? !uploadedFile : !urlInput.trim())
               }
-              className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-bold hover:bg-purple-700 transition disabled:opacity-50"
+              className="flex-1 bg-slate-600 text-white py-2 rounded-lg font-bold hover:bg-slate-700 transition disabled:opacity-50"
             >
               {isPending ? '保存中...' : '保存する'}
             </button>

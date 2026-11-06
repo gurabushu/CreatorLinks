@@ -93,13 +93,13 @@ export function CrmList({ stats, meId }: { stats: CounterpartyStats[]; meId: str
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="名前で検索 (例: 山田)"
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
           aria-label="顧客名で検索"
         />
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
-          className="shrink-0 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="shrink-0 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-500"
           aria-label="並べ替え"
         >
           {(Object.keys(SORT_LABEL) as SortKey[]).map((k) => (
@@ -115,7 +115,7 @@ export function CrmList({ stats, meId }: { stats: CounterpartyStats[]; meId: str
           「{query}」で絞込中 — {filtered.length} 件 /{' '}
           <button
             onClick={() => setQuery('')}
-            className="text-purple-600 hover:underline"
+            className="text-slate-600 hover:underline"
             type="button"
           >
             クリア
@@ -145,10 +145,10 @@ function CounterpartyCard({ c, meId: _meId }: { c: CounterpartyStats; meId: stri
   return (
     <Link
       href={`/artists/${c.id}`}
-      className="block bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 hover:shadow-sm hover:border-purple-300 transition group"
+      className="block bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 hover:shadow-sm hover:border-slate-300 transition group"
     >
       <div className="flex items-start gap-3 sm:gap-4">
-        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
           {c.avatarUrl ? (
             <Image
               src={c.avatarUrl}
@@ -164,7 +164,7 @@ function CounterpartyCard({ c, meId: _meId }: { c: CounterpartyStats; meId: stri
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-2">
-            <p className="font-bold text-base sm:text-lg text-gray-900 group-hover:text-purple-700 transition truncate">
+            <p className="font-bold text-base sm:text-lg text-gray-900 group-hover:text-slate-700 transition truncate">
               {displayName}
             </p>
             {c.mutualEncore && (
@@ -188,7 +188,7 @@ function CounterpartyCard({ c, meId: _meId }: { c: CounterpartyStats; meId: stri
             </div>
             <div>
               <div className="text-gray-400">累計取引額</div>
-              <div className="font-bold text-purple-700">¥{c.totalYen.toLocaleString()}</div>
+              <div className="font-bold text-slate-700">¥{c.totalYen.toLocaleString()}</div>
             </div>
             <div>
               <div className="text-gray-400">最終取引</div>

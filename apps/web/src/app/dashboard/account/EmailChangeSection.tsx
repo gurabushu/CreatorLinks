@@ -56,14 +56,14 @@ export default function EmailChangeSection({ currentEmail }: { currentEmail?: st
               required
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
               placeholder="new@example.com"
             />
           </div>
           <button
             type="submit"
             disabled={loading || !newEmail}
-            className="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50"
+            className="w-full bg-slate-600 text-white py-2 rounded-lg font-medium hover:bg-slate-700 transition disabled:opacity-50"
           >
             {loading ? '送信中...' : '確認メールを送る'}
           </button>

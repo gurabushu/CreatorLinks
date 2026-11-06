@@ -77,7 +77,7 @@ export default async function EventChatPage({ params }: Params) {
         <div className="min-w-0">
           <Link
             href={`/events/${eventId}`}
-            className="text-xs text-gray-500 hover:text-purple-600 hover:underline"
+            className="text-xs text-gray-500 hover:text-slate-600 hover:underline"
           >
             ← イベントに戻る
           </Link>

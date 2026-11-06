@@ -39,7 +39,7 @@ export default function AccountNameForm({ initialName }: { initialName: string }
         <h2 className="font-bold text-gray-900">名前</h2>
         <p className="text-sm text-gray-500 mt-0.5">
           アカウントの名前です。アーティストとしての公開表示名は
-          <a href="/dashboard/profile" className="text-purple-600 underline mx-1">
+          <a href="/dashboard/profile" className="text-slate-600 underline mx-1">
             プロフィール
           </a>
           で別に設定できます（未設定の場合はこの名前が公開表示されます）。
@@ -48,7 +48,7 @@ export default function AccountNameForm({ initialName }: { initialName: string }
       <div>
         <input
           {...register('name')}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
           placeholder="例: 山田 太郎"
         />
         {errors.name && (
@@ -65,7 +65,7 @@ export default function AccountNameForm({ initialName }: { initialName: string }
       <button
         type="submit"
         disabled={isPending}
-        className="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50"
+        className="w-full bg-slate-600 text-white py-2 rounded-lg font-medium hover:bg-slate-700 transition disabled:opacity-50"
       >
         {isPending ? '保存中...' : '変更を保存する'}
       </button>

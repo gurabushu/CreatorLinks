@@ -68,7 +68,7 @@ export function PayoutsClient({
           type="button"
           onClick={() => startTransition(() => startConnectOnboardingAction())}
           disabled={starting}
-          className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 transition disabled:opacity-50"
+          className="flex-1 bg-slate-600 text-white py-3 rounded-xl font-bold hover:bg-slate-700 transition disabled:opacity-50"
         >
           {starting
             ? '準備中...'

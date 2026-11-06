@@ -103,7 +103,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
         <div className="flex items-baseline justify-between mb-4 gap-3 flex-wrap">
           <h2 className="text-lg font-bold">受取履歴</h2>
           <div className="text-xs text-gray-500">
-            累計受取 <span className="font-bold text-purple-700">¥{totalReceived.toLocaleString()}</span>
+            累計受取 <span className="font-bold text-slate-700">¥{totalReceived.toLocaleString()}</span>
             {pendingCount > 0 && (
               <span className="ml-3">
                 保留中 <span className="font-bold text-zinc-700">{pendingCount}件</span>
@@ -115,7 +115,7 @@ export default async function PayoutsPage({ searchParams }: Props) {
           <span>確定申告用:</span>
           <Link
             href={`/dashboard/payouts/year/${new Date().getFullYear()}`}
-            className="px-2 py-1 rounded border border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium"
+            className="px-2 py-1 rounded border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium"
           >
             今年の帳票一覧
           </Link>

@@ -100,7 +100,7 @@ export default async function YearlyDocumentsPage({ params }: Params) {
       <div className="mb-6 flex items-baseline justify-between gap-4 flex-wrap">
         <div>
           <p className="text-xs text-gray-500 mb-1">
-            <Link href="/dashboard/payouts" className="hover:text-purple-700 hover:underline">
+            <Link href="/dashboard/payouts" className="hover:text-slate-700 hover:underline">
               ← 受取履歴に戻る
             </Link>
           </p>
@@ -113,7 +113,7 @@ export default async function YearlyDocumentsPage({ params }: Params) {
           <Link
             href={`/dashboard/payouts/year/${year}/print`}
             target="_blank"
-            className="px-3 py-1.5 rounded border border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium"
+            className="px-3 py-1.5 rounded border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium"
           >
             🖨 全請求書を一括印刷 (PDF)
           </Link>
@@ -130,14 +130,14 @@ export default async function YearlyDocumentsPage({ params }: Params) {
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl border bg-white p-4">
             <p className="text-xs text-gray-500 mb-1">送金確定件数</p>
-            <p className="text-2xl font-bold text-purple-700">
+            <p className="text-2xl font-bold text-slate-700">
               {payments.filter((p) => p.status === 'RELEASED').length}
               <span className="text-sm text-gray-500 font-normal ml-1">件</span>
             </p>
           </div>
           <div className="rounded-xl border bg-white p-4">
             <p className="text-xs text-gray-500 mb-1">受取合計</p>
-            <p className="text-2xl font-bold text-purple-700">¥{totalIncome.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-slate-700">¥{totalIncome.toLocaleString()}</p>
           </div>
           <div className="rounded-xl border bg-white p-4">
             <p className="text-xs text-gray-500 mb-1">支払手数料合計</p>
@@ -173,7 +173,7 @@ export default async function YearlyDocumentsPage({ params }: Params) {
                       <td className="px-3 py-2 font-mono">{r.month}</td>
                       <td className="px-3 py-2 text-right">{r.count}</td>
                       <td className="px-3 py-2 text-right font-mono">¥{r.amount.toLocaleString()}</td>
-                      <td className="px-3 py-2 text-right font-mono text-purple-700">¥{r.payout.toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right font-mono text-slate-700">¥{r.payout.toLocaleString()}</td>
                       <td className="px-3 py-2 text-right font-mono text-gray-500">¥{r.fee.toLocaleString()}</td>
                       <td className="px-3 py-2 text-right font-mono text-zinc-700">¥{r.withholding.toLocaleString()}</td>
                       <td className="px-3 py-2 text-right font-mono font-bold text-zinc-700">
@@ -221,13 +221,13 @@ export default async function YearlyDocumentsPage({ params }: Params) {
                     <div className="min-w-0 mt-1 md:mt-0">
                       <Link
                         href={`/dashboard/chat/${p.matchId}`}
-                        className="text-sm font-medium hover:text-purple-600 break-words"
+                        className="text-sm font-medium hover:text-slate-600 break-words"
                       >
                         {p.match.project?.title ?? '案件詳細'}
                       </Link>
                       <p className="text-xs text-gray-500">依頼主: {clientName}</p>
                     </div>
-                    <div className="text-sm font-bold text-purple-700 mt-1 md:mt-0 md:text-right">
+                    <div className="text-sm font-bold text-slate-700 mt-1 md:mt-0 md:text-right">
                       ¥{p.artistPayoutYen.toLocaleString()}
                     </div>
                     <div className="text-xs text-gray-500 mt-0.5 md:mt-0 md:text-right">
@@ -241,21 +241,21 @@ export default async function YearlyDocumentsPage({ params }: Params) {
                         <Link
                           href={`/dashboard/matches/${p.matchId}/quote`}
                           target="_blank"
-                          className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                          className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-slate-50 hover:text-slate-700"
                         >
                           見積
                         </Link>
                         <Link
                           href={`/dashboard/matches/${p.matchId}/contract`}
                           target="_blank"
-                          className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                          className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-slate-50 hover:text-slate-700"
                         >
                           契約
                         </Link>
                         <Link
                           href={`/dashboard/matches/${p.matchId}/invoice`}
                           target="_blank"
-                          className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                          className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-slate-50 hover:text-slate-700"
                         >
                           請求
                         </Link>
@@ -263,7 +263,7 @@ export default async function YearlyDocumentsPage({ params }: Params) {
                           <Link
                             href={`/dashboard/matches/${p.matchId}/receipt`}
                             target="_blank"
-                            className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                            className="px-1.5 py-0.5 rounded border border-gray-200 text-gray-600 hover:bg-slate-50 hover:text-slate-700"
                           >
                             領収
                           </Link>

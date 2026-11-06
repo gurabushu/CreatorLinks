@@ -146,7 +146,7 @@ export function EventChatClient({ eventId, currentUserId, initialMessages, membe
           return (
             <div key={m.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
               {/* アバター */}
-              <div className="w-8 h-8 rounded-full bg-purple-200 overflow-hidden shrink-0 flex items-center justify-center text-purple-800 text-xs font-bold">
+              <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0 flex items-center justify-center text-slate-800 text-xs font-bold">
                 {m.sender.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={m.sender.avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -161,7 +161,7 @@ export function EventChatClient({ eventId, currentUserId, initialMessages, membe
                 <div
                   className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words ${
                     isMe
-                      ? 'bg-purple-600 text-white rounded-tr-sm'
+                      ? 'bg-slate-600 text-white rounded-tr-sm'
                       : 'bg-gray-100 text-gray-800 rounded-tl-sm'
                   }`}
                 >
@@ -188,13 +188,13 @@ export function EventChatClient({ eventId, currentUserId, initialMessages, membe
             rows={2}
             maxLength={2000}
             disabled={isSending}
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-slate-500"
           />
           <button
             type="button"
             onClick={handleSend}
             disabled={!input.trim() || isSending}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="bg-slate-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-slate-700 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             {isSending ? '...' : '送信'}
           </button>

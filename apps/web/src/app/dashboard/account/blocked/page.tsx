@@ -31,7 +31,7 @@ export default async function BlockedUsersPage() {
         <ul className="divide-y divide-gray-200 border border-gray-200 rounded-lg bg-white">
           {blocks.map((b) => (
             <li key={b.id} className="flex items-center gap-3 px-4 py-3">
-              <div className="w-10 h-10 rounded-full bg-purple-100 overflow-hidden shrink-0">
+              <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden shrink-0">
                 {b.blocked.avatarUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -44,7 +44,7 @@ export default async function BlockedUsersPage() {
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/artists/${b.blocked.id}`}
-                  className="font-semibold text-gray-800 hover:text-purple-600 truncate block"
+                  className="font-semibold text-gray-800 hover:text-slate-600 truncate block"
                 >
                   {getDisplayName(b.blocked)}
                 </Link>

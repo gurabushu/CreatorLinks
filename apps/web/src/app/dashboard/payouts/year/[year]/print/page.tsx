@@ -83,7 +83,7 @@ export default async function YearlyPrintPage({ params }: Params) {
           <div>
             <Link
               href={`/dashboard/payouts/year/${year}`}
-              className="text-xs text-gray-500 hover:text-purple-700 hover:underline"
+              className="text-xs text-gray-500 hover:text-slate-700 hover:underline"
             >
               ← 年間帳票一覧に戻る
             </Link>
@@ -129,7 +129,7 @@ export default async function YearlyPrintPage({ params }: Params) {
               <dt className="text-gray-500">送金確定件数</dt>
               <dd>{payments.filter((p) => p.status === 'RELEASED').length} 件</dd>
               <dt className="text-gray-500">年間受取合計 (RELEASED)</dt>
-              <dd className="font-bold text-purple-700">¥{totalIncome.toLocaleString()}</dd>
+              <dd className="font-bold text-slate-700">¥{totalIncome.toLocaleString()}</dd>
             </dl>
           </div>
 

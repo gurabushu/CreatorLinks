@@ -44,8 +44,8 @@ const STATUS_LABEL: Record<string, string> = {
 }
 const STATUS_CLASS: Record<string, string> = {
   APPLIED: 'bg-gray-100 text-gray-700',
-  SCOUTED: 'bg-purple-50 text-purple-700',
-  ACCEPTED: 'bg-purple-50 text-purple-700',
+  SCOUTED: 'bg-slate-50 text-slate-700',
+  ACCEPTED: 'bg-slate-50 text-slate-700',
   COMPLETED: 'bg-gray-100 text-gray-700',
   REJECTED: 'bg-gray-100 text-gray-500',
 }
@@ -222,7 +222,7 @@ export default async function DashboardPage() {
       {/* オファー受信 — 返信要なので薄い purple で注意喚起 */}
       {scoutedMatches.length > 0 && (
         <section className="mb-8">
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
             <div className="flex items-center justify-between gap-3 mb-3">
               <h2 className="font-bold text-gray-900 text-base">
                 オファー受信
@@ -237,7 +237,7 @@ export default async function DashboardPage() {
                   <li key={m.id}>
                     <Link
                       href="/dashboard/matches"
-                      className="block bg-white border border-gray-200 rounded-lg p-3 hover:border-purple-300 transition"
+                      className="block bg-white border border-gray-200 rounded-lg p-3 hover:border-slate-300 transition"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
@@ -246,7 +246,7 @@ export default async function DashboardPage() {
                             <p className="text-xs text-gray-500 mt-0.5">¥{m.project.budget.toLocaleString()}</p>
                           )}
                         </div>
-                        <span className="shrink-0 text-xs text-purple-700 font-medium">
+                        <span className="shrink-0 text-xs text-slate-700 font-medium">
                           応答する →
                         </span>
                       </div>
@@ -266,7 +266,7 @@ export default async function DashboardPage() {
             <EmptyCard>
               進行中の依頼はまだありません。
               <div className="mt-2">
-                <Link href="/projects" className="text-purple-700 hover:underline">案件を探す →</Link>
+                <Link href="/projects" className="text-slate-700 hover:underline">案件を探す →</Link>
               </div>
             </EmptyCard>
           ) : (
@@ -277,7 +277,7 @@ export default async function DashboardPage() {
                   <li key={m.id}>
                     <Link
                       href={`/projects/${m.project.id}`}
-                      className="block bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition"
+                      className="block bg-white border border-gray-200 rounded-xl p-4 hover:border-slate-300 transition"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
@@ -304,8 +304,8 @@ export default async function DashboardPage() {
             <EmptyCard>
               今後 7 日以内の予定はありません。
               <div className="mt-2 flex gap-3 justify-center flex-wrap">
-                <Link href="/events/new" className="text-purple-700 hover:underline">イベント告知</Link>
-                <Link href="/artists" className="text-purple-700 hover:underline">アーティストをフォロー</Link>
+                <Link href="/events/new" className="text-slate-700 hover:underline">イベント告知</Link>
+                <Link href="/artists" className="text-slate-700 hover:underline">アーティストをフォロー</Link>
               </div>
             </EmptyCard>
           ) : (
@@ -314,11 +314,11 @@ export default async function DashboardPage() {
                 <li key={e.id}>
                   <Link
                     href={`/events/${e.id}`}
-                    className="block bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition"
+                    className="block bg-white border border-gray-200 rounded-xl p-4 hover:border-slate-300 transition"
                   >
                     <div className="flex items-center gap-2 text-xs mb-1 flex-wrap">
                       <span className={`px-2 py-0.5 rounded-full font-medium ${
-                        e.role === 'MINE' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 text-gray-700'
+                        e.role === 'MINE' ? 'bg-slate-50 text-slate-700' : 'bg-gray-100 text-gray-700'
                       }`}>
                         {e.role === 'MINE' ? '自分' : 'フォロー中'}
                       </span>
@@ -350,7 +350,7 @@ export default async function DashboardPage() {
           <EmptyCard>
             まだ案件を掲載していません。
             <div className="mt-2">
-              <Link href="/projects/new" className="text-purple-700 hover:underline">新しい案件を作成</Link>
+              <Link href="/projects/new" className="text-slate-700 hover:underline">新しい案件を作成</Link>
             </div>
           </EmptyCard>
         ) : (
@@ -359,7 +359,7 @@ export default async function DashboardPage() {
               <li key={p.id}>
                 <Link
                   href={`/projects/${p.id}`}
-                  className="block bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition"
+                  className="block bg-white border border-gray-200 rounded-xl p-4 hover:border-slate-300 transition"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
@@ -370,7 +370,7 @@ export default async function DashboardPage() {
                         <span>応募 {p._count.matches} 件</span>
                       </div>
                     </div>
-                    <span className="shrink-0 text-xs px-2.5 py-1 rounded-full bg-purple-50 text-purple-700">
+                    <span className="shrink-0 text-xs px-2.5 py-1 rounded-full bg-slate-50 text-slate-700">
                       {PROJECT_STATUS_LABEL[p.status] ?? p.status}
                     </span>
                   </div>
@@ -385,19 +385,19 @@ export default async function DashboardPage() {
         <section className="mb-8">
           <Link
             href="/dashboard/payouts"
-            className="block bg-purple-50 border border-purple-200 rounded-xl p-4 hover:border-purple-300 transition"
+            className="block bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition"
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs text-purple-700 font-medium mb-0.5">今月の帳票</p>
+                <p className="text-xs text-slate-700 font-medium mb-0.5">今月の帳票</p>
                 <p className="text-sm text-gray-800">
                   今月支払いが発生した案件{' '}
-                  <span className="font-bold text-purple-700">{thisMonthDocCount} 件</span>
+                  <span className="font-bold text-slate-700">{thisMonthDocCount} 件</span>
                   {' '}
                   <span className="text-gray-500 text-xs">見積 / 契約 / 請求 / 領収 が発行できます</span>
                 </p>
               </div>
-              <span className="text-purple-600">→</span>
+              <span className="text-slate-600">→</span>
             </div>
           </Link>
         </section>
@@ -422,10 +422,10 @@ function StatusCard({
   return (
     <Link
       href={href}
-      className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:border-purple-300 transition"
+      className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:border-slate-300 transition"
     >
       <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${highlight ? 'text-purple-700' : 'text-gray-900'}`}>{value}</p>
+      <p className={`text-2xl font-bold ${highlight ? 'text-slate-700' : 'text-gray-900'}`}>{value}</p>
     </Link>
   )
 }
@@ -434,7 +434,7 @@ function SectionHeader({ title, href, hrefLabel }: { title: string; href: string
   return (
     <div className="flex items-baseline justify-between mb-3">
       <h2 className="text-base sm:text-lg font-bold text-gray-900">{title}</h2>
-      <Link href={href} className="text-xs sm:text-sm text-purple-700 hover:underline">
+      <Link href={href} className="text-xs sm:text-sm text-slate-700 hover:underline">
         {hrefLabel} →
       </Link>
     </div>
@@ -455,7 +455,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition"
+      className="bg-white border border-gray-200 rounded-xl p-4 hover:border-slate-300 transition"
     >
       <p className="font-semibold text-sm text-gray-900">{title}</p>
       <p className="text-[11px] text-gray-500 mt-1 leading-snug">{hint}</p>
