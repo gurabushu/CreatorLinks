@@ -53,11 +53,11 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
             key={u.id}
             className="relative flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-4 hover:border-slate-300 hover:shadow-sm transition"
           >
-            {/* カード全面リンク (buttons より z 低い) */}
+            {/* カード全面リンク: z-10 で siblings より前面、buttons は z-20 で override */}
             <Link
               href={`/artists/${u.id}`}
               aria-label={`${getDisplayName(u)} のプロフィールへ`}
-              className="absolute inset-0 rounded-xl"
+              className="absolute inset-0 rounded-xl z-10"
             />
 
             {/* アバター */}
@@ -105,7 +105,7 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
 
             {/* 解除ボタン群は z-10 で前面 */}
             {confirming === u.id ? (
-              <div className="relative z-10 flex items-center gap-1 shrink-0">
+              <div className="relative z-20 flex items-center gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleUnfollow(u.id)}
@@ -126,7 +126,7 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
               <button
                 type="button"
                 onClick={() => setConfirming(u.id)}
-                className="relative z-10 text-xs border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 bg-white shrink-0"
+                className="relative z-20 text-xs border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 bg-white shrink-0"
               >
                 フォロー中
               </button>

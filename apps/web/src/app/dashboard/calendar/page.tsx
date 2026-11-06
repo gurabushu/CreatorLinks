@@ -334,7 +334,7 @@ export default async function CalendarPage({
   })
 
   return (
-    <div className="max-w-6xl mx-auto py-6 sm:py-10 px-3 sm:px-6">
+    <div className="max-w-6xl mx-auto py-4 sm:py-6 px-3 sm:px-6">
       {/* ヘッダー */}
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
         <div className="flex items-center gap-1 sm:gap-2">
@@ -473,8 +473,10 @@ export default async function CalendarPage({
         </div>
       )}
 
+      {/* カレンダー本体 (カード化で背景と差別化) */}
+      <div className="rounded-xl shadow-sm bg-white">
       {/* 曜日ヘッダー */}
-      <div className="grid grid-cols-7 text-center text-xs sm:text-sm border border-slate-100/60 rounded-t-xl overflow-hidden bg-gradient-to-b from-slate-50/60 to-white">
+      <div className="grid grid-cols-7 text-center text-xs sm:text-sm border-b border-slate-200 rounded-t-xl overflow-hidden bg-slate-100">
         {WEEKDAYS.map((w, i) => (
           <div
             key={w}
@@ -496,7 +498,7 @@ export default async function CalendarPage({
           aria-hidden
           className="pointer-events-none absolute inset-0 m-auto w-1/2 max-w-md opacity-45 select-none z-10"
         />
-      <div className="grid grid-cols-7 grid-rows-6 border-l border-r border-b border-slate-100/60 rounded-b-xl overflow-hidden">
+      <div className="grid grid-cols-7 grid-rows-6 rounded-b-xl overflow-hidden">
         {cells.map((d, idx) => {
           const k = dateKey(d)
           const inMonth = d.getMonth() + 1 === month
@@ -509,10 +511,10 @@ export default async function CalendarPage({
           return (
             <div
               key={idx}
-              className={`min-h-[92px] sm:min-h-[112px] border-t border-slate-100/60 ${
+              className={`min-h-[68px] sm:min-h-[88px] border-t border-slate-200 ${
                 idx % 7 !== 0 ? 'border-l' : ''
               } p-1 sm:p-1.5 flex flex-col gap-1 ${
-                inMonth ? 'bg-white' : 'bg-gray-50/70'
+                inMonth ? 'bg-white' : 'bg-slate-100/50'
               }`}
             >
               {/* 日番号（クリックで新規作成へ） */}
@@ -568,6 +570,7 @@ export default async function CalendarPage({
         })}
       </div>
       </div>
+      </div>
 
       {/* 凡例 */}
       <div className="mt-3 flex items-center gap-2 flex-wrap text-[11px] text-gray-500">
@@ -588,7 +591,7 @@ export default async function CalendarPage({
           {year}年 {month}月のアジェンダ
         </h2>
         {monthEntries.length === 0 ? (
-          <div className="rounded-xl border border-slate-100/60 bg-slate-50/30 p-6 text-center text-sm text-gray-600">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-6 text-center text-sm text-gray-600">
             {view === 'following'
               ? 'フォロー中のアーティストからの公開イベントはまだありません。'
               : 'この月の予定はまだありません。'}
@@ -616,7 +619,7 @@ export default async function CalendarPage({
                 <li key={entry.event.id}>
                   <Link
                     href={entry.href}
-                    className="block rounded-xl border border-slate-100/60 bg-white hover:shadow-sm hover:shadow-slate-200/40 transition p-4"
+                    className="block rounded-xl border border-slate-200 bg-white hover:shadow-sm hover:shadow-slate-200/40 transition p-4"
                   >
                     <div className="flex items-start gap-3">
                       <div className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium ${ROLE_BADGE[entry.role]}`}>

@@ -89,23 +89,33 @@ export default async function EventsPage({
   }
   if (andConds.length > 0) where.AND = andConds
 
-  const orderBy: Prisma.EventOrderByWithRelationInput | Prisma.EventOrderByWithRelationInput[] =
+  // ベース並び (選択ソート + 創設メンバー優先の 2 段構え):
+  // Prisma 側で creator.earlyBirdSlot NULLS LAST → 創設メンバー主催イベントが先頭寄せ
+  // その上で user 選択ソートを後段に。
+  const baseSort: Prisma.EventOrderByWithRelationInput[] =
     sort === 'new'
-      ? { createdAt: 'desc' }
+      ? [{ creator: { earlyBirdSlot: { sort: 'asc', nulls: 'last' } } }, { createdAt: 'desc' }]
       : sort === 'popular'
-        ? [{ interests: { _count: 'desc' } }, { startAt: 'asc' }]
-        : { startAt: 'asc' }
+        ? [{ creator: { earlyBirdSlot: { sort: 'asc', nulls: 'last' } } }, { interests: { _count: 'desc' } }, { startAt: 'asc' }]
+        : [{ creator: { earlyBirdSlot: { sort: 'asc', nulls: 'last' } } }, { startAt: 'asc' }]
 
-  const events = await prisma.event.findMany({
+  const fetched = await prisma.event.findMany({
     where,
     take: 60,
-    orderBy,
+    orderBy: baseSort,
     include: {
       creator: {
-        select: { id: true, name: true, displayName: true, avatarUrl: true },
+        select: { id: true, name: true, displayName: true, avatarUrl: true, earlyBirdSlot: true },
       },
       _count: { select: { openRoles: true, participants: true, interests: true } },
     },
+  })
+
+  // 後段: フォロー中アーティストのイベントを更に最上位にバブルアップ (In-memory stable sort)
+  const events = [...fetched].sort((a, b) => {
+    const af = myFollowingIds.has(a.creator.id) ? 1 : 0
+    const bf = myFollowingIds.has(b.creator.id) ? 1 : 0
+    return bf - af // true が前
   })
 
   // 人気ジャンル候補 (絞り込みの suggest 用)

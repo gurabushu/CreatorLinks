@@ -95,6 +95,52 @@
 
 ---
 
+## 直近の変更 (2026-11-06 〜 2026-11-07)
+
+### /events 絞り込み・ソート機能追加
+
+- **絞り込み**: キーワード (タイトル/会場/説明) / 種別 (9 種) / ジャンル / 開催地 / 開催形式 (会場 / オンライン) / 料金 (無料 / 有料) / フォロー中のみ
+- **並び替え**: 開催日が近い順 (default) / 新着順 / 人気順 (行きたい数)
+- **アイキャッチ強化**: 16:9 大型カバー画像、2 列 grid、カバーなしは種別頭 2 文字をグラデ背景で表示
+- **上位表示の優先順位** (多段):
+  1. **フォロー中アーティストのイベント**を常に最上位 (in-memory stable sort)
+  2. **創設メンバー主催のイベント**を次点ブースト (`creator.earlyBirdSlot ASC NULLS LAST`)
+  3. 上記バケット内で user 選択ソート (開催日 / 新着 / 人気)
+- 実装: `apps/web/src/app/events/page.tsx`
+
+### /dashboard/calendar — フォロー絞り込みチップ + 視認性改善
+
+- `?view=following&artists=id1,id2` でフォロー中アーティストを部分選択
+- Collapsible UI (`<details>`) で多数フォロー対応 (grid + 縦スクロール)
+- 透かし画像 (`/calendar-watermark.png`) を中央に配置、opacity 0.45
+- セル背景: `bg-slate-100/50` (前月/翌月) で inMonth 白と差別化、border-slate-200 で強調
+- カード化 (`shadow-sm bg-white`) で全体の存在感 UP
+- セル min-height 削減 (92/112 → 68/88) で 1 画面収容
+
+### ダッシュボード系を slate 化
+
+- /dashboard/* 全画面 + dashboard-shell を purple → slate に一括置換 (29 ファイル)
+- 「クリエイター作業 = purple ブランド」「仕事効率化 = slate ニュートラル」の視覚分離
+- LP / /events / /artists / /projects は purple ブランド色を維持
+
+### LP 整理
+
+- セクション 10 → 6 (Hero / 3機能 / 流れ / 料金 / FAQ)
+- Hero: ブランド「また一緒に」が続く音楽の場所 + 機能サブ「音楽の仕事を、ひとつのアプリに」の 2 段構え
+- CTA を「無料で始める」1 本に集約
+- FeatureBar の概要テキストに fade-rise アニメーション (キーワード単位、160ms stagger)
+- 創設メンバー枠バッジに脈動ドット
+- 料金を表形式 + 具体例「1 万円の案件 → 手取り ¥9,300」
+
+### その他
+
+- /dashboard/following: カード全体を Link 化 (stretched link、z-index 階層化で buttons を前面)
+- /events/new 公開範囲: 絵文字 (🔒👥⭐🌐) を廃止、左ボーダー + ドットの色味差別化 (gray/indigo/amber/emerald)
+- プロフィール編集 + /artists 検索: ジャンルに「カメラマン・映像制作」追加
+- 招待メール: FROM_EMAIL default → `noreply@encorecue.jp`、本文の旧コピー差し替え
+
+---
+
 ## 直近の変更 (2026-11-02 〜 2026-11-04)
 
 ### 事前登録 (創設メンバー枠 Google Form 連携) 導入 (2026-11-04)
