@@ -8,6 +8,12 @@ body {
   overflow-wrap: break-word;
 }
 
+/* ページ全体の薄いグレー背景。サイドバー・ヘッダ・カードは bg-white で浮かび上がる。
+   slate-50 相当 (#f8fafc) で、白とのコントラストを弱くしつつ視覚的な層を作る。 */
+body {
+  background-color: #f8fafc;
+}
+
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;

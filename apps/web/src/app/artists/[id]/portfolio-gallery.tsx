@@ -14,7 +14,7 @@ export function PortfolioGallery({ portfolios }: { portfolios: LightboxPortfolio
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-0 rounded-xl overflow-hidden">
         {portfolios.map((p, i) => (
           <PortfolioTile key={p.id} portfolio={p} onClick={() => setOpenIndex(i)} />
         ))}
@@ -60,7 +60,7 @@ function PortfolioTile({
     <button
       type="button"
       onClick={onClick}
-      className="relative aspect-square rounded-xl overflow-hidden bg-zinc-100 group focus:outline-none focus:ring-2 focus:ring-purple-600"
+      className="relative aspect-square overflow-hidden bg-zinc-100 group focus:outline-none focus:ring-2 focus:ring-purple-600 focus:z-10"
       title={portfolio.title}
     >
       {thumb && (
