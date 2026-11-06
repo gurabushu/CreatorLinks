@@ -7,7 +7,7 @@ const FEATURES = [
       </svg>
     ),
     title: 'ライブ・セッションを告知',
-    body: 'カレンダーで一覧できる。',
+    body: '見てほしい予定をオープンに。仲間の活動もカレンダーで一覧。',
   },
   {
     icon: (
@@ -17,7 +17,7 @@ const FEATURES = [
       </svg>
     ),
     title: '見積から支払いまで',
-    body: '依頼・契約・入金が 1 画面で完結。',
+    body: '依頼・契約・入金・領収書まで、アプリ 1 画面で完結。',
   },
   {
     icon: (
@@ -28,24 +28,28 @@ const FEATURES = [
       </svg>
     ),
     title: '音楽仲間を見つける',
-    body: '楽器・ジャンルで検索。',
+    body: '楽器・ジャンル・実績で検索。知り合いの外にもつながれる。',
   },
 ]
 
 export function FeatureBar() {
   return (
     <section id="features" className="bg-gray-50 border-y border-gray-200">
-      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10">
+      <div className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
+        <div className="text-center mb-8 sm:mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">できること</h2>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">
+            音楽の仕事に必要なことを、ひとつに。
+          </p>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
           {FEATURES.map((f) => (
-            <div key={f.title} className="flex items-start gap-3">
-              <span className="shrink-0 w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+            <div key={f.title} className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              <span className="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-purple-100 text-purple-600 mb-3">
                 <span className="w-5 h-5 block">{f.icon}</span>
               </span>
-              <div>
-                <div className="font-bold text-gray-900">{f.title}</div>
-                <p className="text-sm text-gray-600 mt-1 leading-relaxed">{f.body}</p>
-              </div>
+              <div className="font-bold text-gray-900">{f.title}</div>
+              <p className="text-sm text-gray-600 mt-2 leading-relaxed">{f.body}</p>
             </div>
           ))}
         </div>
