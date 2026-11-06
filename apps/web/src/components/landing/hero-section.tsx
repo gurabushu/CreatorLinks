@@ -19,27 +19,6 @@ export function HeroSection() {
             音楽の仕事を、ひとつのアプリに。
           </p>
 
-          <p className="mt-4 sm:mt-5 text-sm sm:text-base text-gray-600 leading-relaxed">
-            ライブ告知・仕事の見積・支払い・仲間とのつながり。
-            <br className="hidden sm:block" />
-            全部まとめて、スマホひとつで。
-          </p>
-
-          <ul className="mt-5 space-y-1.5 text-sm text-gray-700 max-w-md mx-auto md:mx-0">
-            <li className="flex items-start gap-2">
-              <span aria-hidden className="text-purple-600 shrink-0 mt-0.5">✓</span>
-              <span>見積・契約・入金・領収書まで、アプリ 1 画面で</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span aria-hidden className="text-purple-600 shrink-0 mt-0.5">✓</span>
-              <span>お支払いは先に一時預かり → 納品確認後に送金</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span aria-hidden className="text-purple-600 shrink-0 mt-0.5">✓</span>
-              <span>楽器・ジャンル・実績で、新しい仲間が見つかる</span>
-            </li>
-          </ul>
-
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start items-stretch sm:items-center max-w-sm mx-auto md:max-w-none md:mx-0">
             <Link
               href="/auth"

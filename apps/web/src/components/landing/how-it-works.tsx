@@ -49,6 +49,12 @@ export function HowItWorks() {
             </li>
           ))}
         </ol>
+
+        <p className="mt-8 sm:mt-10 text-center text-xs sm:text-sm text-gray-500 leading-relaxed">
+          ライブ・セッション・レコーディングのイベント告知、
+          <br className="sm:hidden" />
+          共演者とのカレンダー日程調整もいつでも利用できます。
+        </p>
       </div>
     </section>
   )

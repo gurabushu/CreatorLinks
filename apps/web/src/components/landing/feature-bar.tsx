@@ -37,10 +37,12 @@ export function FeatureBar() {
     <section id="features" className="bg-gray-50 border-y border-gray-200">
       <div className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
         <div className="text-center mb-8 sm:mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">できること</h2>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">
-            音楽の仕事に必要なことを、ひとつに。
+          <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-5 sm:mb-6">
+            ライブ告知・仕事の見積・支払い・仲間とのつながり。
+            <br className="hidden sm:block" />
+            全部まとめて、スマホひとつで。
           </p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">できること</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
           {FEATURES.map((f) => (
