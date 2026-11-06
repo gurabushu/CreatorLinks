@@ -291,13 +291,18 @@ export default async function EventDetailPage({ params }: Params) {
         })()}
       </div>
 
-      {/* 参加表明ボタン（ログインユーザーのみ、非主催者） */}
-      {session && !isCreator && isPublished && (
+      {/* 参加表明ボタン: ログイン済みかつ CANCELLED でなければ表示 (主催者・DRAFT も可) */}
+      {session && event.status !== 'CANCELLED' && (
         <div className="mb-6">
           <EventInterestButton
             eventId={event.id}
             currentIsAttending={myInterest?.isAttending ?? null}
           />
+          {isCreator && (
+            <p className="text-[11px] text-gray-500 mt-1.5">
+              主催者としての表明。カレンダーに反映されます。
+            </p>
+          )}
         </div>
       )}
 
