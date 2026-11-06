@@ -242,8 +242,16 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
         </Link>
       </div>
 
+      {!isSelf && viewerId && (
+        <p className="mb-2 text-[11px] text-gray-500">
+          空きの日をクリックすると、その日でこのアーティスト宛の案件を作成できます。
+        </p>
+      )}
+
+      {/* カレンダー本体 (カード化 + 透かし) */}
+      <div className="rounded-xl shadow-sm bg-white">
       {/* 曜日行 */}
-      <div className="grid grid-cols-7 text-center text-xs sm:text-sm border border-purple-100/60 rounded-t-xl overflow-hidden bg-gradient-to-b from-purple-50/60 to-white">
+      <div className="grid grid-cols-7 text-center text-xs sm:text-sm border-b border-slate-200 rounded-t-xl overflow-hidden bg-slate-100">
         {WEEKDAYS.map((w, i) => (
           <div
             key={w}
@@ -256,13 +264,16 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
         ))}
       </div>
 
-      {/* カレンダーグリッド */}
-      {!isSelf && viewerId && (
-        <p className="mb-2 text-[11px] text-gray-500">
-          空きの日をクリックすると、その日でこのアーティスト宛の案件を作成できます。
-        </p>
-      )}
-      <div className="grid grid-cols-7 grid-rows-6 border-l border-r border-b border-purple-100/60 rounded-b-xl overflow-hidden">
+      {/* 月グリッド (ブランド透かし付き) */}
+      <div className="relative">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/calendar-watermark.png"
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 m-auto w-1/2 max-w-md opacity-45 select-none z-10"
+        />
+      <div className="grid grid-cols-7 grid-rows-6 rounded-b-xl overflow-hidden">
         {cells.map((d, idx) => {
           const inMonth = d.getMonth() + 1 === month
           const k = dateKey(d)
@@ -323,10 +334,10 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
               </div>
             </>
           )
-          const baseClassName = `min-h-[92px] sm:min-h-[112px] border-t border-purple-100/60 ${
+          const baseClassName = `min-h-[68px] sm:min-h-[88px] border-t border-slate-200 ${
             idx % 7 !== 0 ? 'border-l' : ''
           } p-1 sm:p-1.5 flex flex-col gap-1 ${
-            inMonth ? 'bg-white' : 'bg-gray-50/70'
+            inMonth ? 'bg-white' : 'bg-slate-100/50'
           }`
           if (isFreeSlot) {
             return (
@@ -346,6 +357,8 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
             </div>
           )
         })}
+      </div>
+      </div>
       </div>
 
       {/* 当月イベントリスト */}
