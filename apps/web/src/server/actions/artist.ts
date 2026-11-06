@@ -2,6 +2,7 @@
 
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
 import {
   HEIGHT_BUCKET_RANGES,
   type CommitmentLevel,
@@ -58,10 +59,13 @@ export async function listArtistsAction(params: {
     limit = 12,
   } = params
   const trimmed = q?.trim()
+  const session = await auth().catch(() => null)
+  const meId = session?.user?.id ?? null
   const andConds: Prisma.UserWhereInput[] = [
     { isOfficial: false }, // 公式アカウントはアーティスト一覧に載せない
     { isGuest: false },    // 24h で消えるゲストも除外
   ]
+  if (meId) andConds.push({ id: { not: meId } }) // 自分は一覧に出さない
 
   if (genres?.length) andConds.push({ genres: { hasSome: genres } })
   if (gender) andConds.push({ gender })
