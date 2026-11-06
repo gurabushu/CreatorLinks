@@ -32,15 +32,43 @@ const FEATURES = [
   },
 ]
 
+const KEYWORDS = ['ライブ告知', '仕事の見積', '支払い', '仲間とのつながり']
+
 export function FeatureBar() {
   return (
     <section id="features" className="bg-gray-50 border-y border-gray-200">
       <div className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
         <div className="text-center mb-8 sm:mb-10">
           <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-5 sm:mb-6">
-            ライブ告知・仕事の見積・支払い・仲間とのつながり。
-            <br className="hidden sm:block" />
-            全部まとめて、スマホひとつで。
+            <span className="inline-flex flex-wrap justify-center gap-x-1 gap-y-1 items-baseline">
+              {KEYWORDS.map((kw, i) => (
+                <span key={kw} className="inline-flex items-baseline">
+                  <span
+                    className="animate-rise font-bold text-gray-900"
+                    style={{ animationDelay: `${i * 160}ms` }}
+                  >
+                    {kw}
+                  </span>
+                  {i < KEYWORDS.length - 1 && (
+                    <span
+                      className="animate-rise text-purple-500 mx-0.5"
+                      style={{ animationDelay: `${i * 160 + 80}ms` }}
+                      aria-hidden
+                    >
+                      ・
+                    </span>
+                  )}
+                </span>
+              ))}
+            </span>
+            <br />
+            <span
+              className="animate-rise inline-block mt-1"
+              style={{ animationDelay: `${KEYWORDS.length * 160}ms` }}
+            >
+              全部まとめて、
+              <span className="font-bold text-gray-900">スマホひとつで。</span>
+            </span>
           </p>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">できること</h2>
         </div>

@@ -19,20 +19,21 @@ export function HeroSection() {
             音楽の仕事を、ひとつのアプリに。
           </p>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start items-stretch sm:items-center max-w-sm mx-auto md:max-w-none md:mx-0">
+          <div className="mt-8 flex justify-center md:justify-start">
             <Link
               href="/auth"
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
+              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-zinc-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg hover:opacity-95 transition"
             >
               無料で始める <span aria-hidden>→</span>
             </Link>
           </div>
 
-          <p className="mt-6 text-sm text-gray-600 text-center md:text-left">
-            <span className="inline-block bg-zinc-50 text-zinc-700 border border-zinc-200/70 px-2 py-0.5 rounded-full text-xs font-semibold mr-2">
+          <p className="mt-6 text-sm text-gray-600 text-center md:text-left flex items-center justify-center md:justify-start gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 border border-purple-200/70 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse-dot" aria-hidden />
               創設メンバー枠
             </span>
-            先着 100 名に、最初の 6 ヶ月 手数料 0%
+            <span>先着 100 名に、最初の 6 ヶ月 手数料 0%</span>
           </p>
         </div>
 
