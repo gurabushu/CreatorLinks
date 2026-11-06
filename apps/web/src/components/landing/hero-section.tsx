@@ -26,12 +26,6 @@ export function HeroSection() {
             >
               無料で始める <span aria-hidden>→</span>
             </Link>
-            <Link
-              href="#how-it-works"
-              className="inline-flex items-center justify-center border border-gray-300 text-gray-700 font-bold px-7 py-3.5 rounded-xl hover:bg-gray-50 transition"
-            >
-              使い方を見る
-            </Link>
           </div>
 
           <p className="mt-6 text-sm text-gray-600 text-center md:text-left">
