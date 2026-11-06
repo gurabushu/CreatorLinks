@@ -344,11 +344,13 @@ export default async function ArtistDetailPage({ params }: Props) {
             )}
           </div>
 
-          {/* Bio */}
+          {/* Bio — SNS 風バブル */}
           {user.bio && (
-            <p className="text-sm text-zinc-700 mt-4 whitespace-pre-wrap leading-relaxed">
-              {user.bio}
-            </p>
+            <div className="mt-4 rounded-2xl bg-gradient-to-br from-purple-50 via-white to-zinc-50 border border-purple-100 p-4 sm:p-5 shadow-sm">
+              <p className="text-sm text-zinc-800 whitespace-pre-wrap leading-relaxed">
+                {user.bio}
+              </p>
+            </div>
           )}
 
           {/* アクション — Primary 行 (CTA) */}
