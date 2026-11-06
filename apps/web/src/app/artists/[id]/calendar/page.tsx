@@ -128,9 +128,106 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
     orderBy: { startAt: 'asc' },
   })
 
+  // 自分視点でのみ: 興味ありイベントと確定案件 (match) もマージして /dashboard/calendar と同期
+  type CalendarEntry = {
+    id: string
+    title: string
+    startAt: Date
+    type: string
+    visibility: string
+    venueName: string | null
+    creatorId: string | null
+    href: string
+    kind: 'event' | 'interest' | 'match'
+  }
+
+  const entries: CalendarEntry[] = events.map((e) => ({
+    id: e.id,
+    title: e.title,
+    startAt: e.startAt,
+    type: e.type,
+    visibility: e.visibility,
+    venueName: e.venueName,
+    creatorId: e.creatorId,
+    href: `/events/${e.id}`,
+    kind: 'event',
+  }))
+
+  if (isSelf) {
+    const [interests, matches] = await Promise.all([
+      prisma.eventInterest.findMany({
+        where: {
+          userId: id,
+          isAttending: true,
+          event: {
+            startAt: { gte: gridStart, lte: gridEnd },
+            status: 'PUBLISHED',
+          },
+        },
+        include: {
+          event: {
+            select: {
+              id: true, title: true, startAt: true, type: true, visibility: true,
+              venueName: true, creatorId: true,
+            },
+          },
+        },
+      }),
+      prisma.match.findMany({
+        where: {
+          status: { in: ['ACCEPTED', 'COMPLETED'] },
+          project: { scheduledStartAt: { gte: gridStart, lte: gridEnd } },
+          OR: [
+            { artistId: id },
+            { project: { clientId: id } },
+          ],
+        },
+        include: {
+          project: {
+            select: { id: true, title: true, scheduledStartAt: true },
+          },
+        },
+      }),
+    ])
+
+    const seen = new Set(events.map((e) => e.id))
+
+    for (const i of interests) {
+      if (seen.has(i.event.id)) continue
+      entries.push({
+        id: `interest-${i.event.id}`,
+        title: i.event.title,
+        startAt: i.event.startAt,
+        type: i.event.type,
+        visibility: i.event.visibility,
+        venueName: i.event.venueName,
+        creatorId: i.event.creatorId,
+        href: `/events/${i.event.id}`,
+        kind: 'interest',
+      })
+    }
+
+    for (const m of matches) {
+      if (!m.project || !m.project.scheduledStartAt) continue
+      entries.push({
+        id: `match-${m.id}`,
+        title: m.project.title,
+        startAt: m.project.scheduledStartAt,
+        type: 'PROJECT',
+        visibility: 'PRIVATE',
+        venueName: null,
+        creatorId: null,
+        href: `/dashboard/matches`,
+        kind: 'match',
+      })
+    }
+  }
+
+  entries.sort((a, b) => a.startAt.getTime() - b.startAt.getTime())
+
   // 日付キー別にグループ化
-  const byDate = new Map<string, typeof events>()
-  for (const e of events) {
+  const byDate = new Map<string, CalendarEntry[]>()
+  for (const e of entries) {
     const k = dateKey(e.startAt)
     if (!byDate.has(k)) byDate.set(k, [])
     byDate.get(k)!.push(e)
@@ -149,7 +246,7 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
   const prev = shiftMonth(year, month, -1)
   const next = shiftMonth(year, month, 1)
 
-  const monthEvents = events.filter((e) => {
+  const monthEvents = entries.filter((e) => {
     const p = jstParts(e.startAt)
     return p.year === year && p.month === month
   })
@@ -314,20 +411,30 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
                 )}
               </div>
               <div className="flex-1 flex flex-col gap-0.5 overflow-hidden">
-                {visible.map((e) => (
-                  <Link
-                    key={e.id}
-                    href={`/events/${e.id}`}
-                    title={`${fmtTime(e.startAt)} ${e.title}`}
-                    className={`text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded truncate transition-colors bg-purple-100 text-purple-700 hover:bg-purple-200 ${!inMonth ? 'opacity-60' : ''}`}
-                  >
-                    <span className="font-medium mr-1">{fmtTime(e.startAt)}</span>
-                    <span aria-hidden className="mr-0.5">
-                      {EVENT_VISIBILITY_ICONS[e.visibility as EventVisibility]}
-                    </span>
-                    {e.title}
-                  </Link>
-                ))}
+                {visible.map((e) => {
+                  const pillClass =
+                    e.kind === 'interest'
+                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                      : e.kind === 'match'
+                        ? 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                  return (
+                    <Link
+                      key={e.id}
+                      href={e.href}
+                      title={`${fmtTime(e.startAt)} ${e.title}`}
+                      className={`text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded truncate transition-colors ${pillClass} ${!inMonth ? 'opacity-60' : ''}`}
+                    >
+                      <span className="font-medium mr-1">{fmtTime(e.startAt)}</span>
+                      {e.kind === 'event' && (
+                        <span aria-hidden className="mr-0.5">
+                          {EVENT_VISIBILITY_ICONS[e.visibility as EventVisibility]}
+                        </span>
+                      )}
+                      {e.title}
+                    </Link>
+                  )
+                })}
                 {overflow > 0 && (
                   <div className="text-[10px] text-gray-500 px-1">+{overflow} 件</div>
                 )}
@@ -370,34 +477,50 @@ export default async function ArtistCalendarPage({ params, searchParams }: Props
           <p className="text-sm text-gray-500">この月にイベントはありません。</p>
         ) : (
           <ul className="space-y-2">
-            {monthEvents.map((e) => (
-              <li key={e.id}>
-                <Link
-                  href={`/events/${e.id}`}
-                  className="block rounded-xl border border-gray-200 bg-white hover:shadow-sm transition p-3"
-                >
-                  <div className="flex items-center gap-2 text-xs text-purple-700 mb-1 flex-wrap">
-                    {(() => {
-                      const p = jstParts(e.startAt)
-                      return <span>{String(p.month).padStart(2, '0')}/{String(p.day).padStart(2, '0')}</span>
-                    })()}
-                    <span>{fmtTime(e.startAt)}</span>
-                    <span>·</span>
-                    <span>{EVENT_TYPE_LABELS[e.type as EventType]}</span>
-                    {e.venueName && (
-                      <>
-                        <span>·</span>
-                        <span>{e.venueName}</span>
-                      </>
-                    )}
-                    <span className="ml-auto text-gray-500">
-                      {EVENT_VISIBILITY_ICONS[e.visibility as EventVisibility]}
-                    </span>
-                  </div>
-                  <div className="font-medium text-gray-900 line-clamp-1">{e.title}</div>
-                </Link>
-              </li>
-            ))}
+            {monthEvents.map((e) => {
+              const typeLabel =
+                e.kind === 'interest'
+                  ? '興味あり'
+                  : e.kind === 'match'
+                    ? '案件'
+                    : EVENT_TYPE_LABELS[e.type as EventType]
+              const accent =
+                e.kind === 'interest'
+                  ? 'text-amber-700'
+                  : e.kind === 'match'
+                    ? 'text-slate-800'
+                    : 'text-purple-700'
+              return (
+                <li key={e.id}>
+                  <Link
+                    href={e.href}
+                    className="block rounded-xl border border-gray-200 bg-white hover:shadow-sm transition p-3"
+                  >
+                    <div className={`flex items-center gap-2 text-xs mb-1 flex-wrap ${accent}`}>
+                      {(() => {
+                        const p = jstParts(e.startAt)
+                        return <span>{String(p.month).padStart(2, '0')}/{String(p.day).padStart(2, '0')}</span>
+                      })()}
+                      <span>{fmtTime(e.startAt)}</span>
+                      <span>·</span>
+                      <span>{typeLabel}</span>
+                      {e.venueName && (
+                        <>
+                          <span>·</span>
+                          <span>{e.venueName}</span>
+                        </>
+                      )}
+                      {e.kind === 'event' && (
+                        <span className="ml-auto text-gray-500">
+                          {EVENT_VISIBILITY_ICONS[e.visibility as EventVisibility]}
+                        </span>
+                      )}
+                    </div>
+                    <div className="font-medium text-gray-900 line-clamp-1">{e.title}</div>
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>
