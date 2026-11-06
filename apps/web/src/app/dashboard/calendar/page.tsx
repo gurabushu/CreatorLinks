@@ -399,55 +399,77 @@ export default async function CalendarPage({
         </Link>
       </div>
 
-      {/* フォロー中ビュー: アーティスト絞り込みチップ */}
+      {/* フォロー中ビュー: アーティスト絞り込み (collapsible、選択中は常時表示) */}
       {view === 'following' && followedArtists.length > 0 && (
-        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
-          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-            <p className="text-xs font-medium text-gray-600">
-              表示するアーティスト
-              {selectedArtistIds.length > 0 && (
-                <span className="ml-1.5 text-slate-700 font-semibold">({selectedArtistIds.length} 人選択中)</span>
-              )}
-            </p>
-            {selectedArtistIds.length > 0 && (
-              <Link
-                href={`?ym=${ymString(year, month)}&view=following`}
-                className="text-[11px] text-slate-700 hover:underline"
+        <div className="mb-4 rounded-xl border border-slate-200 bg-white">
+          <details className="group" open={selectedArtistIds.length > 0}>
+            <summary className="list-none cursor-pointer p-3 sm:p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm font-semibold text-gray-800">表示するアーティスト</span>
+                {selectedArtistIds.length === 0 ? (
+                  <span className="text-xs text-gray-500">(全 {followedArtists.length} 人)</span>
+                ) : (
+                  <span className="text-xs text-slate-700 font-semibold">
+                    {selectedArtistIds.length} / {followedArtists.length} 人選択中
+                  </span>
+                )}
+              </div>
+              <span
+                aria-hidden
+                className="shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-xs transition group-open:rotate-180"
               >
-                すべて表示に戻す
-              </Link>
-            )}
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {followedArtists.map((a) => {
-              const selected = selectedSet.has(a.id)
-              const nextIds = selected
-                ? selectedArtistIds.filter((id) => id !== a.id)
-                : [...selectedArtistIds, a.id]
-              const nextParam = nextIds.length > 0 ? `&artists=${nextIds.join(',')}` : ''
-              return (
-                <Link
-                  key={a.id}
-                  href={`?ym=${ymString(year, month)}&view=following${nextParam}`}
-                  className={`shrink-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full border text-xs transition ${
-                    selected
-                      ? 'bg-slate-700 text-white border-slate-700'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-slate-300'
-                  }`}
-                >
-                  {a.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
-                  ) : (
-                    <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${selected ? 'bg-white/20' : 'bg-slate-100 text-slate-700'}`}>
-                      {getDisplayName(a).slice(0, 1)}
-                    </span>
-                  )}
-                  <span className="whitespace-nowrap max-w-[8rem] truncate">{getDisplayName(a)}</span>
-                </Link>
-              )
-            })}
-          </div>
+                ▾
+              </span>
+            </summary>
+
+            <div className="px-3 sm:px-4 pb-3 sm:pb-4 -mt-1 space-y-3">
+              {/* 選択中アーティストの一覧 (常に先頭) */}
+              {selectedArtistIds.length > 0 && (
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <p className="text-[11px] text-gray-500">選択中のみ表示中</p>
+                  <Link
+                    href={`?ym=${ymString(year, month)}&view=following`}
+                    className="text-[11px] text-slate-700 hover:underline"
+                  >
+                    選択をリセット
+                  </Link>
+                </div>
+              )}
+
+              {/* 全フォロー中のチップグリッド (多数想定、縦スクロール) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-72 overflow-y-auto pr-1">
+                {followedArtists.map((a) => {
+                  const selected = selectedSet.has(a.id)
+                  const nextIds = selected
+                    ? selectedArtistIds.filter((id) => id !== a.id)
+                    : [...selectedArtistIds, a.id]
+                  const nextParam = nextIds.length > 0 ? `&artists=${nextIds.join(',')}` : ''
+                  return (
+                    <Link
+                      key={a.id}
+                      href={`?ym=${ymString(year, month)}&view=following${nextParam}`}
+                      className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs transition ${
+                        selected
+                          ? 'bg-slate-700 text-white border-slate-700'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-slate-300'
+                      }`}
+                    >
+                      {a.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={a.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0 ${selected ? 'bg-white/20' : 'bg-slate-100 text-slate-700'}`}>
+                          {getDisplayName(a).slice(0, 1)}
+                        </span>
+                      )}
+                      <span className="truncate flex-1">{getDisplayName(a)}</span>
+                      {selected && <span aria-hidden className="text-[10px]">✓</span>}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          </details>
         </div>
       )}
 
