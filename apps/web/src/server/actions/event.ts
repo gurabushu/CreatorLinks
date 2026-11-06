@@ -280,11 +280,14 @@ export async function toggleInterestAction(
   const session = await auth()
   if (!session) return { success: false, error: 'ログインが必要です' }
 
-  // 初回「行く」反応の時だけ主催者に通知。既存反応の切り替えや取り消しは通知しない。
+  // 「行く」になる遷移時に主催者へ通知:
+  //   未記録 → 行く  / 興味あり → 行く  のいずれも対象
+  //   既に「行く」の状態からの再押下 (toggle解除手前) は通知しない
   const existing = await prisma.eventInterest.findUnique({
     where: { userId_eventId: { userId: session.user.id, eventId } },
     select: { isAttending: true },
   })
+  const wasAttending = existing?.isAttending === true
 
   await prisma.eventInterest.upsert({
     where: { userId_eventId: { userId: session.user.id, eventId } },
@@ -292,7 +295,7 @@ export async function toggleInterestAction(
     update: { isAttending },
   })
 
-  if (!existing && isAttending) {
+  if (!wasAttending && isAttending) {
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       select: { creatorId: true, title: true },
