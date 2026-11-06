@@ -22,22 +22,31 @@ export default async function EventsPage() {
   const session = await auth()
   const now = new Date()
 
-  const events = await prisma.event.findMany({
-    where: {
-      status: 'PUBLISHED',
-      visibility: 'PUBLIC', // Phase A.5: 公開一覧は PUBLIC のみ
-      // 開催中の複数日イベント（startAt 過去だが endAt 未来）も残す
-      OR: [{ startAt: { gte: now } }, { endAt: { gte: now } }],
-    },
-    take: 30,
-    orderBy: { startAt: 'asc' },
-    include: {
-      creator: {
-        select: { id: true, name: true, displayName: true, avatarUrl: true },
+  const [events, followRows] = await Promise.all([
+    prisma.event.findMany({
+      where: {
+        status: 'PUBLISHED',
+        visibility: 'PUBLIC',
+        OR: [{ startAt: { gte: now } }, { endAt: { gte: now } }],
       },
-      _count: { select: { openRoles: true, participants: true, interests: true } },
-    },
-  })
+      take: 30,
+      orderBy: { startAt: 'asc' },
+      include: {
+        creator: {
+          select: { id: true, name: true, displayName: true, avatarUrl: true },
+        },
+        _count: { select: { openRoles: true, participants: true, interests: true } },
+      },
+    }),
+    session?.user?.id
+      ? prisma.follow.findMany({
+          where: { followerId: session.user.id },
+          select: { followingId: true },
+        })
+      : Promise.resolve([]),
+  ])
+
+  const myFollowingIds = new Set(followRows.map((f) => f.followingId))
 
   return (
     <div className="max-w-4xl mx-auto py-8 sm:py-12 px-4">
@@ -71,12 +80,24 @@ export default async function EventsPage() {
         </div>
       ) : (
         <ul className="space-y-3">
-          {events.map((e) => (
+          {events.map((e) => {
+            const isFollowed = myFollowingIds.has(e.creator.id)
+            return (
             <li
               key={e.id}
-              className="rounded-xl border border-gray-200 bg-white hover:shadow-sm transition"
+              className={`rounded-xl border bg-white hover:shadow-sm transition ${
+                isFollowed ? 'border-purple-300 bg-purple-50/40' : 'border-gray-200'
+              }`}
             >
               <Link href={`/events/${e.id}`} className="block p-4 sm:p-5">
+                {isFollowed && (
+                  <div className="mb-2">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                      <span aria-hidden>★</span>
+                      フォロー中のアーティスト
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-start gap-4">
                   {e.coverUrl && (
                     <img
@@ -102,7 +123,7 @@ export default async function EventsPage() {
                     <h2 className="font-semibold text-gray-900 mb-1 line-clamp-2">
                       {e.title}
                     </h2>
-                    <p className="text-xs text-gray-500 line-clamp-1">
+                    <p className={`text-xs line-clamp-1 ${isFollowed ? 'text-purple-700 font-medium' : 'text-gray-500'}`}>
                       主催 {getDisplayName(e.creator)}
                     </p>
                     <div className="flex items-center gap-4 mt-2 text-[11px] text-gray-500">
@@ -122,7 +143,8 @@ export default async function EventsPage() {
                 </div>
               </Link>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
     </div>
