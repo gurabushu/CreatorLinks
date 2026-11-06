@@ -7,11 +7,12 @@ export function HeroSection() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-8 items-center">
         <div className="text-center md:text-left min-w-0">
           <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.2] tracking-tight text-gray-900 break-keep">
-            音楽の仕事を、
-            <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-zinc-600">
-              ひとつのアプリに。
+              「また一緒に」
             </span>
+            が
+            <br />
+            続く、音楽の場所。
           </h1>
           <p className="mt-5 sm:mt-6 text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed">
             ライブ告知・仕事の見積・支払い・音楽仲間とのつながり。

@@ -10,7 +10,7 @@ import { Faq } from '@/components/landing/faq'
 import { SITE_NAME } from '@/lib/brand'
 
 export const metadata: Metadata = {
-  title: `${SITE_NAME} — 音楽の仕事を、ひとつのアプリに。`,
+  title: `${SITE_NAME} — 「また一緒に」が続く、音楽の場所。`,
   description:
     '音楽業界の仕事管理アプリ。ライブ告知・見積・支払い・仲間とのつながりをまとめて管理。登録無料、アプリ内決済 7%。',
   alternates: { canonical: '/' },
