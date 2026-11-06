@@ -6,8 +6,8 @@ const FEATURES = [
         <path d="M3 10h18M8 2v4M16 2v4" />
       </svg>
     ),
-    title: 'イベントの告知',
-    body: 'ライブ・セッション・リリースをオープンに告知。\nフォロー中の仲間の予定も、カレンダーで一望できます。',
+    title: 'ライブ・セッションを告知',
+    body: 'カレンダーで一覧できる。',
   },
   {
     icon: (
@@ -16,8 +16,8 @@ const FEATURES = [
         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
       </svg>
     ),
-    title: 'お仕事のやりとりを、ひとつに',
-    body: '依頼テンプレ・安心のお支払い・スケジュール\nを 1 画面で。DM の遡り検索とは、もうお別れ。',
+    title: '見積から支払いまで',
+    body: '依頼・契約・入金が 1 画面で完結。',
   },
   {
     icon: (
@@ -27,17 +27,8 @@ const FEATURES = [
         <circle cx="18" cy="16" r="3" />
       </svg>
     ),
-    title: '音楽仲間との、新しい出会い',
-    body: 'ボーカル / ギター / DTM / MIX / エンジニア。\n楽器 × ジャンル × 実績で、必要な仲間が見つかります。',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-      </svg>
-    ),
-    title: '「また一緒に」で、ずっと続く',
-    body: 'お仕事完了時にお互いが「また一緒に」を押せば、次の依頼はワンタップ。\n手数料 7%（業界最安クラス）。',
+    title: '音楽仲間を見つける',
+    body: '楽器・ジャンルで検索。',
   },
 ]
 
@@ -45,7 +36,7 @@ export function FeatureBar() {
   return (
     <section id="features" className="bg-gray-50 border-y border-gray-200">
       <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
           {FEATURES.map((f) => (
             <div key={f.title} className="flex items-start gap-3">
               <span className="shrink-0 w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
@@ -53,9 +44,7 @@ export function FeatureBar() {
               </span>
               <div>
                 <div className="font-bold text-gray-900">{f.title}</div>
-                <p className="text-sm text-gray-600 mt-1 whitespace-pre-line leading-relaxed">
-                  {f.body}
-                </p>
+                <p className="text-sm text-gray-600 mt-1 leading-relaxed">{f.body}</p>
               </div>
             </div>
           ))}
