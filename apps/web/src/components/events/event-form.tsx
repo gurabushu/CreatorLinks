@@ -17,7 +17,6 @@ import {
   EVENT_VISIBILITIES,
   EVENT_VISIBILITY_LABELS,
   EVENT_VISIBILITY_DESCRIPTIONS,
-  EVENT_VISIBILITY_ICONS,
   MEDIA_MAX_IMAGES,
   MEDIA_MAX_VIDEOS,
   parseVideoEmbed,
@@ -299,29 +298,39 @@ export function EventForm(props: EventFormProps) {
         </div>
       </div>
 
-      {/* 可視性 */}
+      {/* 可視性: 色コード (左 border) で差別化、絵文字なし */}
       <div>
         <label className="block text-sm font-medium mb-1.5">公開範囲</label>
         <div className="grid sm:grid-cols-2 gap-2">
-          {EVENT_VISIBILITIES.map((v) => (
-            <button
-              type="button"
-              key={v}
-              onClick={() => setVisibility(v)}
-              className={`text-left px-3 py-2.5 rounded-lg border transition ${
-                visibility === v
-                  ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500'
-                  : 'bg-white border-gray-300 hover:border-purple-400'
-              }`}
-            >
-              <div className="text-xs font-medium mb-0.5">
-                {EVENT_VISIBILITY_ICONS[v]} {EVENT_VISIBILITY_LABELS[v]}
-              </div>
-              <div className="text-[11px] text-gray-500 leading-snug">
-                {EVENT_VISIBILITY_DESCRIPTIONS[v]}
-              </div>
-            </button>
-          ))}
+          {EVENT_VISIBILITIES.map((v) => {
+            // 公開範囲ごとの色コード (左 border + ドット)
+            const accent =
+              v === 'PRIVATE'           ? 'bg-gray-400' :
+              v === 'PARTICIPANTS_ONLY' ? 'bg-indigo-400' :
+              v === 'FOLLOWERS'         ? 'bg-amber-400' :
+                                          'bg-emerald-400'
+            return (
+              <button
+                type="button"
+                key={v}
+                onClick={() => setVisibility(v)}
+                className={`relative text-left pl-4 pr-3 py-2.5 rounded-lg border transition overflow-hidden ${
+                  visibility === v
+                    ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500'
+                    : 'bg-white border-gray-300 hover:border-purple-400'
+                }`}
+              >
+                <span className={`absolute left-0 top-0 bottom-0 w-1.5 ${accent}`} aria-hidden />
+                <div className="flex items-center gap-2 text-xs font-medium mb-0.5">
+                  <span className={`inline-block w-2 h-2 rounded-full ${accent}`} aria-hidden />
+                  {EVENT_VISIBILITY_LABELS[v]}
+                </div>
+                <div className="text-[11px] text-gray-500 leading-snug">
+                  {EVENT_VISIBILITY_DESCRIPTIONS[v]}
+                </div>
+              </button>
+            )
+          })}
         </div>
       </div>
 

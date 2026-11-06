@@ -1,8 +1,6 @@
 'use client'
 
-// フォロー中一覧の client 部分。
-// 各行のインライン「解除」ボタンで unfollowUserAction を呼び、
-// 楽観的にリストから消す (再取得は router.refresh で親 SSR に任せる)。
+// フォロー中一覧の client 部分。カード全体を Link 化、解除ボタンは z-10 で前面。
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
@@ -37,12 +35,10 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
 
   const handleUnfollow = (userId: string) => {
     setConfirming(null)
-    // 楽観的更新: 先にリストから消す
     setItems((prev) => prev.filter((i) => i.user.id !== userId))
     startTransition(async () => {
       const res = await unfollowUserAction(userId)
       if (!res.success) {
-        // 失敗したら状態を復元 (簡易: refresh で SSR を再取得)
         router.refresh()
       }
     })
@@ -55,10 +51,17 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
         return (
           <li
             key={u.id}
-            className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-4"
+            className="relative flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-4 hover:border-slate-300 hover:shadow-sm transition"
           >
-            {/* アバター + Story あり時のグラデリング */}
-            <Link href={`/artists/${u.id}`} className="shrink-0">
+            {/* カード全面リンク (buttons より z 低い) */}
+            <Link
+              href={`/artists/${u.id}`}
+              aria-label={`${getDisplayName(u)} のプロフィールへ`}
+              className="absolute inset-0 rounded-xl"
+            />
+
+            {/* アバター */}
+            <div className="shrink-0 relative">
               <div
                 className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] ${
                   u.hasActiveStory
@@ -79,16 +82,14 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
                   )}
                 </div>
               </div>
-            </Link>
+            </div>
 
-            <div className="flex-1 min-w-0">
+            {/* テキスト */}
+            <div className="flex-1 min-w-0 relative">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <Link
-                  href={`/artists/${u.id}`}
-                  className="text-sm font-semibold text-gray-900 hover:text-slate-700 truncate"
-                >
+                <span className="text-sm font-semibold text-gray-900 truncate">
                   {getDisplayName(u)}
-                </Link>
+                </span>
                 {u.isOfficial && <OfficialBadge />}
                 {u.earlyBirdSlot !== null && (
                   <FoundingMemberBadge slot={u.earlyBirdSlot} showTotal={false} />
@@ -102,8 +103,9 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
               )}
             </div>
 
+            {/* 解除ボタン群は z-10 で前面 */}
             {confirming === u.id ? (
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="relative z-10 flex items-center gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleUnfollow(u.id)}
@@ -115,7 +117,7 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
                 <button
                   type="button"
                   onClick={() => setConfirming(null)}
-                  className="text-xs border border-gray-300 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-50"
+                  className="text-xs border border-gray-300 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-50 bg-white"
                 >
                   取消
                 </button>
@@ -124,7 +126,7 @@ export function FollowingListClient({ initialItems }: { initialItems: Item[] }) 
               <button
                 type="button"
                 onClick={() => setConfirming(u.id)}
-                className="text-xs border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 shrink-0"
+                className="relative z-10 text-xs border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 bg-white shrink-0"
               >
                 フォロー中
               </button>

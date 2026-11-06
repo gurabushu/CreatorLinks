@@ -55,8 +55,8 @@ export async function sendInviteEmailAction(
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #1f2937;">
       <p>こんにちは、</p>
       <p><strong>${escapeHtml(inviterName)}</strong> さんが ${SITE_NAME} にあなたを招待しました。</p>
-      <p>${SITE_NAME} は、音楽業界特化の <strong>イベント告知 × 仕事 DX × マッチング</strong> を 1 つにまとめたアプリです。<br>
-      LINE や DM でやり取りしていた録音・ライブ・MIX 依頼を、記録と支払いまで残せる形に切り替えられます。</p>
+      <p>${SITE_NAME} は、音楽業界の <strong>ライブ告知・仕事のやりとり・音楽仲間とのつながり</strong> を 1 つのアプリにまとめたサービスです。<br>
+      LINE や DM で進めていた録音・ライブ・MIX 依頼を、記録と支払いまでひとつにできます。</p>
       <p style="margin: 32px 0;">
         <a href="${inviteUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #4f46e5); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
           ${SITE_NAME} をはじめる

@@ -7,7 +7,7 @@ export const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null
 
-export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'noreply@creatorlinks.jp'
+export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'noreply@encorecue.jp'
 // 過去 import 互換のため再エクスポート。新規コードは '@/lib/brand' から取ること。
 export { SITE_NAME }
 // APP_URL: 招待 URL / メール本文 / リンクの生成に使う。多段フォールバックは lib/app-url.ts に集約。
