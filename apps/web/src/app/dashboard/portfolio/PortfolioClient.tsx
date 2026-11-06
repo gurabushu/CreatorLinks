@@ -2,7 +2,12 @@
 
 import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
-import { createPortfolioAction, deletePortfolioAction, setFeaturedPortfolioAction } from '@/server/actions/portfolio'
+import {
+  createPortfolioAction,
+  deletePortfolioAction,
+  setFeaturedPortfolioAction,
+  updatePortfolioAction,
+} from '@/server/actions/portfolio'
 import { compressImage } from '@/lib/compress-image'
 import { uploadBlob } from '@/lib/blob-upload'
 import { resolveMediaSource } from '@/lib/media-source'
@@ -129,6 +134,51 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isPending, startTransition] = useTransition()
+
+  // 編集中のポートフォリオ (null = 編集してない)
+  const [editing, setEditing] = useState<Portfolio | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editError, setEditError] = useState<string | null>(null)
+
+  const openEdit = (p: Portfolio) => {
+    setEditing(p)
+    setEditTitle(p.title)
+    setEditDescription(p.description ?? '')
+    setEditError(null)
+  }
+
+  const closeEdit = () => {
+    setEditing(null)
+    setEditError(null)
+  }
+
+  const handleEditSave = () => {
+    if (!editing || !editTitle.trim()) return
+    setEditError(null)
+    const id = editing.id
+    const newTitle = editTitle.trim()
+    const newDescription = editDescription.trim() || undefined
+    startTransition(async () => {
+      const result = await updatePortfolioAction({
+        id,
+        title: newTitle,
+        description: newDescription,
+      })
+      if (result.success) {
+        setPortfolios((prev) =>
+          prev.map((p) =>
+            p.id === id
+              ? { ...p, title: newTitle, description: newDescription ?? null }
+              : p,
+          ),
+        )
+        closeEdit()
+      } else {
+        setEditError(result.error)
+      }
+    })
+  }
 
   const resetForm = () => {
     setTitle('')
@@ -390,8 +440,74 @@ export default function PortfolioClient({ initialPortfolios, initialFeaturedId }
               isFeatured={featuredId === p.id}
               onDelete={() => handleDelete(p.id)}
               onToggleFeatured={() => handleToggleFeatured(p.id)}
+              onEdit={() => openEdit(p)}
             />
           ))}
+        </div>
+      )}
+
+      {/* 編集モーダル */}
+      {editing && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={closeEdit}
+        >
+          <div
+            className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 sm:px-6 pt-5 pb-3 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">作品を編集</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                タイトルと説明文を編集できます。ファイル差し替えは削除 → 再追加で。
+              </p>
+            </div>
+            <div className="px-5 sm:px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">タイトル *</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  maxLength={100}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">説明（任意）</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={5}
+                  maxLength={1000}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500 resize-y"
+                  placeholder="作品の概要・制作背景など"
+                />
+                <p className="text-[11px] text-gray-400 mt-1 text-right">{editDescription.length} / 1000</p>
+              </div>
+              {editError && <p className="text-red-600 text-sm">{editError}</p>}
+            </div>
+            <div className="px-5 sm:px-6 py-4 bg-gray-50 flex gap-3">
+              <button
+                type="button"
+                onClick={closeEdit}
+                disabled={isPending}
+                className="flex-1 border border-gray-300 bg-white py-2 rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={handleEditSave}
+                disabled={isPending || !editTitle.trim()}
+                className="flex-1 bg-slate-600 text-white py-2 rounded-lg font-bold hover:bg-slate-700 transition disabled:opacity-50"
+              >
+                {isPending ? '保存中...' : '保存する'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -403,11 +519,13 @@ function PortfolioCard({
   isFeatured,
   onDelete,
   onToggleFeatured,
+  onEdit,
 }: {
   portfolio: Portfolio
   isFeatured: boolean
   onDelete: () => void
   onToggleFeatured: () => void
+  onEdit: () => void
 }) {
   const { title, mediaType, fileKey } = portfolio
   const source = resolveMediaSource(fileKey)
@@ -473,12 +591,20 @@ function PortfolioCard({
           {source.kind === 'twitter' && ' · X'}
         </p>
       </div>
-      <button
-        onClick={onDelete}
-        className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 bg-red-100 text-red-600 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded transition"
-      >
-        削除
-      </button>
+      <div className="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
+        <button
+          onClick={onEdit}
+          className="bg-white/95 border border-gray-200 text-gray-700 hover:text-slate-700 hover:border-slate-300 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shadow-sm"
+        >
+          編集
+        </button>
+        <button
+          onClick={onDelete}
+          className="bg-red-100 text-red-600 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded"
+        >
+          削除
+        </button>
+      </div>
     </div>
   )
 }

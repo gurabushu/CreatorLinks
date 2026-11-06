@@ -2,7 +2,12 @@
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { CreatePortfolioSchema, type CreatePortfolioInput } from '@creator-links/shared'
+import {
+  CreatePortfolioSchema,
+  type CreatePortfolioInput,
+  UpdatePortfolioSchema,
+  type UpdatePortfolioInput,
+} from '@creator-links/shared'
 import { revalidatePath } from 'next/cache'
 import { notifyFollowers } from '@/lib/notifications'
 import { getDisplayName } from '@/lib/user'
@@ -41,6 +46,38 @@ export async function createPortfolioAction(data: CreatePortfolioInput) {
     return { success: true as const }
   } catch {
     return { success: false as const, error: 'ポートフォリオの作成に失敗しました' }
+  }
+}
+
+export async function updatePortfolioAction(data: UpdatePortfolioInput) {
+  const session = await auth()
+  if (!session) return { success: false as const, error: '認証が必要です' }
+
+  const parsed = UpdatePortfolioSchema.safeParse(data)
+  if (!parsed.success) {
+    return { success: false as const, error: '入力内容が正しくありません' }
+  }
+
+  try {
+    const portfolio = await prisma.portfolio.findUnique({
+      where: { id: parsed.data.id },
+      select: { userId: true },
+    })
+    if (!portfolio || portfolio.userId !== session.user.id) {
+      return { success: false as const, error: 'ポートフォリオが見つかりません' }
+    }
+    await prisma.portfolio.update({
+      where: { id: parsed.data.id },
+      data: {
+        title: parsed.data.title,
+        description: parsed.data.description ?? null,
+      },
+    })
+    revalidatePath('/dashboard/portfolio')
+    revalidatePath(`/artists/${session.user.id}`)
+    return { success: true as const }
+  } catch {
+    return { success: false as const, error: '更新に失敗しました' }
   }
 }
 
