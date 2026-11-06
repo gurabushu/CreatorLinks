@@ -398,7 +398,7 @@ export default async function CalendarPage({
           src="/calendar-watermark.png"
           alt=""
           aria-hidden
-          className="pointer-events-none absolute inset-0 m-auto w-1/2 max-w-md opacity-25 select-none z-10"
+          className="pointer-events-none absolute inset-0 m-auto w-1/2 max-w-md opacity-45 select-none z-10"
         />
       <div className="grid grid-cols-7 grid-rows-6 border-l border-r border-b border-slate-100/60 rounded-b-xl overflow-hidden">
         {cells.map((d, idx) => {
