@@ -124,14 +124,23 @@ function fmtDate(d: Date) {
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ym?: string; view?: string }>
+  searchParams: Promise<{ ym?: string; view?: string; artists?: string }>
 }) {
   const session = await auth()
   if (!session) redirect('/auth')
 
-  const { ym, view: rawView } = await searchParams
+  const { ym, view: rawView, artists: artistsParam } = await searchParams
   const view: View = rawView === 'following' ? 'following' : 'mine'
   const { year, month } = parseYm(ym)
+
+  // 選択されたアーティスト ID (フォロー中ビュー専用の絞り込み)
+  const selectedArtistIds = artistsParam
+    ? artistsParam.split(',').filter(Boolean)
+    : []
+  const selectedSet = new Set(selectedArtistIds)
+
+  // フォロー中ビューで表示する「絞り込みチップ」用に、フォロー中アーティストのプロフィールを取得
+  let followedArtists: Artist[] = []
 
   // グリッドの表示範囲: 月初の日の週の日曜 〜 6 週後の土曜（42 セル）
   const monthStart = new Date(year, month - 1, 1)
@@ -143,19 +152,32 @@ export default async function CalendarPage({
   let entries: Entry[]
 
   if (view === 'following') {
-    // Phase A.6: フォロー中アーティストの公開イベント
-    // visibility=PUBLIC / FOLLOWERS のみ（PARTICIPANTS_ONLY はフォロワー閲覧不可）
     const follows = await prisma.follow.findMany({
       where: { followerId: session.user.id },
       select: { followingId: true },
     })
     const followingIds = follows.map((f) => f.followingId)
 
-    const followingEvents = followingIds.length === 0
+    // フィルタ UI 用: フォロー中の全員 (アバター含む)
+    if (followingIds.length > 0) {
+      const users = await prisma.user.findMany({
+        where: { id: { in: followingIds } },
+        select: { id: true, name: true, displayName: true, avatarUrl: true },
+        orderBy: { name: 'asc' },
+      })
+      followedArtists = users
+    }
+
+    // イベント取得 (artists 選択があれば絞り込み)
+    const effectiveIds = selectedArtistIds.length > 0
+      ? followingIds.filter((id) => selectedSet.has(id))
+      : followingIds
+
+    const followingEvents = effectiveIds.length === 0
       ? []
       : await prisma.event.findMany({
           where: {
-            creatorId: { in: followingIds },
+            creatorId: { in: effectiveIds },
             status: 'PUBLISHED',
             visibility: { in: ['PUBLIC', 'FOLLOWERS'] },
             startAt: { gte: gridStart, lte: gridEnd },
@@ -376,6 +398,58 @@ export default async function CalendarPage({
           フォロー中
         </Link>
       </div>
+
+      {/* フォロー中ビュー: アーティスト絞り込みチップ */}
+      {view === 'following' && followedArtists.length > 0 && (
+        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <p className="text-xs font-medium text-gray-600">
+              表示するアーティスト
+              {selectedArtistIds.length > 0 && (
+                <span className="ml-1.5 text-slate-700 font-semibold">({selectedArtistIds.length} 人選択中)</span>
+              )}
+            </p>
+            {selectedArtistIds.length > 0 && (
+              <Link
+                href={`?ym=${ymString(year, month)}&view=following`}
+                className="text-[11px] text-slate-700 hover:underline"
+              >
+                すべて表示に戻す
+              </Link>
+            )}
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {followedArtists.map((a) => {
+              const selected = selectedSet.has(a.id)
+              const nextIds = selected
+                ? selectedArtistIds.filter((id) => id !== a.id)
+                : [...selectedArtistIds, a.id]
+              const nextParam = nextIds.length > 0 ? `&artists=${nextIds.join(',')}` : ''
+              return (
+                <Link
+                  key={a.id}
+                  href={`?ym=${ymString(year, month)}&view=following${nextParam}`}
+                  className={`shrink-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full border text-xs transition ${
+                    selected
+                      ? 'bg-slate-700 text-white border-slate-700'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-slate-300'
+                  }`}
+                >
+                  {a.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={a.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+                  ) : (
+                    <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${selected ? 'bg-white/20' : 'bg-slate-100 text-slate-700'}`}>
+                      {getDisplayName(a).slice(0, 1)}
+                    </span>
+                  )}
+                  <span className="whitespace-nowrap max-w-[8rem] truncate">{getDisplayName(a)}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 曜日ヘッダー */}
       <div className="grid grid-cols-7 text-center text-xs sm:text-sm border border-slate-100/60 rounded-t-xl overflow-hidden bg-gradient-to-b from-slate-50/60 to-white">
